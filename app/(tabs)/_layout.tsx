@@ -2,16 +2,15 @@ import React from 'react';
 import { View, Pressable, StyleSheet } from 'react-native';
 import { Tabs } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Sunrise, Route, BookOpen, User } from 'lucide-react-native';
+import { Sunrise, Route, BookOpen, User, Compass } from 'lucide-react-native';
 import { Text } from '@/components/primitives/Text';
 import { useTheme, MIN_TOUCH } from '@/theme';
 import { feedback } from '@/services/feedback';
 
-const ICONS = { today: Sunrise, journey: Route, bible: BookOpen, you: User } as const;
-const LABELS = { today: 'Today', journey: 'Journey', bible: 'Bible', you: 'You' } as const;
+const ICONS = { today: Sunrise, journey: Route, bible: BookOpen, way: Compass, you: User } as const;
+const LABELS = { today: 'Today', journey: 'Journey', bible: 'Bible', way: 'The Way', you: 'You' } as const;
 type TabKey = keyof typeof ICONS;
 
-/** Structural props — avoids coupling to a specific @react-navigation version. */
 type TabBarProps = {
   state: { index: number; routes: readonly { key: string; name: string }[] };
   navigation: { navigate: (name: string) => void };
@@ -37,6 +36,7 @@ const TabBar = ({ state, navigation }: TabBarProps) => {
         const Icon = ICONS[key];
         if (!Icon) return null;
         const focused = state.index === index;
+        const isWay = key === 'way';
         return (
           <Pressable
             key={route.key}
@@ -49,11 +49,17 @@ const TabBar = ({ state, navigation }: TabBarProps) => {
             }}
             style={styles.item}
           >
-            <Icon
-              size={21}
-              strokeWidth={focused ? 2 : 1.6}
-              color={focused ? t.colors.accent : t.colors.textMuted}
-            />
+            {isWay && focused ? (
+              <View style={[styles.wayPill, { backgroundColor: t.colors.accent }]}>
+                <Icon size={19} strokeWidth={2} color={t.colors.background} />
+              </View>
+            ) : (
+              <Icon
+                size={21}
+                strokeWidth={focused ? 2 : 1.6}
+                color={focused ? t.colors.accent : t.colors.textMuted}
+              />
+            )}
             <Text
               variant="caption"
               tone={focused ? 'primary' : 'muted'}
@@ -74,6 +80,7 @@ export default function TabsLayout() {
       <Tabs.Screen name="today" />
       <Tabs.Screen name="journey" />
       <Tabs.Screen name="bible" />
+      <Tabs.Screen name="way" />
       <Tabs.Screen name="you" />
     </Tabs>
   );
@@ -82,5 +89,6 @@ export default function TabsLayout() {
 const styles = StyleSheet.create({
   bar: { flexDirection: 'row', borderTopWidth: StyleSheet.hairlineWidth, paddingTop: 11 },
   item: { flex: 1, alignItems: 'center', gap: 5, minHeight: MIN_TOUCH },
-  label: { fontSize: 10.5, letterSpacing: 0.2 },
+  label: { fontSize: 10, letterSpacing: 0.2 },
+  wayPill: { width: 36, height: 36, borderRadius: 18, alignItems: 'center', justifyContent: 'center' },
 });
