@@ -12,6 +12,8 @@ export type ColorTokens = {
   surfaceRaised: string;
   surfacePressed: string;
 
+  /** Default body colour. Alias of textPrimary, kept so screens can read `text`. */
+  text: string;
   textPrimary: string;
   textSecondary: string;
   textMuted: string;
@@ -55,6 +57,7 @@ export const lightColors: ColorTokens = {
   surfaceRaised: '#FFFFFF',
   surfacePressed: ramp.ivory200,
 
+  text: palette.ink,
   textPrimary: palette.ink,
   textSecondary: ramp.ink400,
   textMuted: ramp.sage,
@@ -95,6 +98,7 @@ export const darkColors: ColorTokens = {
   surfaceRaised: ramp.night600,
   surfacePressed: ramp.ink700,
 
+  text: '#EEE9DD',
   textPrimary: '#EEE9DD',
   textSecondary: ramp.sageDark,
   textMuted: ramp.sageDeep,

@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { View, ScrollView, Pressable, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
@@ -7,22 +7,24 @@ import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 import { Text } from '@/components/primitives/Text';
 import { useTheme } from '@/theme';
 import { feedback } from '@/services/feedback';
-import { getDayReading, passagesForDay, TOTAL_DAYS } from '@/data/year-plan';
-import { useGathered, TOTAL_CHAPTERS } from '@/store/gathered';
+import { getDayReading, TOTAL_DAYS } from '@/data/plan/year-plan';
+import { useGathered, TOTAL_CHAPTERS, expandReference } from '@/store/gathered';
+import { passagesForDay } from '@/data/plan/year-plan';
 
-/** Which plan day is "today" — mapped to day-of-year. */
+/** Which plan day is "today" — day 1 is the first time the app is opened. */
 function currentDay(): number {
+  // Simple day-of-year mapping; a start-date preference can replace this later.
   const now = new Date();
   const start = new Date(now.getFullYear(), 0, 0);
   const diff = now.getTime() - start.getTime();
-  return Math.min(Math.max(Math.floor(diff / 86_400_000), 1), TOTAL_DAYS);
+  return Math.min(Math.floor(diff / 86_400_000), TOTAL_DAYS);
 }
 
-const MONTHS: [string, number][] = [
+const MONTHS = [
   ['January', 31], ['February', 28], ['March', 31], ['April', 30],
   ['May', 31], ['June', 30], ['July', 31], ['August', 31],
   ['September', 30], ['October', 31], ['November', 30], ['December', 31],
-];
+] as const;
 
 export default function Journey() {
   const t = useTheme();
@@ -43,16 +45,16 @@ export default function Journey() {
     let n = 0;
     for (let d = 1; d <= TOTAL_DAYS; d++) if (isDayGathered(d)) n++;
     return n;
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [chapters]);
 
   const todayReading = getDayReading(today);
 
-  let cursor = 0;
-  const monthBlocks = MONTHS.map(([monthName, days]) => {
-    const start = cursor + 1;
-    cursor += days;
-    return { monthName, days, start };
+  // Build the calendar: day-of-year index per month
+  let dayCursor = 0;
+  const monthBlocks = MONTHS.map(([name, days]) => {
+    const start = dayCursor + 1;
+    dayCursor += days;
+    return { name, days, start };
   });
 
   return (
@@ -60,6 +62,7 @@ export default function Journey() {
       <StatusBar style={t.scheme === 'dark' ? 'light' : 'dark'} />
 
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+        {/* Header */}
         <Animated.View entering={FadeIn.duration(400)}>
           <Text variant="caption" tone="muted" uppercase>The Journey</Text>
           <Text variant="hero" style={{ color: t.colors.text, marginTop: 6 }}>
@@ -98,7 +101,7 @@ export default function Journey() {
         {todayReading && (
           <Animated.View entering={FadeInDown.delay(140).duration(450)}>
             <Pressable
-              onPress={() => { feedback.select(); router.push(`/read?day=${today}`); }}
+              onPress={() => { feedback.select(); router.push(`/read/${today}`); }}
               style={[styles.todayCard, { backgroundColor: t.colors.accent + '12', borderColor: t.colors.accent + '44' }]}
             >
               <Text variant="caption" style={{ color: t.colors.accent, letterSpacing: 1 }} uppercase>
@@ -116,18 +119,18 @@ export default function Journey() {
           </Animated.View>
         )}
 
-        {/* Year calendar */}
+        {/* Calendar */}
         <Text variant="caption" tone="muted" uppercase style={{ marginTop: 30, marginBottom: 12 }}>
           The year
         </Text>
 
         {monthBlocks.map((m, mi) => (
           <Animated.View
-            key={m.monthName}
-            entering={FadeInDown.delay(180 + mi * 26).duration(400)}
+            key={m.name}
+            entering={FadeInDown.delay(180 + mi * 30).duration(400)}
             style={styles.month}
           >
-            <Text variant="caption" tone="muted" style={styles.monthName}>{m.monthName}</Text>
+            <Text variant="caption" tone="muted" style={styles.monthName}>{m.name}</Text>
             <View style={styles.grid}>
               {Array.from({ length: m.days }, (_, i) => {
                 const dayNum = m.start + i;
@@ -138,12 +141,14 @@ export default function Journey() {
                 return (
                   <Pressable
                     key={dayNum}
-                    onPress={() => { feedback.select(); router.push(`/read?day=${dayNum}`); }}
+                    onPress={() => { feedback.select(); router.push(`/read/${dayNum}`); }}
                     style={[
                       styles.dot,
                       {
                         backgroundColor: gathered ? t.colors.accent : 'transparent',
-                        borderColor: isToday || gathered
+                        borderColor: isToday
+                          ? t.colors.accent
+                          : gathered
                           ? t.colors.accent
                           : t.colors.border + (future ? '40' : '99'),
                         borderWidth: isToday ? 2 : 1,

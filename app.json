@@ -16,7 +16,10 @@
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "com.scripturepath.app",
-      "buildNumber": "2"
+      "buildNumber": "2",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
       "package": "com.scripturepath.app",
@@ -29,7 +32,12 @@
       "expo-router",
       "expo-font",
       "expo-splash-screen",
-      ["expo-system-ui", { "style": "automatic" }]
+      [
+        "expo-system-ui",
+        {
+          "style": "automatic"
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true

@@ -33,8 +33,6 @@ const Navigator = () => {
       <Stack.Screen name="(auth)" />
       <Stack.Screen name="(tabs)" />
       <Stack.Screen name="lesson/[id]" options={{ animation: 'slide_from_right' }} />
-      <Stack.Screen name="read" options={{ animation: 'slide_from_right' }} />
-      <Stack.Screen name="book" options={{ animation: 'slide_from_right' }} />
       <Stack.Screen name="gathered" options={{ animation: 'fade', animationDuration: 420 }} />
     </Stack>
   );

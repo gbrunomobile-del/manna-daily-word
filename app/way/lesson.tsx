@@ -8,6 +8,8 @@ import { Text } from '@/components/primitives/Text';
 import { Button } from '@/components/primitives/Button';
 import { useTheme } from '@/theme';
 import { feedback } from '@/services/feedback';
+import { useWay } from '@/store/way';
+import { useGathered } from '@/store/gathered';
 
 const { width: W } = Dimensions.get('window');
 
@@ -147,6 +149,9 @@ export default function WayLesson() {
   const router = useRouter();
   const { skillId } = useLocalSearchParams<{ skillId: string }>();
 
+  const { recordAttempt } = useWay();
+  const { gather } = useGathered();
+
   const questions = QUESTIONS[skillId ?? ''] ?? QUESTIONS.creation;
   const [qIdx, setQIdx] = useState(0);
   const [hearts, setHearts] = useState(MAX_HEARTS);
@@ -184,14 +189,24 @@ export default function WayLesson() {
     }
   }, [q, showResult, shake]);
 
+  /** Save progress and gather every verse this topic taught. */
+  const finish = useCallback(async (finalScore: number) => {
+    setDone(true);
+    const verses = questions.map((x) => x.verse).filter(Boolean) as string[];
+    await Promise.all([
+      recordAttempt(skillId ?? 'creation', finalScore, TOTAL_QUESTIONS),
+      gather(verses),
+    ]);
+  }, [questions, recordAttempt, gather, skillId]);
+
   const handleNext = useCallback(() => {
-    if (hearts <= 0) { setDone(true); return; }
-    if (qIdx >= TOTAL_QUESTIONS - 1) { setDone(true); return; }
+    if (hearts <= 0) { void finish(score); return; }
+    if (qIdx >= TOTAL_QUESTIONS - 1) { void finish(score); return; }
     setQIdx(i => i + 1);
     setSelected(null);
     setShowResult(false);
     setCorrect(false);
-  }, [qIdx, hearts]);
+  }, [qIdx, hearts, score, finish]);
 
   if (done) {
     const passed = score >= 3;

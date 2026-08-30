@@ -22,7 +22,7 @@ type Actions = {
 const todayIso = () => new Date().toISOString().slice(0, 10);
 
 const initial: ProgressState = {
-  daysGathered: 12,
+  daysGathered: 0,
   gatheredDates: [],
   completedLessonIds: [],
   savedPassageIds: [],

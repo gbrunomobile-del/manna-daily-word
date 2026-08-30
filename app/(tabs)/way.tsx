@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useEffect } from 'react';
 import { View, ScrollView, Pressable, StyleSheet, Dimensions } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
@@ -7,7 +7,7 @@ import Animated, { FadeInDown, FadeIn } from 'react-native-reanimated';
 import { Text } from '@/components/primitives/Text';
 import { useTheme } from '@/theme';
 import { feedback } from '@/services/feedback';
-import { useProgress } from '@/store/progress';
+import { useWay } from '@/store/way';
 
 const { width: W } = Dimensions.get('window');
 
@@ -139,16 +139,17 @@ const Connector = ({ color }: { color: string }) => (
 export default function TheWay() {
   const t = useTheme();
   const router = useRouter();
-  const { wayCompleted = [], wayInProgress = [], daysGathered } = useProgress() as any;
+  const { completed, attempted, xp, hydrate, hydrated } = useWay();
+
+  useEffect(() => { if (!hydrated) void hydrate(); }, [hydrated, hydrate]);
 
   // Group skills by row
   const rows = Array.from({ length: MAX_ROWS }, (_, i) =>
     SKILLS.filter(s => s.row === i + 1)
   );
 
-  const totalCompleted = wayCompleted.length;
+  const totalCompleted = completed.length;
   const totalSkills = SKILLS.length;
-  const xp = totalCompleted * 50;
 
   return (
     <SafeAreaView style={[styles.flex, { backgroundColor: t.colors.background }]} edges={['top']}>
@@ -183,7 +184,7 @@ export default function TheWay() {
               style={styles.row}
             >
               {rowSkills.map(skill => {
-                const status = getStatus(skill, wayCompleted, wayInProgress);
+                const status = getStatus(skill, completed, attempted);
                 const x = COL_POS[skill.col] * W;
                 return (
                   <View key={skill.id} style={[styles.nodeWrapper, { left: x - NODE_SIZE / 2 }]}>
