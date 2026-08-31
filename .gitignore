@@ -1,6 +1,16 @@
 node_modules/
 .expo/
 dist/
+
+# Source artwork libraries and full-resolution originals — kept locally,
+# never committed. The app bundles only the downscaled versions.
+assets/_originals/
+assets/*.zip
+assets/*Dore_*.jpg
+assets/LogoDore*.jpg
+assets/lt_DorePics.jpg
+assets/index.htm
+assets/aa_readme.txt
 .env
 .env.local
 *.log

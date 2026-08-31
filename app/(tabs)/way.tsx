@@ -21,7 +21,22 @@ const LANES = [0.24, 0.5, 0.76];   // left, centre, right — as a fraction of w
  * to its emoji, so the tree stays complete while the set is being filled in.
  */
 const ART: Record<string, ImageSourcePropType> = {
-  // creation: require('../../assets/way/creation.png'),
+  creation: require('../../assets/creation.png'),
+  'the-fall': require('../../assets/the-fall.png'),
+  noah: require('../../assets/noah.png'),
+  abraham: require('../../assets/abraham.png'),
+  joseph: require('../../assets/joseph.png'),
+  moses: require('../../assets/moses.png'),
+  'the-law': require('../../assets/the-law.png'),
+  david: require('../../assets/david.png'),
+  isaiah: require('../../assets/isaiah.png'),
+  birth: require('../../assets/birth.png'),
+  ministry: require('../../assets/ministry.png'),
+  miracles: require('../../assets/miracles.png'),
+  cross: require('../../assets/cross.png'),
+  acts: require('../../assets/acts.png'),
+  letters: require('../../assets/letters.png'),
+  revelation: require('../../assets/revelation.png'),
 };
 
 interface Skill {
