@@ -10,6 +10,7 @@ import { router } from 'expo-router';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Text } from '@/components/primitives/Text';
+import { Ornament } from '@/components/manna/Ornament';
 import { useTheme, MIN_TOUCH } from '@/theme';
 import { feedback } from '@/services/feedback';
 
@@ -79,10 +80,11 @@ export default function LoginScreen() {
           >
             {/* Wordmark */}
             <Animated.View entering={FadeIn.duration(900)} style={styles.wordmark}>
+              <Ornament width={196} opacity={0.85} />
               <Text variant="hero" style={[styles.manna, { color: t.colors.text }]} uppercase>
                 Manna
               </Text>
-              <View style={[styles.rule, { backgroundColor: t.colors.accent }]} />
+              <Ornament width={132} opacity={0.6} />
               <Text variant="reference" tone="muted" style={styles.dailyWord} uppercase>
                 Daily Word
               </Text>
@@ -191,9 +193,8 @@ const styles = StyleSheet.create({
   plateImg: { width: '100%', height: '100%' },
   fade: { position: 'absolute', left: 0, right: 0, bottom: 0, height: '58%' },
   content: { flexGrow: 1, paddingHorizontal: 28, paddingBottom: 32 },
-  wordmark: { alignItems: 'center', gap: 10 },
+  wordmark: { alignItems: 'center', gap: 14 },
   manna: { letterSpacing: 10, fontSize: 40 },
-  rule: { width: 54, height: 1, opacity: 0.7 },
   dailyWord: { letterSpacing: 4 },
   tagline: { textAlign: 'center', fontSize: 16, marginTop: 14, marginBottom: 28 },
   actions: { gap: 12 },
