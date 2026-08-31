@@ -28,6 +28,12 @@ const NODES = [
 /** Full-width imagery needs more, but nowhere near the original. */
 const WIDE = [{ name: 'hero-manna', width: 1400 }];
 
+/** Screen-header plates — displayed inside a 96pt arch. */
+const HEADERS = [
+  'manna_today_active', 'manna_journey_inactive', 'manna_bible_inactive',
+  'manna_the_way_inactive', 'manna_you_inactive',
+];
+
 async function shrink(file, width) {
   const src = path.join(ASSETS, file);
   if (!fs.existsSync(src)) {
@@ -66,6 +72,9 @@ async function shrink(file, width) {
 
   console.log('\nFull-width art');
   for (const { name, width } of WIDE) await shrink(`${name}.png`, width);
+
+  console.log('\nScreen headers -> 512px');
+  for (const n of HEADERS) await shrink(`${n}.png`, 512);
 
   const total = fs.readdirSync(ASSETS)
     .filter((f) => /\.(png|jpg)$/i.test(f))
