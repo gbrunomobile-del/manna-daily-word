@@ -86,3 +86,46 @@ export const weekDots = (gatheredDates: readonly string[]): boolean[] => {
   }
   return out;
 };
+
+const isoDaysAgo = (n: number) => {
+  const d = new Date();
+  d.setDate(d.getDate() - n);
+  return d.toISOString().slice(0, 10);
+};
+
+/**
+ * Consecutive days gathered, counting back from today.
+ *
+ * Today not being gathered yet does not break the streak — it is still early.
+ * The streak only ends once a whole day has passed untouched.
+ */
+export const currentStreak = (gatheredDates: readonly string[]): number => {
+  const set = new Set(gatheredDates);
+  let start = 0;
+  if (!set.has(isoDaysAgo(0))) {
+    if (!set.has(isoDaysAgo(1))) return 0;
+    start = 1;
+  }
+  let n = 0;
+  for (let i = start; i < 3650; i++) {
+    if (!set.has(isoDaysAgo(i))) break;
+    n++;
+  }
+  return n;
+};
+
+/** True once today has been gathered. */
+export const gatheredToday = (gatheredDates: readonly string[]): boolean =>
+  gatheredDates.includes(isoDaysAgo(0));
+
+/**
+ * Someone coming back after a gap of two days or more.
+ *
+ * This exists so the app can say "Welcome back" rather than announce a loss.
+ * Nothing is taken away for being absent; the number simply starts again.
+ */
+export const isReturning = (gatheredDates: readonly string[]): boolean => {
+  if (gatheredDates.length === 0) return false;
+  const set = new Set(gatheredDates);
+  return !set.has(isoDaysAgo(0)) && !set.has(isoDaysAgo(1));
+};

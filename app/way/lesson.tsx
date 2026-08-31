@@ -10,6 +10,7 @@ import { useTheme } from '@/theme';
 import { feedback } from '@/services/feedback';
 import { useWay } from '@/store/way';
 import { useGathered } from '@/store/gathered';
+import { useProgress } from '@/store/progress';
 
 const { width: W } = Dimensions.get('window');
 
@@ -151,6 +152,7 @@ export default function WayLesson() {
 
   const { recordAttempt } = useWay();
   const { gather } = useGathered();
+  const recordDay = useProgress((s) => s.gather);
 
   const questions = QUESTIONS[skillId ?? ''] ?? QUESTIONS.creation;
   const [qIdx, setQIdx] = useState(0);
@@ -196,8 +198,12 @@ export default function WayLesson() {
     await Promise.all([
       recordAttempt(skillId ?? 'creation', finalScore, TOTAL_QUESTIONS),
       gather(verses),
+      // Passing a topic counts toward the day as much as a reading does.
+      finalScore >= 3
+        ? recordDay(`way-${skillId ?? 'creation'}`, 0)
+        : Promise.resolve(),
     ]);
-  }, [questions, recordAttempt, gather, skillId]);
+  }, [questions, recordAttempt, gather, recordDay, skillId]);
 
   const handleNext = useCallback(() => {
     if (hearts <= 0) { void finish(score); return; }

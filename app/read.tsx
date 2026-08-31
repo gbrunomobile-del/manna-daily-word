@@ -10,6 +10,7 @@ import { useTheme } from '@/theme';
 import { feedback } from '@/services/feedback';
 import { getDayReading, passagesForDay } from '@/data/year-plan';
 import { useGathered } from '@/store/gathered';
+import { useProgress } from '@/store/progress';
 
 interface Passage {
   reference: string;
@@ -36,6 +37,7 @@ export default function DailyReading() {
 
   const reading = getDayReading(day);
   const { gather, hasGathered, hydrate, hydrated } = useGathered();
+  const recordDay = useProgress((s) => s.gather);
 
   const [passages, setPassages] = useState<Passage[]>([]);
   const [loading, setLoading] = useState(true);
@@ -78,9 +80,14 @@ export default function DailyReading() {
 
   const handleComplete = useCallback(async () => {
     feedback.success?.();
-    await gather(passagesForDay(day));
+    // Two records: the chapters themselves, and the day — the day is what
+    // carries the streak on Today.
+    await Promise.all([
+      gather(passagesForDay(day)),
+      recordDay(`day-${day}`, 0),
+    ]);
     setComplete(true);
-  }, [day, gather]);
+  }, [day, gather, recordDay]);
 
   if (!reading) {
     return (
