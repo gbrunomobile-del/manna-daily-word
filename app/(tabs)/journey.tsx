@@ -9,29 +9,29 @@ import { useTheme } from '@/theme';
 import { feedback } from '@/services/feedback';
 import { getDayReading, passagesForDay, TOTAL_DAYS } from '@/data/year-plan';
 import { useGathered, TOTAL_CHAPTERS } from '@/store/gathered';
+import { useProgress, planDay } from '@/store/progress';
 
-/** Which plan day is "today" — mapped to day-of-year. */
-function currentDay(): number {
-  const now = new Date();
-  const start = new Date(now.getFullYear(), 0, 0);
-  const diff = now.getTime() - start.getTime();
-  return Math.min(Math.max(Math.floor(diff / 86_400_000), 1), TOTAL_DAYS);
-}
-
-const MONTHS: [string, number][] = [
-  ['January', 31], ['February', 28], ['March', 31], ['April', 30],
-  ['May', 31], ['June', 30], ['July', 31], ['August', 31],
-  ['September', 30], ['October', 31], ['November', 30], ['December', 31],
-];
+/**
+ * The year is shown in twelve blocks of thirty days rather than calendar
+ * months, because the plan starts whenever someone joined — labelling day 1
+ * as "January" would be wrong for everyone who didn't begin on New Year's Day.
+ */
+const BLOCK = 30;
+const BLOCKS = Array.from({ length: Math.ceil(TOTAL_DAYS / BLOCK) }, (_, i) => ({
+  start: i * BLOCK + 1,
+  days: Math.min(BLOCK, TOTAL_DAYS - i * BLOCK),
+}));
 
 export default function Journey() {
   const t = useTheme();
   const router = useRouter();
   const { chapters, hydrate, hydrated, hasGathered } = useGathered();
+  const { startDate, hydrate: hydrateProgress, hydrated: progressReady } = useProgress();
 
   useEffect(() => { if (!hydrated) void hydrate(); }, [hydrated, hydrate]);
+  useEffect(() => { if (!progressReady) void hydrateProgress(); }, [progressReady, hydrateProgress]);
 
-  const today = useMemo(() => currentDay(), []);
+  const today = useMemo(() => planDay(startDate), [startDate]);
   const gatheredCount = Object.keys(chapters).length;
   const pct = Math.min(100, Math.round((gatheredCount / TOTAL_CHAPTERS) * 100));
 
@@ -47,13 +47,6 @@ export default function Journey() {
   }, [chapters]);
 
   const todayReading = getDayReading(today);
-
-  let cursor = 0;
-  const monthBlocks = MONTHS.map(([monthName, days]) => {
-    const start = cursor + 1;
-    cursor += days;
-    return { monthName, days, start };
-  });
 
   return (
     <SafeAreaView style={[styles.flex, { backgroundColor: t.colors.background }]} edges={['top']}>
@@ -121,16 +114,18 @@ export default function Journey() {
           The year
         </Text>
 
-        {monthBlocks.map((m, mi) => (
+        {BLOCKS.map((b, bi) => (
           <Animated.View
-            key={m.monthName}
-            entering={FadeInDown.delay(180 + mi * 26).duration(400)}
+            key={b.start}
+            entering={FadeInDown.delay(180 + bi * 26).duration(400)}
             style={styles.month}
           >
-            <Text variant="caption" tone="muted" style={styles.monthName}>{m.monthName}</Text>
+            <Text variant="caption" tone="muted" style={styles.monthName}>
+              Days {b.start}–{b.start + b.days - 1}
+            </Text>
             <View style={styles.grid}>
-              {Array.from({ length: m.days }, (_, i) => {
-                const dayNum = m.start + i;
+              {Array.from({ length: b.days }, (_, i) => {
+                const dayNum = b.start + i;
                 if (dayNum > TOTAL_DAYS) return null;
                 const gathered = isDayGathered(dayNum);
                 const isToday = dayNum === today;

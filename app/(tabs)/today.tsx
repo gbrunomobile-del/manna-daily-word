@@ -14,15 +14,8 @@ import { getDayReading, passagesForDay, TOTAL_DAYS } from '@/data/year-plan';
 import { useGathered } from '@/store/gathered';
 import { useWay } from '@/store/way';
 import {
-  useProgress, weekDots, currentStreak, gatheredToday, isReturning,
+  useProgress, weekDots, currentStreak, gatheredToday, isReturning, planDay,
 } from '@/store/progress';
-
-/** Plan day, mapped to day-of-year. */
-function currentDay(): number {
-  const now = new Date();
-  const start = new Date(now.getFullYear(), 0, 0);
-  return Math.min(Math.max(Math.floor((now.getTime() - start.getTime()) / 86_400_000), 1), TOTAL_DAYS);
-}
 
 function greeting(): string {
   const h = new Date().getHours();
@@ -72,7 +65,7 @@ export default function Today() {
   const router = useRouter();
   const [name, setName] = useState('');
 
-  const { gatheredDates, hydrate: hydrateProgress, hydrated: progressReady } = useProgress();
+  const { gatheredDates, startDate, hydrate: hydrateProgress, hydrated: progressReady } = useProgress();
   const { hasGathered, hydrate: hydrateGathered, hydrated: gatheredReady, chapters } = useGathered();
   const { completed, hydrate: hydrateWay, hydrated: wayReady } = useWay();
 
@@ -85,7 +78,7 @@ export default function Today() {
     });
   }, [progressReady, gatheredReady, wayReady, hydrateProgress, hydrateGathered, hydrateWay]);
 
-  const day = useMemo(() => currentDay(), []);
+  const day = useMemo(() => planDay(startDate), [startDate]);
   const reading = getDayReading(day);
   const refs = useMemo(() => passagesForDay(day), [day]);
 

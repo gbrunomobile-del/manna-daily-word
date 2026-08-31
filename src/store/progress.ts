@@ -6,6 +6,8 @@ export type ProgressState = {
   /** ISO dates of gathered days — never used to punish. */
   gatheredDates: string[];
   lastGathered?: string;
+  /** ISO date this person began the plan. Set once, on first launch. */
+  startDate?: string;
   completedLessonIds: string[];
   savedPassageIds: string[];
   totalSeconds: number;
@@ -35,7 +37,17 @@ export const useProgress = create<ProgressState & Actions>((set, get) => ({
 
   hydrate: async () => {
     const saved = await localRepository.get<ProgressState>(StorageKeys.progress);
-    set({ ...(saved ?? initial), hydrated: true });
+    const state = { ...(saved ?? initial), hydrated: true };
+
+    // The plan begins the day someone first opens the app, not on 1 January.
+    // Stamped once and never moved, so the count is stable across devices
+    // and across a reinstall that restores this store.
+    if (!state.startDate) {
+      state.startDate = todayIso();
+      await localRepository.set(StorageKeys.progress, state);
+    }
+
+    set(state);
   },
 
   gather: async (lessonId, seconds) => {
@@ -85,6 +97,21 @@ export const weekDots = (gatheredDates: readonly string[]): boolean[] => {
     out.push(gatheredDates.includes(d.toISOString().slice(0, 10)));
   }
   return out;
+};
+
+/**
+ * Which day of the 365-day plan someone is on.
+ *
+ * Counted from the day they started, not the calendar year — so everyone
+ * begins at Genesis on day one, whenever they join. Capped at 365; a plan
+ * that has run its course simply stays at the end rather than wrapping.
+ */
+export const planDay = (startDate?: string): number => {
+  if (!startDate) return 1;
+  const start = new Date(`${startDate}T00:00:00`);
+  const today = new Date(`${isoDaysAgo(0)}T00:00:00`);
+  const elapsed = Math.floor((today.getTime() - start.getTime()) / 86_400_000);
+  return Math.min(Math.max(elapsed + 1, 1), 365);
 };
 
 const isoDaysAgo = (n: number) => {
