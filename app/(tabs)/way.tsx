@@ -6,6 +6,8 @@ import { useRouter } from 'expo-router';
 import Animated, { FadeInDown, FadeIn } from 'react-native-reanimated';
 import { Check, Lock } from 'lucide-react-native';
 import { Text } from '@/components/primitives/Text';
+import { ScreenHeader } from '@/components/manna/ScreenHeader';
+import { SCREEN_ART } from '@/components/manna/screen-art';
 import { useTheme } from '@/theme';
 import { feedback } from '@/services/feedback';
 import { useWay } from '@/store/way';
@@ -106,6 +108,11 @@ export default function TheWay() {
       </Animated.View>
 
       <ScrollView contentContainerStyle={styles.tree} showsVerticalScrollIndicator={false}>
+        {SCREEN_ART.way && (
+          <View style={styles.treeHeader}>
+            <ScreenHeader art={SCREEN_ART.way} title="Learn the story" eyebrow="Sixteen topics" />
+          </View>
+        )}
         {SKILLS.map((skill, i) => {
           const status = statusOf(skill, completed, attempted);
           const locked = status === 'locked';
@@ -211,6 +218,7 @@ const styles = StyleSheet.create({
   },
   xp: { paddingHorizontal: 14, paddingVertical: 7, borderRadius: 20, borderWidth: 1 },
   tree: { paddingTop: 28 },
+  treeHeader: { paddingHorizontal: 24, paddingBottom: 34 },
   row: { height: ROW_H, width: '100%', position: 'relative' },
   thread: { position: 'absolute', width: 2, height: ROW_H - NODE + 12, borderRadius: 1 },
   nodeWrap: { position: 'absolute', width: NODE + 40, alignItems: 'center', marginLeft: -20 },

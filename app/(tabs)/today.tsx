@@ -8,6 +8,8 @@ import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 import { Check, ArrowRight } from 'lucide-react-native';
 import { Text } from '@/components/primitives/Text';
 import { Ornament } from '@/components/manna/Ornament';
+import { SCREEN_ART } from '@/components/manna/screen-art';
+import { ScreenHeader } from '@/components/manna/ScreenHeader';
 import { useTheme, MIN_TOUCH } from '@/theme';
 import { feedback } from '@/services/feedback';
 import { getDayReading, passagesForDay, TOTAL_DAYS } from '@/data/year-plan';
@@ -99,18 +101,32 @@ export default function Today() {
 
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         {/* Greeting */}
-        <Animated.View entering={FadeIn.duration(420)}>
-          <Text variant="caption" tone="muted" uppercase>
-            {returning ? 'Welcome back' : greeting()}
-          </Text>
-          <Text variant="hero" style={{ color: t.colors.text, marginTop: 6 }}>
-            {returning
-              ? 'Your portion is waiting.'
-              : name
-              ? `${greeting()}, ${name}.`
-              : 'Gather truth. Daily.'}
-          </Text>
-        </Animated.View>
+        {SCREEN_ART.today ? (
+          <ScreenHeader
+            art={SCREEN_ART.today}
+            eyebrow={returning ? 'Welcome back' : greeting()}
+            title={
+              returning
+                ? 'Your portion is waiting.'
+                : name
+                ? `${greeting()}, ${name}.`
+                : 'Gather truth. Daily.'
+            }
+          />
+        ) : (
+          <Animated.View entering={FadeIn.duration(420)}>
+            <Text variant="caption" tone="muted" uppercase>
+              {returning ? 'Welcome back' : greeting()}
+            </Text>
+            <Text variant="hero" style={{ color: t.colors.text, marginTop: 6 }}>
+              {returning
+                ? 'Your portion is waiting.'
+                : name
+                ? `${greeting()}, ${name}.`
+                : 'Gather truth. Daily.'}
+            </Text>
+          </Animated.View>
+        )}
 
         {/* Streak — stated, never scolded */}
         <Animated.View

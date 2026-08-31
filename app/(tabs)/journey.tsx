@@ -5,6 +5,8 @@ import { StatusBar } from 'expo-status-bar';
 import { useRouter } from 'expo-router';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 import { Text } from '@/components/primitives/Text';
+import { ScreenHeader } from '@/components/manna/ScreenHeader';
+import { SCREEN_ART } from '@/components/manna/screen-art';
 import { useTheme } from '@/theme';
 import { feedback } from '@/services/feedback';
 import { getDayReading, passagesForDay, TOTAL_DAYS } from '@/data/year-plan';
@@ -53,12 +55,11 @@ export default function Journey() {
       <StatusBar style={t.scheme === 'dark' ? 'light' : 'dark'} />
 
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        <Animated.View entering={FadeIn.duration(400)}>
-          <Text variant="caption" tone="muted" uppercase>The Journey</Text>
-          <Text variant="hero" style={{ color: t.colors.text, marginTop: 6 }}>
-            A year in the Word
-          </Text>
-        </Animated.View>
+        <ScreenHeader
+          art={SCREEN_ART.journey}
+          eyebrow="The Journey"
+          title="A year in the Word"
+        />
 
         {/* Progress summary */}
         <Animated.View

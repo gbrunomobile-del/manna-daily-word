@@ -6,6 +6,8 @@ import { useRouter } from 'expo-router';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 import { Search } from 'lucide-react-native';
 import { Text } from '@/components/primitives/Text';
+import { ScreenHeader } from '@/components/manna/ScreenHeader';
+import { SCREEN_ART } from '@/components/manna/screen-art';
 import { useTheme, MIN_TOUCH } from '@/theme';
 import { feedback } from '@/services/feedback';
 import { BOOKS, type Book } from '@/data/books';
@@ -62,15 +64,12 @@ export default function Bible() {
         contentContainerStyle={styles.content}
         keyboardShouldPersistTaps="handled"
       >
-        <Animated.View entering={FadeIn.duration(400)}>
-          <Text variant="caption" tone="muted" uppercase>World English Bible</Text>
-          <Text variant="hero" style={{ color: t.colors.text, marginTop: 6 }}>
-            Read freely
-          </Text>
-          <Text variant="body" tone="muted" style={{ marginTop: 6 }}>
-            {totalGathered} of {TOTAL_CHAPTERS} chapters gathered
-          </Text>
-        </Animated.View>
+        <ScreenHeader
+          art={SCREEN_ART.bible}
+          eyebrow="World English Bible"
+          title="Read freely"
+          subtitle={`${totalGathered} of ${TOTAL_CHAPTERS} chapters gathered`}
+        />
 
         <View style={[styles.search, { backgroundColor: t.colors.surface, borderColor: t.colors.border }]}>
           <Search size={17} color={t.colors.textMuted} strokeWidth={1.7} />
