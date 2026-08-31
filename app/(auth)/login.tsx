@@ -1,125 +1,209 @@
-import React, { useState } from 'react';
-import { View, TextInput, TouchableOpacity, ScrollView, KeyboardAvoidingView, Platform, StyleSheet, ActivityIndicator } from 'react-native';
+import React, { useState, useCallback } from 'react';
+import {
+  View, TextInput, Pressable, ScrollView, KeyboardAvoidingView,
+  Platform, StyleSheet, Image, ActivityIndicator, Dimensions,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { StatusBar } from 'expo-status-bar';
+import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
+import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Text } from '@/components/primitives/Text';
+import { useTheme, MIN_TOUCH } from '@/theme';
+import { feedback } from '@/services/feedback';
 
-// Manna palette
-const INK = '#18201C';
-const IVORY = '#F8F4EA';
-const GOLD = '#D7AD5A';
-const MORNING = '#F2DDAF';
-const GREEN = '#356653';
-const MUTED = '#8A9089';
-const SURFACE = '#F1EADC';
-const BORDER = '#E4DCC9';
+const { height: H } = Dimensions.get('window');
+const PLATE_H = H * 0.52;
+
+/**
+ * The hero is treated as an illuminated plate rather than a background:
+ * the engraving occupies the upper half and dissolves into the page, so
+ * the wordmark and controls sit on solid ground with guaranteed contrast.
+ * The wordmark is set in Instrument Serif, never baked into the image.
+ */
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const PLATE = require('../../assets/hero-manna.png');
 
 export default function LoginScreen() {
+  const t = useTheme();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showEmail, setShowEmail] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const handleLogin = async () => {
+  const handleEmail = useCallback(async () => {
     if (!email.includes('@')) { setError('Please enter a valid email.'); return; }
     if (password.length < 6) { setError('Password must be at least 6 characters.'); return; }
     setError(''); setLoading(true);
     try {
-      await AsyncStorage.setItem('manna_user', JSON.stringify({ email, name: email.split('@')[0] }));
+      await AsyncStorage.setItem(
+        'manna_user',
+        JSON.stringify({ email, name: email.split('@')[0] }),
+      );
       router.replace('/(tabs)/today');
     } catch {
       setError('Something went wrong. Please try again.');
     } finally {
       setLoading(false);
     }
-  };
+  }, [email, password]);
+
+  const bg = t.colors.background;
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: IVORY }}>
-      <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-        <ScrollView contentContainerStyle={s.container} keyboardShouldPersistTaps="handled">
-          <View style={s.header}>
-            <View style={[s.mark, { backgroundColor: GREEN }]}>
-              <View style={[s.markInner, { backgroundColor: GOLD }]} />
-            </View>
-            <View style={s.wordmark}>
-              <View style={s.wordmarkTop} />
-              <View style={[s.wordmarkLine, { backgroundColor: INK }]} />
-            </View>
-          </View>
-          <View style={s.eyebrow}><View style={[s.eyebrowLine, { backgroundColor: GOLD }]} /></View>
-          <View style={s.titleBlock}>
-            <TextInput
-              style={[s.title, { color: INK }]}
-              editable={false}
-              value="Welcome back."
-              pointerEvents="none"
-            />
-          </View>
-          <View style={s.card}>
-            <View style={s.field}>
-              <View style={s.labelRow}>
-                <View style={[s.labelDot, { backgroundColor: GREEN }]} />
-                <TextInput style={[s.label, { color: MUTED }]} editable={false} value="EMAIL" pointerEvents="none" />
-              </View>
-              <TextInput
-                style={[s.input, { backgroundColor: SURFACE, borderColor: BORDER, color: INK }]}
-                value={email} onChangeText={setEmail}
-                placeholder="you@example.com" placeholderTextColor={MUTED}
-                keyboardType="email-address" autoCapitalize="none" autoCorrect={false}
-              />
-            </View>
-            <View style={s.field}>
-              <View style={s.labelRow}>
-                <View style={[s.labelDot, { backgroundColor: GREEN }]} />
-                <TextInput style={[s.label, { color: MUTED }]} editable={false} value="PASSWORD" pointerEvents="none" />
-              </View>
-              <TextInput
-                style={[s.input, { backgroundColor: SURFACE, borderColor: BORDER, color: INK }]}
-                value={password} onChangeText={setPassword}
-                placeholder="••••••••" placeholderTextColor={MUTED}
-                secureTextEntry autoCapitalize="none"
-              />
-            </View>
-            {!!error && <View style={[s.errorBox, { backgroundColor: '#F3E2DF', borderColor: '#A85A5544' }]}><TextInput style={{ color: '#A85A55', fontSize: 13 }} editable={false} value={`⚠  ${error}`} pointerEvents="none" /></View>}
-            <TouchableOpacity onPress={handleLogin} disabled={loading} activeOpacity={0.8} style={[s.btn, { backgroundColor: INK }]}>
-              {loading
-                ? <ActivityIndicator color={IVORY} size="small" />
-                : <TextInput style={{ color: GOLD, fontSize: 14, letterSpacing: 1.4, fontWeight: '600' }} editable={false} value="Enter" pointerEvents="none" />
-              }
-            </TouchableOpacity>
-          </View>
-          <View style={s.switchRow}>
-            <TextInput style={{ color: MUTED, fontSize: 14 }} editable={false} value="New here? " pointerEvents="none" />
-            <TouchableOpacity onPress={() => router.push('/(auth)/register')}>
-              <TextInput style={{ color: GREEN, fontSize: 14, fontWeight: '600' }} editable={false} value="Create account" pointerEvents="none" />
-            </TouchableOpacity>
-          </View>
-        </ScrollView>
-      </KeyboardAvoidingView>
-    </SafeAreaView>
+    <View style={[styles.flex, { backgroundColor: bg }]}>
+      <StatusBar style={t.scheme === 'dark' ? 'light' : 'dark'} />
+
+      {/* Plate */}
+      <View style={[styles.plate, { height: PLATE_H }]} pointerEvents="none">
+        <Image source={PLATE} style={styles.plateImg} resizeMode="cover" />
+        {/* Dissolve the dark foreground into the page */}
+        <LinearGradient
+          colors={['transparent', bg + '00', bg]}
+          locations={[0, 0.55, 1]}
+          style={styles.fade}
+        />
+      </View>
+
+      <SafeAreaView style={styles.flex}>
+        <KeyboardAvoidingView
+          style={styles.flex}
+          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        >
+          <ScrollView
+            contentContainerStyle={[styles.content, { paddingTop: PLATE_H * 0.78 }]}
+            keyboardShouldPersistTaps="handled"
+            showsVerticalScrollIndicator={false}
+          >
+            {/* Wordmark */}
+            <Animated.View entering={FadeIn.duration(900)} style={styles.wordmark}>
+              <Text variant="hero" style={[styles.manna, { color: t.colors.text }]} uppercase>
+                Manna
+              </Text>
+              <View style={[styles.rule, { backgroundColor: t.colors.accent }]} />
+              <Text variant="reference" tone="muted" style={styles.dailyWord} uppercase>
+                Daily Word
+              </Text>
+            </Animated.View>
+
+            <Animated.View entering={FadeInDown.delay(250).duration(700)}>
+              <Text variant="body" tone="muted" style={styles.tagline}>
+                Gather truth. Daily.
+              </Text>
+            </Animated.View>
+
+            {/* Sign-in */}
+            <Animated.View entering={FadeInDown.delay(400).duration(700)} style={styles.actions}>
+              {!showEmail ? (
+                <>
+                  {/* Apple and Google buttons land here once their providers are configured. */}
+                  <Pressable
+                    accessibilityRole="button"
+                    onPress={() => { feedback.select(); setShowEmail(true); }}
+                    style={[styles.primaryBtn, { backgroundColor: t.colors.primary }]}
+                  >
+                    <Text variant="body" style={{ color: t.colors.onPrimary, fontFamily: t.fonts.sansSemi }}>
+                      Continue with email
+                    </Text>
+                  </Pressable>
+
+                  <Pressable
+                    accessibilityRole="button"
+                    onPress={() => router.push('/(auth)/register')}
+                    style={styles.textBtn}
+                  >
+                    <Text variant="caption" style={{ color: t.colors.accent }}>
+                      New here? Create an account
+                    </Text>
+                  </Pressable>
+                </>
+              ) : (
+                <>
+                  <TextInput
+                    style={[styles.input, {
+                      backgroundColor: t.colors.surface,
+                      borderColor: t.colors.border,
+                      color: t.colors.text,
+                    }]}
+                    value={email}
+                    onChangeText={setEmail}
+                    placeholder="you@example.com"
+                    placeholderTextColor={t.colors.textMuted}
+                    keyboardType="email-address"
+                    autoCapitalize="none"
+                    autoCorrect={false}
+                    accessibilityLabel="Email address"
+                  />
+                  <TextInput
+                    style={[styles.input, {
+                      backgroundColor: t.colors.surface,
+                      borderColor: t.colors.border,
+                      color: t.colors.text,
+                    }]}
+                    value={password}
+                    onChangeText={setPassword}
+                    placeholder="Password"
+                    placeholderTextColor={t.colors.textMuted}
+                    secureTextEntry
+                    autoCapitalize="none"
+                    accessibilityLabel="Password"
+                  />
+
+                  {!!error && (
+                    <Text variant="caption" style={{ color: t.colors.error, paddingHorizontal: 4 }}>
+                      {error}
+                    </Text>
+                  )}
+
+                  <Pressable
+                    accessibilityRole="button"
+                    onPress={handleEmail}
+                    disabled={loading}
+                    style={[styles.primaryBtn, { backgroundColor: t.colors.primary }]}
+                  >
+                    {loading
+                      ? <ActivityIndicator color={t.colors.onPrimary} size="small" />
+                      : <Text variant="body" style={{ color: t.colors.onPrimary, fontFamily: t.fonts.sansSemi }}>
+                          Enter
+                        </Text>}
+                  </Pressable>
+
+                  <Pressable accessibilityRole="button" onPress={() => setShowEmail(false)} style={styles.textBtn}>
+                    <Text variant="caption" tone="muted">Back</Text>
+                  </Pressable>
+                </>
+              )}
+            </Animated.View>
+
+            <View style={{ height: 24 }} />
+          </ScrollView>
+        </KeyboardAvoidingView>
+      </SafeAreaView>
+    </View>
   );
 }
 
-const s = StyleSheet.create({
-  container: { flexGrow: 1, padding: 24, paddingBottom: 48, justifyContent: 'center' },
-  header: { alignItems: 'center', marginBottom: 32, gap: 12 },
-  mark: { width: 52, height: 52, borderRadius: 14, alignItems: 'center', justifyContent: 'center' },
-  markInner: { width: 20, height: 20, borderRadius: 10 },
-  wordmark: { gap: 4 },
-  wordmarkTop: { height: 8, width: 120, backgroundColor: '#35665322', borderRadius: 4 },
-  wordmarkLine: { height: 2, width: 120, borderRadius: 2 },
-  eyebrow: { flexDirection: 'row', alignItems: 'center', marginBottom: 8, gap: 8 },
-  eyebrowLine: { height: 2, width: 32, borderRadius: 2 },
-  titleBlock: { marginBottom: 28 },
-  title: { fontSize: 29, lineHeight: 35, fontWeight: '400', letterSpacing: -0.2 },
-  card: { gap: 16, marginBottom: 24 },
-  field: { gap: 8 },
-  labelRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  labelDot: { width: 5, height: 5, borderRadius: 2.5 },
-  label: { fontSize: 11, letterSpacing: 1.2, fontWeight: '600' },
-  input: { borderWidth: 1, borderRadius: 12, paddingHorizontal: 16, paddingVertical: 13, fontSize: 16 },
-  errorBox: { borderRadius: 10, borderWidth: 1, padding: 12 },
-  btn: { borderRadius: 12, paddingVertical: 15, alignItems: 'center', marginTop: 4 },
-  switchRow: { flexDirection: 'row', justifyContent: 'center', alignItems: 'center' },
+const styles = StyleSheet.create({
+  flex: { flex: 1 },
+  plate: { position: 'absolute', top: 0, left: 0, right: 0 },
+  plateImg: { width: '100%', height: '100%' },
+  fade: { position: 'absolute', left: 0, right: 0, bottom: 0, height: '58%' },
+  content: { flexGrow: 1, paddingHorizontal: 28, paddingBottom: 32 },
+  wordmark: { alignItems: 'center', gap: 10 },
+  manna: { letterSpacing: 10, fontSize: 40 },
+  rule: { width: 54, height: 1, opacity: 0.7 },
+  dailyWord: { letterSpacing: 4 },
+  tagline: { textAlign: 'center', fontSize: 16, marginTop: 14, marginBottom: 28 },
+  actions: { gap: 12 },
+  primaryBtn: {
+    borderRadius: 14, paddingVertical: 16, alignItems: 'center',
+    justifyContent: 'center', minHeight: MIN_TOUCH,
+  },
+  textBtn: { alignItems: 'center', paddingVertical: 12, minHeight: MIN_TOUCH, justifyContent: 'center' },
+  input: {
+    borderWidth: 1, borderRadius: 14, paddingHorizontal: 18, paddingVertical: 15,
+    fontSize: 16, minHeight: MIN_TOUCH,
+  },
 });
