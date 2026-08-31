@@ -17,6 +17,7 @@
       "supportsTablet": false,
       "bundleIdentifier": "com.scripturepath.app",
       "buildNumber": "2",
+      "usesAppleSignIn": true,
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false
       }
@@ -32,6 +33,7 @@
       "expo-router",
       "expo-font",
       "expo-splash-screen",
+      "expo-apple-authentication",
       [
         "expo-system-ui",
         {
@@ -41,6 +43,13 @@
     ],
     "experiments": {
       "typedRoutes": true
+    },
+    "updates": {
+      "url": "https://u.expo.dev/36e64c67-be88-4250-b108-bcd2318475c8",
+      "fallbackToCacheTimeout": 0
+    },
+    "runtimeVersion": {
+      "policy": "fingerprint"
     },
     "extra": {
       "eas": {

@@ -1,10 +1,11 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import {
   View, TextInput, Pressable, ScrollView, KeyboardAvoidingView,
   Platform, StyleSheet, Image, ActivityIndicator, Dimensions,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
+import * as AppleAuthentication from 'expo-apple-authentication';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
@@ -33,6 +34,51 @@ export default function LoginScreen() {
   const [showEmail, setShowEmail] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [appleReady, setAppleReady] = useState(false);
+
+  // Apple sign-in exists only on iOS 13+, so the button is conditional.
+  useEffect(() => {
+    let alive = true;
+    AppleAuthentication.isAvailableAsync()
+      .then((ok) => { if (alive) setAppleReady(ok); })
+      .catch(() => { /* leave the button hidden */ });
+    return () => { alive = false; };
+  }, []);
+
+  /**
+   * Apple returns the name and email on the FIRST authorisation only — every
+   * later sign-in gives just the stable user id. So whatever arrives now has
+   * to be persisted now; there is no second chance to ask for it.
+   */
+  const handleApple = useCallback(async () => {
+    try {
+      const credential = await AppleAuthentication.signInAsync({
+        requestedScopes: [
+          AppleAuthentication.AppleAuthenticationScope.FULL_NAME,
+          AppleAuthentication.AppleAuthenticationScope.EMAIL,
+        ],
+      });
+
+      const existing = await AsyncStorage.getItem('manna_user');
+      const prior = existing ? JSON.parse(existing) : {};
+      const given = credential.fullName?.givenName;
+
+      await AsyncStorage.setItem('manna_user', JSON.stringify({
+        ...prior,
+        appleUserId: credential.user,
+        // Apple can withhold the real address; keep whatever we already had.
+        email: credential.email ?? prior.email ?? '',
+        name: given ?? prior.name ?? 'Friend',
+      }));
+
+      router.replace('/(tabs)/today');
+    } catch (e: any) {
+      // Cancelling is a normal outcome, not an error worth showing.
+      if (e?.code !== 'ERR_REQUEST_CANCELED') {
+        setError('Could not sign in with Apple. Please try again.');
+      }
+    }
+  }, []);
 
   const handleEmail = useCallback(async () => {
     if (!email.includes('@')) { setError('Please enter a valid email.'); return; }
@@ -100,7 +146,21 @@ export default function LoginScreen() {
             <Animated.View entering={FadeInDown.delay(400).duration(700)} style={styles.actions}>
               {!showEmail ? (
                 <>
-                  {/* Apple and Google buttons land here once their providers are configured. */}
+                  {appleReady && (
+                    <AppleAuthentication.AppleAuthenticationButton
+                      buttonType={AppleAuthentication.AppleAuthenticationButtonType.CONTINUE}
+                      buttonStyle={
+                        t.scheme === 'dark'
+                          ? AppleAuthentication.AppleAuthenticationButtonStyle.WHITE
+                          : AppleAuthentication.AppleAuthenticationButtonStyle.BLACK
+                      }
+                      cornerRadius={14}
+                      style={styles.appleBtn}
+                      onPress={handleApple}
+                    />
+                  )}
+
+                  {/* Google lands here once its OAuth client exists. */}
                   <Pressable
                     accessibilityRole="button"
                     onPress={() => { feedback.select(); setShowEmail(true); }}
@@ -198,6 +258,7 @@ const styles = StyleSheet.create({
   dailyWord: { letterSpacing: 4 },
   tagline: { textAlign: 'center', fontSize: 16, marginTop: 14, marginBottom: 28 },
   actions: { gap: 12 },
+  appleBtn: { height: 52, width: '100%' },
   primaryBtn: {
     borderRadius: 14, paddingVertical: 16, alignItems: 'center',
     justifyContent: 'center', minHeight: MIN_TOUCH,
