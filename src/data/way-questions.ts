@@ -12,7 +12,7 @@
  * Scripture is the World English Bible (public domain).
  */
 
-export type Question =
+type QuestionBody =
   /** Straight multiple choice. Recognition. */
   | {
       kind: 'mcq';
@@ -82,6 +82,15 @@ export type Question =
       insight: string;
       verse?: string;
     };
+
+/**
+ * The load-bearing word of a question, set large on the teaching screen.
+ *
+ * Curated only. It is the word the verse turns on — “GOOD”, “IMAGE”, “BEGINNING”
+ * — and picking it is an editorial judgement, never something to derive from
+ * the text. Questions without one fall back to leading with the insight.
+ */
+export type Question = QuestionBody & { teachingKeyword?: string };
 
 export type QuestionKind = Question['kind'];
 
@@ -332,6 +341,7 @@ export const CHAPTER_QUESTIONS: Record<string, Question[]> = {
       text: 'God created man in his own ___. In God\u2019s image he created him; male and female he created them.',
       options: ['image', 'likeness', 'shape', 'spirit'],
       answer: 0,
+      teachingKeyword: 'IMAGE.',
       insight: 'Said three times in one verse. Whatever else the chapter establishes, it will not let this one pass quietly.',
       verse: 'Genesis 1:27',
     },
@@ -340,6 +350,7 @@ export const CHAPTER_QUESTIONS: Record<string, Question[]> = {
       prompt: 'What did God say when he saw everything he had made?',
       options: ['That it was finished', 'That it was very good', 'That it was his', 'That it would endure'],
       answer: 1,
+      teachingKeyword: 'GOOD.',
       insight: 'Six times “good”, and once at the end “very good” — the verdict is on the whole, not the parts.',
       verse: 'Genesis 1:31',
     },
@@ -394,6 +405,7 @@ export const CHAPTER_QUESTIONS: Record<string, Question[]> = {
       prompt: 'What does the name Immanuel mean?',
       options: ['The Lord saves', 'God with us', 'Prince of peace', 'Son of David'],
       answer: 1,
+      teachingKeyword: 'WITH US.',
       insight: 'Isaiah’s word, held for seven hundred years and produced here. The whole Gospel closes on the same promise: “I am with you always.”',
       verse: 'Matthew 1:23',
     },
@@ -412,6 +424,7 @@ export const CHAPTER_QUESTIONS: Record<string, Question[]> = {
       prompt: 'The blessed man is compared to a tree planted by what?',
       options: ['A road', 'Streams of water', 'The temple', 'A field'],
       answer: 1,
+      teachingKeyword: 'PLANTED.',
       insight: 'Planted, not growing wild — put there deliberately, and near enough to the water to survive a dry season.',
       verse: 'Psalm 1:3',
     },
@@ -438,6 +451,7 @@ export const CHAPTER_QUESTIONS: Record<string, Question[]> = {
       text: 'The fear of Yahweh is the beginning of ___.',
       options: ['knowledge', 'wisdom', 'understanding', 'peace'],
       answer: 0,
+      teachingKeyword: 'BEGINNING.',
       insight: 'The beginning, not the sum. Everything the book goes on to teach assumes you have started here.',
       verse: 'Proverbs 1:7',
     },

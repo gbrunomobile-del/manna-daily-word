@@ -207,17 +207,6 @@ export default function WayLesson() {
     if (ok) { feedback.success?.(); setScore((s) => s + 1); } else { wrong(); }
   }, [wrong]);
 
-  /**
-   * Choosing and committing are now separate: tapping an answer selects it,
-   * and Check submits. That gives a moment to reconsider, and makes the
-   * teaching screen feel like a consequence rather than an interruption.
-   */
-  const checkChoice = useCallback(() => {
-    if (choice === null) return;
-    const answer = 'answer' in q ? q.answer : null;
-    settle(choice === answer);
-  }, [choice, q, settle]);
-
   /** How an option should look, given the selection and whether it is checked. */
   const answerState = useCallback(
     (isAnswer: boolean, isPicked: boolean): AnswerState => {
@@ -228,10 +217,6 @@ export default function WayLesson() {
     },
     [showResult],
   );
-
-  /** Formats that select first and submit second. */
-  const isChoiceKind =
-    q.kind === 'mcq' || q.kind === 'tf' || q.kind === 'cloze' || q.kind === 'whosaid';
 
   const finish = useCallback(async (finalScore: number) => {
     setDone(true);
@@ -331,9 +316,20 @@ export default function WayLesson() {
           <Animated.View entering={FadeInDown.delay(120).duration(520)} style={s.teachingBody}>
             <Ornament width={116} opacity={0.4} />
 
-            <Text variant="h1" style={[s.teachingText, { color: t.colors.onImmersive }]}>
-              {q.insight}
-            </Text>
+            {q.teachingKeyword ? (
+              <>
+                <Text variant="display" style={[s.keyword, { color: t.colors.accent }]}>
+                  {q.teachingKeyword}
+                </Text>
+                <Text variant="bodyLarge" style={[s.teachingText, { color: t.colors.onImmersive }]}>
+                  {q.insight}
+                </Text>
+              </>
+            ) : (
+              <Text variant="h1" style={[s.teachingText, { color: t.colors.onImmersive }]}>
+                {q.insight}
+              </Text>
+            )}
 
             {'verse' in q && q.verse && (
               <Text variant="reference" uppercase style={{ color: t.colors.accent, marginTop: 22 }}>
@@ -781,7 +777,8 @@ const s = StyleSheet.create({
     alignItems: 'center', justifyContent: 'center',
   },
   teachingBody: { alignItems: 'center', marginTop: 40, flex: 1, justifyContent: 'center' },
-  teachingText: { textAlign: 'center', marginTop: 26 },
+  keyword: { textAlign: 'center', marginTop: 28, letterSpacing: 1 },
+  teachingText: { textAlign: 'center', marginTop: 22, lineHeight: 27 },
   teachingCta: { marginTop: 40 },
   insight: { borderWidth: 1, borderRadius: 16, padding: 18, marginTop: 22 },
   next: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, marginTop: 16, borderWidth: 1, borderRadius: 12, paddingVertical: 14, minHeight: MIN_TOUCH },
