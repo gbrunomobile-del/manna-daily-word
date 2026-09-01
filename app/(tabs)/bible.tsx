@@ -4,7 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { useRouter } from 'expo-router';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
-import { Search } from 'lucide-react-native';
+import { Search, ChevronRight } from 'lucide-react-native';
 import { Text } from '@/components/primitives/Text';
 import { ScreenHeader } from '@/components/manna/ScreenHeader';
 import { SCREEN_ART } from '@/components/manna/screen-art';
@@ -90,46 +90,58 @@ export default function Bible() {
       >
         <ScreenHeader
           art={SCREEN_ART.bible}
-          caption="Bible"
+          caption="The Word"
           eyebrow="World English Bible"
-          title="Read freely"
+          title="Read freely."
           subtitle={`${totalGathered} of ${TOTAL_CHAPTERS} chapters gathered`}
         />
 
-        <View style={[styles.search, { backgroundColor: t.colors.surface, borderColor: t.colors.border }]}>
-          <Search size={17} color={t.colors.textMuted} strokeWidth={1.7} />
+        {/* Search sits on a hairline rather than in a filled pill: available,
+            but not competing with the books it exists to find. */}
+        <View style={[styles.search, { borderBottomColor: t.colors.border }]}>
+          <Search size={16} color={t.colors.textMuted} strokeWidth={1.6} />
           <TextInput
             value={query}
             onChangeText={setQuery}
-            placeholder="Search for a book"
+            placeholder="Search a book, or a phrase"
             placeholderTextColor={t.colors.textMuted}
             style={[styles.input, { color: t.colors.text, fontFamily: t.fonts.sans }]}
-            autoCapitalize="words"
+            autoCapitalize="none"
             autoCorrect={false}
-            accessibilityLabel="Search for a book"
+            accessibilityLabel="Search for a book or a phrase"
           />
         </View>
 
+        {/* Typographic rather than a segmented control — a gold rule marks
+            which testament you are in. */}
         {!searching && (
-          <View style={[styles.switch, { backgroundColor: t.colors.surface, borderColor: t.colors.border }]}>
+          <View style={styles.switch}>
             {(['OT', 'NT'] as Testament[]).map((key) => {
               const active = testament === key;
               return (
                 <Pressable
                   key={key}
                   onPress={() => { feedback.select(); setTestament(key); }}
-                  style={[styles.switchItem, active && { backgroundColor: t.colors.accent }]}
+                  style={styles.switchItem}
+                  accessibilityRole="tab"
+                  accessibilityState={{ selected: active }}
                 >
                   <Text
-                    variant="caption"
+                    variant="label"
+                    uppercase
                     style={{
-                      color: active ? t.colors.background : t.colors.textMuted,
+                      color: active ? t.colors.text : t.colors.textMuted,
                       fontFamily: active ? t.fonts.sansSemi : t.fonts.sans,
-                      letterSpacing: 0.6,
                     }}
                   >
                     {key === 'OT' ? 'Old Testament' : 'New Testament'}
                   </Text>
+                  <View
+                    style={[
+                      styles.switchRule,
+                      { backgroundColor: active ? t.colors.accent : 'transparent' },
+                    ]}
+                  />
                 </Pressable>
               );
             })}
@@ -187,7 +199,6 @@ export default function Bible() {
 
             {books.map((book) => {
               const done = gatheredIn(book);
-              const pct = done / book.chapters;
               const complete = done === book.chapters;
               return (
                 <Pressable
@@ -196,17 +207,27 @@ export default function Bible() {
                     feedback.select();
                     router.push(`/book?name=${encodeURIComponent(book.name)}`);
                   }}
-                  style={[
-                    styles.book,
-                    {
-                      backgroundColor: done > 0 ? t.colors.accent + '0C' : 'transparent',
-                      borderColor: done > 0 ? t.colors.accent + '30' : t.colors.border + '77',
-                    },
-                  ]}
+                  style={[styles.book, { borderTopColor: t.colors.border }]}
                 >
+                  {/* A gold mark rather than a progress bar: the point is
+                      whether you have been here, not a percentage. */}
+                  <View
+                    style={[
+                      styles.mark,
+                      {
+                        borderColor: done > 0 ? t.colors.accent : t.colors.border,
+                        backgroundColor: complete ? t.colors.accent : 'transparent',
+                      },
+                    ]}
+                  >
+                    {done > 0 && !complete && (
+                      <View style={[styles.markCore, { backgroundColor: t.colors.accent }]} />
+                    )}
+                  </View>
+
                   <View style={{ flex: 1 }}>
                     <Text
-                      variant="body"
+                      variant="bodyLarge"
                       style={{
                         color: t.colors.text,
                         fontFamily: complete ? t.fonts.sansSemi : t.fonts.sans,
@@ -214,18 +235,14 @@ export default function Bible() {
                     >
                       {book.name}
                     </Text>
-                    <View style={[styles.track, { backgroundColor: t.colors.border + '55' }]}>
-                      <View
-                        style={[
-                          styles.trackFill,
-                          { backgroundColor: t.colors.accent, width: `${Math.round(pct * 100)}%` },
-                        ]}
-                      />
-                    </View>
+                    <Text variant="caption" tone="muted" style={{ marginTop: 2 }}>
+                      {done > 0
+                        ? `${done} of ${book.chapters} gathered`
+                        : `${book.chapters} ${book.chapters === 1 ? 'chapter' : 'chapters'}`}
+                    </Text>
                   </View>
-                  <Text variant="caption" tone="muted" style={styles.count}>
-                    {done}/{book.chapters}
-                  </Text>
+
+                  <ChevronRight size={17} color={t.colors.textMuted} strokeWidth={1.6} />
                 </Pressable>
               );
             })}
@@ -248,24 +265,27 @@ const styles = StyleSheet.create({
   flex: { flex: 1 },
   content: { paddingHorizontal: 24, paddingTop: 16 },
   search: {
-    flexDirection: 'row', alignItems: 'center', gap: 10,
-    borderWidth: 1, borderRadius: 999,
-    paddingHorizontal: 16, marginTop: 20, minHeight: MIN_TOUCH,
+    flexDirection: 'row', alignItems: 'center', gap: 11,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    marginTop: 34, minHeight: MIN_TOUCH,
   },
   input: { flex: 1, fontSize: 15, paddingVertical: 12 },
-  switch: { flexDirection: 'row', borderWidth: 1, borderRadius: 999, padding: 3, marginTop: 12 },
-  switchItem: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingVertical: 9, borderRadius: 999 },
-  group: { marginTop: 26 },
-  groupName: { marginBottom: 10, letterSpacing: 1 },
+  switch: { flexDirection: 'row', gap: 28, marginTop: 26 },
+  switchItem: { alignItems: 'flex-start', gap: 8, paddingVertical: 4 },
+  switchRule: { height: 1.5, alignSelf: 'stretch', borderRadius: 1 },
+  group: { marginTop: 34 },
+  groupName: { marginBottom: 4, letterSpacing: 1.2 },
   hitsHead: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   hit: { borderWidth: 1, borderRadius: 14, padding: 15, marginBottom: 8 },
   book: {
     flexDirection: 'row', alignItems: 'center', gap: 14,
-    borderWidth: 1, borderRadius: 14,
-    paddingHorizontal: 16, paddingVertical: 13, marginBottom: 8,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    paddingVertical: 15,
     minHeight: MIN_TOUCH,
   },
-  track: { height: 3, borderRadius: 2, marginTop: 7, overflow: 'hidden' },
-  trackFill: { height: '100%', borderRadius: 2 },
-  count: { fontVariant: ['tabular-nums'] },
+  mark: {
+    width: 12, height: 12, borderRadius: 6, borderWidth: 1,
+    alignItems: 'center', justifyContent: 'center',
+  },
+  markCore: { width: 5, height: 5, borderRadius: 2.5 },
 });
