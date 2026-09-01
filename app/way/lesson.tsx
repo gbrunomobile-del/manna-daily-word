@@ -373,12 +373,7 @@ export default function WayLesson() {
     );
   }
 
-  const optionStyle = (isAnswer: boolean, isPicked: boolean) => {
-    let bg = t.colors.surface, border = t.colors.border, fg = t.colors.text;
-    if (showResult && isAnswer) { bg = '#1A5535'; border = '#1A5535'; fg = '#F8F4EA'; }
-    else if (showResult && isPicked) { bg = '#5E1A1A'; border = '#5E1A1A'; fg = '#F8F4EA'; }
-    return { bg, border, fg };
-  };
+  const MARKERS = ['A', 'B', 'C', 'D'];
 
   const renderBody = () => {
     switch (q.kind) {
@@ -393,19 +388,15 @@ export default function WayLesson() {
               </View>
             )}
             <View style={s.options}>
-              {opts.map((opt, i) => {
-                const { bg, border, fg } = optionStyle(i === q.answer, choice === i);
-                return (
-                  <Pressable
-                    key={i}
-                    disabled={showResult}
-                    onPress={() => { setChoice(i); settle(i === q.answer); }}
-                    style={[s.option, { backgroundColor: bg, borderColor: border }]}
-                  >
-                    <Text variant="body" style={{ color: fg }}>{opt}</Text>
-                  </Pressable>
-                );
-              })}
+              {opts.map((opt, i) => (
+                <AnswerCard
+                  key={i}
+                  label={opt}
+                  marker={MARKERS[i]}
+                  state={answerState(i === q.answer, choice === i)}
+                  onPress={() => { setChoice(i); settle(i === q.answer); }}
+                />
+              ))}
             </View>
           </>
         );
@@ -414,19 +405,14 @@ export default function WayLesson() {
       case 'tf':
         return (
           <View style={s.options}>
-            {[true, false].map((v) => {
-              const { bg, border, fg } = optionStyle(v === q.answer, choice === v);
-              return (
-                <Pressable
-                  key={String(v)}
-                  disabled={showResult}
-                  onPress={() => { setChoice(v); settle(v === q.answer); }}
-                  style={[s.option, { backgroundColor: bg, borderColor: border }]}
-                >
-                  <Text variant="body" style={{ color: fg }}>{v ? 'True' : 'False'}</Text>
-                </Pressable>
-              );
-            })}
+            {[true, false].map((v) => (
+              <AnswerCard
+                key={String(v)}
+                label={v ? 'True' : 'False'}
+                state={answerState(v === q.answer, choice === v)}
+                onPress={() => { setChoice(v); settle(v === q.answer); }}
+              />
+            ))}
           </View>
         );
 
@@ -437,19 +423,15 @@ export default function WayLesson() {
               <Text variant="scripture" style={{ color: t.colors.text }}>{q.text}</Text>
             </View>
             <View style={s.options}>
-              {q.options.map((opt, i) => {
-                const { bg, border, fg } = optionStyle(i === q.answer, choice === i);
-                return (
-                  <Pressable
-                    key={i}
-                    disabled={showResult}
-                    onPress={() => { setChoice(i); settle(i === q.answer); }}
-                    style={[s.option, { backgroundColor: bg, borderColor: border }]}
-                  >
-                    <Text variant="body" style={{ color: fg }}>{opt}</Text>
-                  </Pressable>
-                );
-              })}
+              {q.options.map((opt, i) => (
+                <AnswerCard
+                  key={i}
+                  label={opt}
+                  marker={MARKERS[i]}
+                  state={answerState(i === q.answer, choice === i)}
+                  onPress={() => { setChoice(i); settle(i === q.answer); }}
+                />
+              ))}
             </View>
           </>
         );
