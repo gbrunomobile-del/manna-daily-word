@@ -1,9 +1,11 @@
-import React, { useState, useCallback, useMemo } from 'react';
-import { View, Pressable, ScrollView, StyleSheet, TextInput } from 'react-native';
+import React, { useState, useCallback, useMemo, useRef } from 'react';
+import { View, Pressable, ScrollView, StyleSheet, TextInput, type LayoutRectangle } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter, useLocalSearchParams } from 'expo-router';
+import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, {
   FadeIn, FadeInDown, useSharedValue, useAnimatedStyle, withSequence, withTiming,
+  withSpring, runOnJS,
 } from 'react-native-reanimated';
 import { X, Heart, ArrowRight, RotateCcw } from 'lucide-react-native';
 import { Text } from '@/components/primitives/Text';
@@ -30,6 +32,70 @@ function shuffle<T>(arr: T[]): T[] {
 
 const normalise = (s: string) =>
   s.trim().toLowerCase().replace(/[^a-z\s]/g, '').replace(/\s+/g, ' ');
+
+/**
+ * A placed word that can be dragged to a new position.
+ *
+ * Tapping still returns it to the bank; dragging reorders. Position is worked
+ * out from where the finger lands against the measured tile rectangles, so it
+ * behaves correctly when the line wraps.
+ */
+const DragTile = ({
+  label, index, onMeasure, onMove, onRemove, disabled, colours,
+}: {
+  label: string;
+  index: number;
+  onMeasure: (i: number, r: LayoutRectangle) => void;
+  onMove: (from: number, dx: number, dy: number) => void;
+  onRemove: (i: number) => void;
+  disabled: boolean;
+  colours: { bg: string; border: string; text: string };
+}) => {
+  const dx = useSharedValue(0);
+  const dy = useSharedValue(0);
+  const held = useSharedValue(0);
+
+  const pan = Gesture.Pan()
+    .enabled(!disabled)
+    .activateAfterLongPress(120)
+    .onStart(() => { held.value = withTiming(1, { duration: 120 }); })
+    .onUpdate((e) => { dx.value = e.translationX; dy.value = e.translationY; })
+    .onEnd((e) => {
+      runOnJS(onMove)(index, e.translationX, e.translationY);
+      dx.value = withSpring(0, { damping: 20 });
+      dy.value = withSpring(0, { damping: 20 });
+      held.value = withTiming(0, { duration: 160 });
+    });
+
+  const tap = Gesture.Tap()
+    .enabled(!disabled)
+    .onEnd(() => { runOnJS(onRemove)(index); });
+
+  const style = useAnimatedStyle(() => ({
+    transform: [
+      { translateX: dx.value },
+      { translateY: dy.value },
+      { scale: 1 + held.value * 0.07 },
+    ],
+    zIndex: held.value > 0 ? 20 : 1,
+    opacity: 1 - held.value * 0.15,
+  }));
+
+  return (
+    <GestureDetector gesture={Gesture.Exclusive(pan, tap)}>
+      <Animated.View
+        onLayout={(e) => onMeasure(index, e.nativeEvent.layout)}
+        style={[
+          s.tile,
+          { backgroundColor: colours.bg, borderColor: colours.border },
+          style,
+        ]}
+      >
+        <Text variant="body" style={{ color: colours.text }}>{label}</Text>
+      </Animated.View>
+    </GestureDetector>
+  );
+};
 
 export default function WayLesson() {
   const t = useTheme();
@@ -81,6 +147,47 @@ export default function WayLesson() {
     if (q.kind !== 'match') return [];
     return shuffle(q.pairs.map((_, i) => i));
   }, [q, qIdx]);
+
+  /** Measured rectangles of the placed tiles, used to resolve a drop. */
+  const tileRects = useRef<Record<number, LayoutRectangle>>({});
+
+  const measureTile = useCallback((i: number, r: LayoutRectangle) => {
+    tileRects.current[i] = r;
+  }, []);
+
+  const removeTile = useCallback((pos: number) => {
+    setBuilt((b) => b.filter((_, p) => p !== pos));
+    tileRects.current = {};
+  }, []);
+
+  /** Drop a dragged tile into whichever position its centre landed nearest. */
+  const moveTile = useCallback((from: number, dx: number, dy: number) => {
+    const rects = tileRects.current;
+    const origin = rects[from];
+    if (!origin) return;
+
+    const dropX = origin.x + origin.width / 2 + dx;
+    const dropY = origin.y + origin.height / 2 + dy;
+
+    let nearest = from;
+    let best = Infinity;
+    for (const [key, r] of Object.entries(rects)) {
+      const i = Number(key);
+      const d =
+        (r.x + r.width / 2 - dropX) ** 2 + (r.y + r.height / 2 - dropY) ** 2;
+      if (d < best) { best = d; nearest = i; }
+    }
+    if (nearest === from) return;
+
+    setBuilt((b) => {
+      const next = [...b];
+      const [moved] = next.splice(from, 1);
+      next.splice(nearest, 0, moved);
+      return next;
+    });
+    tileRects.current = {};
+    feedback.select();
+  }, []);
 
   const wrong = useCallback(() => {
     feedback.error?.();
@@ -145,7 +252,7 @@ export default function WayLesson() {
                 ? (passed ? 'Held onto.' : 'Worth reading again.')
                 : (passed ? 'Well gathered.' : 'Worth another look.')}
             </Text>
-            <Text variant="body" tone="muted" style={{ textAlign: 'center', paddingHorizontal: 34, lineHeight: 22 }}>
+            <Text variant="body" tone="muted" style={{ textAlign: 'center', lineHeight: 22 }}>
               {isChapter
                 ? `${score} of ${total}. The chapter is yours either way — these only help it stay.`
                 : passed
@@ -303,18 +410,30 @@ export default function WayLesson() {
               ) : (
                 <View style={s.tiles}>
                   {built.map((bi, pos) => (
-                    <Pressable
+                    <DragTile
                       key={`${bi}-${pos}`}
+                      index={pos}
+                      label={bank[bi]}
                       disabled={showResult}
-                      onPress={() => setBuilt((b) => b.filter((_, p) => p !== pos))}
-                      style={[s.tile, { backgroundColor: t.colors.accent + '22', borderColor: t.colors.accent + '55' }]}
-                    >
-                      <Text variant="body" style={{ color: t.colors.text }}>{bank[bi]}</Text>
-                    </Pressable>
+                      onMeasure={measureTile}
+                      onMove={moveTile}
+                      onRemove={removeTile}
+                      colours={{
+                        bg: t.colors.accent + '22',
+                        border: t.colors.accent + '55',
+                        text: t.colors.text,
+                      }}
+                    />
                   ))}
                 </View>
               )}
             </View>
+
+            {!showResult && chosen.length > 0 && (
+              <Text variant="caption" tone="muted" style={s.buildHint}>
+                Tap a word to take it back, or hold and drag to move it.
+              </Text>
+            )}
 
             {/* The bank */}
             <View style={s.tiles}>
@@ -339,7 +458,7 @@ export default function WayLesson() {
 
             {!showResult && (
               <View style={s.buildActions}>
-                <Pressable onPress={() => setBuilt([])} style={s.reset}>
+                <Pressable onPress={() => { setBuilt([]); tileRects.current = {}; }} style={s.reset}>
                   <RotateCcw size={15} color={t.colors.textMuted} strokeWidth={1.8} />
                   <Text variant="caption" tone="muted">Clear</Text>
                 </Pressable>
@@ -537,7 +656,7 @@ export default function WayLesson() {
 
 const s = StyleSheet.create({
   flex: { flex: 1 },
-  centre: { flex: 1, alignItems: 'center', justifyContent: 'center' },
+  centre: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 48 },
   topBar: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 20, paddingTop: 8, paddingBottom: 16, gap: 12 },
   progress: { flex: 1, height: 6, borderRadius: 3, overflow: 'hidden' },
   progressFill: { height: '100%', borderRadius: 3 },
@@ -551,6 +670,7 @@ const s = StyleSheet.create({
   input: { borderWidth: 1.5, borderRadius: 14, paddingHorizontal: 18, paddingVertical: 15, fontSize: 17, minHeight: MIN_TOUCH },
   check: { borderRadius: 13, paddingVertical: 15, alignItems: 'center', justifyContent: 'center', marginTop: 12, minHeight: MIN_TOUCH },
   buildArea: { borderWidth: 1.5, borderRadius: 16, borderStyle: 'dashed', padding: 16, minHeight: 88, marginBottom: 18, justifyContent: 'center' },
+  buildHint: { marginTop: -10, marginBottom: 14 },
   tiles: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   tile: { borderWidth: 1.5, borderRadius: 11, paddingHorizontal: 13, paddingVertical: 10 },
   buildActions: { flexDirection: 'row', alignItems: 'center', gap: 14, marginTop: 16 },

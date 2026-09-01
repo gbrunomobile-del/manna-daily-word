@@ -119,7 +119,7 @@ export default function DailyReading() {
             <Text variant="title" style={{ color: t.colors.text, textAlign: 'center' }}>
               Gathered.
             </Text>
-            <Text variant="body" tone="muted" style={{ textAlign: 'center', paddingHorizontal: 40, lineHeight: 22 }}>
+            <Text variant="body" tone="muted" style={{ textAlign: 'center', lineHeight: 22 }}>
               Day {day} is complete. These chapters are part of your journey now — you will see them lit wherever they appear again.
             </Text>
             <Button label="Return" variant="primary" onPress={() => router.back()} />
@@ -276,7 +276,7 @@ export default function DailyReading() {
 
 const styles = StyleSheet.create({
   flex: { flex: 1 },
-  centre: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 16, paddingHorizontal: 24 },
+  centre: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 16, paddingHorizontal: 48 },
   header: {
     flexDirection: 'row', alignItems: 'center', gap: 8,
     paddingHorizontal: 16, paddingVertical: 14,

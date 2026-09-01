@@ -136,10 +136,9 @@ export const QUESTIONS: Record<string, Question[]> = {
     {
       kind: 'wordbank',
       prompt: 'Build the verse.',
-      answer: ['God', 'saw', 'everything', 'that', 'he', 'had', 'made,', 'and,', 'behold,', 'it', 'was', 'very', 'good.'],
-      distractors: ['world', 'perfect'],
-      insight: 'Repeated six times as "good", and once at the end as "very good" — the verdict is on the whole, not the parts.',
-      verse: 'Genesis 1:31',
+      answer: ['God', 'created', 'man', 'in', 'his', 'own', 'image.'],
+      insight: 'The claim the chapter has been building toward, and the ground of every argument for human dignity that follows it.',
+      verse: 'Genesis 1:27',
     },
     {
       kind: 'mcq',
@@ -232,8 +231,7 @@ export const QUESTIONS: Record<string, Question[]> = {
     {
       kind: 'wordbank',
       prompt: 'Build the verse.',
-      answer: ['The', 'eyes', 'of', 'both', 'of', 'them', 'were', 'opened.'],
-      distractors: ['closed', 'hearts'],
+      answer: ['The', 'eyes', 'of', 'both', 'were', 'opened.'],
       insight: 'The serpent promised open eyes and delivered them. What they saw first was their own nakedness.',
       verse: 'Genesis 3:7',
     },
@@ -303,8 +301,7 @@ export const QUESTIONS: Record<string, Question[]> = {
     {
       kind: 'wordbank',
       prompt: 'Build the verse.',
-      answer: ['Noah', 'did', 'everything', 'that', 'God', 'commanded', 'him.'],
-      distractors: ['some', 'asked'],
+      answer: ['Noah', 'did', 'everything', 'God', 'commanded', 'him.'],
       insight: 'Stated plainly and without elaboration. The obedience is the whole point of the sentence.',
       verse: 'Genesis 6:22',
     },
@@ -422,7 +419,6 @@ export const CHAPTER_QUESTIONS: Record<string, Question[]> = {
       kind: 'wordbank',
       prompt: 'Build the verse.',
       answer: ['his', 'delight', 'is', 'in', 'Yahweh\u2019s', 'law.'],
-      distractors: ['fear', 'strength'],
       insight: 'Delight rather than duty. The psalm rests its whole argument on which of the two you bring to it.',
       verse: 'Psalm 1:2',
     },
