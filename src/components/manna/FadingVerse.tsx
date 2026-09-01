@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { View, StyleSheet } from 'react-native';
+import { View, StyleSheet, Text as RNText } from 'react-native';
 import Animated, { FadeIn } from 'react-native-reanimated';
 import { Text } from '@/components/primitives/Text';
 import { useTheme } from '@/theme';
@@ -117,19 +117,22 @@ export const FadingVerse = ({
             // A blank the width of the word it replaces, so the shape of the
             // sentence survives even when the word does not.
             return (
-              <Text key={i} style={{ color: 'transparent' }}>
+              <RNText key={i} style={{ color: 'transparent' }}>
                 {word.replace(/[A-Za-z’']/g, '\u2009\u2009')}{' '}
-              </Text>
+              </RNText>
             );
           }
           const illuminated = notice && lit.has(bare(word));
+          // Plain RN Text for the spans: the Text primitive applies the theme's
+          // default colour to every instance, which would override the colour
+          // set on the parent and leave ink-on-ink.
           return (
-            <Text
+            <RNText
               key={i}
               style={illuminated ? { color: t.colors.accent } : undefined}
             >
               {word}{' '}
-            </Text>
+            </RNText>
           );
         })}
       </Text>
