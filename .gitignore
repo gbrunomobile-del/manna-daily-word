@@ -5,6 +5,7 @@ dist/
 # Source artwork libraries and full-resolution originals — kept locally,
 # never committed. The app bundles only the downscaled versions.
 assets/_originals/
+assets/_with-background/
 assets/*.zip
 assets/*Dore_*.jpg
 assets/LogoDore*.jpg
