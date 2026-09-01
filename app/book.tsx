@@ -15,7 +15,7 @@ import { useTheme, MIN_TOUCH } from '@/theme';
 import { feedback } from '@/services/feedback';
 import { getBook } from '@/data/books';
 import { VERSIONS, DEFAULT_VERSION, getVersion } from '@/data/versions';
-import { fetchChapter, metInTheWay, type Verse } from '@/services/bible';
+import { fetchChapter, type Verse } from '@/services/bible';
 import { useGathered, chapterId } from '@/store/gathered';
 
 /** Reading sizes, in points. Stored so the choice persists. */
@@ -59,6 +59,19 @@ export default function BookScreen() {
 
   const isGathered = useCallback(
     (n: number) => chapters[chapterId(`${bookName} ${n}`)] !== undefined,
+    [chapters, bookName],
+  );
+
+  /**
+   * Whether this exact verse has been met in a lesson.
+   *
+   * Lessons gather the verses they teach as verse-level keys, so this asks what
+   * the reader has actually encountered — not merely which verses the question
+   * bank happens to contain.
+   */
+  const wasTaught = useCallback(
+    (n: number, verse: number) =>
+      chapters[chapterId(`${bookName} ${n}:${verse}`)] !== undefined,
     [chapters, bookName],
   );
 
@@ -201,7 +214,7 @@ export default function BookScreen() {
             {/* The chapter, verse by verse */}
             <View>
               {verses.map((verse) => {
-                const taught = metInTheWay(book.name, openChapter, verse.number);
+                const taught = wasTaught(openChapter, verse.number);
                 return (
                   <View key={verse.number} style={s.verseRow}>
                     <Text

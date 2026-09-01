@@ -36,7 +36,6 @@ const TabBar = ({ state, navigation }: TabBarProps) => {
         const Icon = ICONS[key];
         if (!Icon) return null;
         const focused = state.index === index;
-        const isWay = key === 'way';
         return (
           <Pressable
             key={route.key}
@@ -49,21 +48,22 @@ const TabBar = ({ state, navigation }: TabBarProps) => {
             }}
             style={styles.item}
           >
-            {isWay && focused ? (
-              <View style={[styles.wayPill, { backgroundColor: t.colors.accent }]}>
-                <Icon size={19} strokeWidth={2} color={t.colors.background} />
-              </View>
-            ) : (
-              <Icon
-                size={21}
-                strokeWidth={focused ? 2 : 1.6}
-                color={focused ? t.colors.accent : t.colors.textMuted}
-              />
-            )}
+            <Icon
+              size={21}
+              strokeWidth={focused ? 1.9 : 1.5}
+              color={focused ? t.colors.accent : t.colors.textMuted}
+              opacity={focused ? 1 : 0.7}
+            />
             <Text
               variant="caption"
-              tone={focused ? 'primary' : 'muted'}
-              style={[styles.label, focused ? { fontFamily: t.fonts.sansSemi } : null]}
+              style={[
+                styles.label,
+                {
+                  color: focused ? t.colors.textPrimary : t.colors.textMuted,
+                  fontFamily: focused ? t.fonts.sansSemi : t.fonts.sans,
+                  opacity: focused ? 1 : 0.75,
+                },
+              ]}
             >
               {LABELS[key]}
             </Text>
@@ -87,8 +87,9 @@ export default function TabsLayout() {
 }
 
 const styles = StyleSheet.create({
-  bar: { flexDirection: 'row', borderTopWidth: StyleSheet.hairlineWidth, paddingTop: 11 },
-  item: { flex: 1, alignItems: 'center', gap: 5, minHeight: MIN_TOUCH },
-  label: { fontSize: 10, letterSpacing: 0.2 },
-  wayPill: { width: 36, height: 36, borderRadius: 18, alignItems: 'center', justifyContent: 'center' },
+  // Sits on the paper rather than on a bar: a hairline rule, no fill change,
+  // no container behind the active icon.
+  bar: { flexDirection: 'row', borderTopWidth: StyleSheet.hairlineWidth, paddingTop: 13 },
+  item: { flex: 1, alignItems: 'center', gap: 6, minHeight: MIN_TOUCH },
+  label: { fontSize: 10.5, letterSpacing: 0.3 },
 });

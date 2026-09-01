@@ -1,7 +1,10 @@
 import React, { useCallback } from 'react';
 import { Pressable, ActivityIndicator, StyleSheet, View, ViewStyle, StyleProp } from 'react-native';
-import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
+import Animated, {
+  useAnimatedStyle, useSharedValue, withTiming, interpolateColor,
+} from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
+import { ArrowRight } from 'lucide-react-native';
 import { Text } from './Text';
 import { useTheme, MIN_TOUCH } from '@/theme';
 
@@ -14,6 +17,8 @@ type Props = {
   disabled?: boolean;
   loading?: boolean;
   full?: boolean;
+  /** A gold arrow at the trailing edge — for actions that carry you onward. */
+  arrow?: boolean;
   style?: StyleProp<ViewStyle>;
   accessibilityHint?: string;
 };
@@ -21,13 +26,28 @@ type Props = {
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
 export const Button = ({
-  label, onPress, variant = 'primary', disabled, loading, full = true, style, accessibilityHint,
+  label, onPress, variant = 'primary', disabled, loading, full = true, arrow,
+  style, accessibilityHint,
 }: Props) => {
   const t = useTheme();
   const press = useSharedValue(0);
 
+  const palette: Record<Variant, {
+    bg: string; bgPressed: string; border: string;
+    tone: 'onPrimary' | 'primary' | 'inverse';
+  }> = {
+    primary:   { bg: t.colors.primary, bgPressed: t.colors.primaryPressed, border: t.colors.primary, tone: 'onPrimary' },
+    secondary: { bg: 'transparent', bgPressed: t.colors.surfacePressed, border: t.colors.borderStrong, tone: 'primary' },
+    text:      { bg: 'transparent', bgPressed: 'transparent', border: 'transparent', tone: 'primary' },
+    onDark:    { bg: 'transparent', bgPressed: 'rgba(238,233,221,0.08)', border: 'rgba(238,233,221,0.34)', tone: 'inverse' },
+  };
+  const p = palette[variant];
+
+  // A small settle rather than a bounce, and the ground darkens with it — the
+  // press should feel like pressing paper, not a game button.
   const animated = useAnimatedStyle(() => ({
-    transform: [{ scale: 1 - press.value * 0.014 }],
+    transform: [{ scale: 1 - press.value * 0.012 }, { translateY: press.value * 1.5 }],
+    backgroundColor: interpolateColor(press.value, [0, 1], [p.bg, p.bgPressed]),
   }));
 
   const handle = useCallback(() => {
@@ -36,13 +56,10 @@ export const Button = ({
     onPress?.();
   }, [disabled, loading, onPress]);
 
-  const palette: Record<Variant, { bg: string; border: string; tone: 'onPrimary' | 'primary' | 'inverse' }> = {
-    primary:   { bg: t.colors.primary, border: t.colors.primary, tone: 'onPrimary' },
-    secondary: { bg: 'transparent', border: t.colors.borderStrong, tone: 'primary' },
-    text:      { bg: 'transparent', border: 'transparent', tone: 'primary' },
-    onDark:    { bg: 'transparent', border: 'rgba(238,233,221,0.34)', tone: 'inverse' },
-  };
-  const p = palette[variant];
+  const labelColour =
+    variant === 'primary' ? t.colors.onPrimary
+    : variant === 'onDark' ? t.colors.onImmersive
+    : t.colors.textPrimary;
 
   return (
     <AnimatedPressable
@@ -57,7 +74,6 @@ export const Button = ({
       style={[
         styles.base,
         {
-          backgroundColor: p.bg,
           borderColor: p.border,
           borderRadius: t.radius.button,
           paddingHorizontal: t.spacing.xl,
@@ -69,12 +85,20 @@ export const Button = ({
       ]}
     >
       {loading ? (
-        <ActivityIndicator color={variant === 'primary' ? t.colors.onPrimary : t.colors.textPrimary} />
+        <ActivityIndicator color={labelColour} />
       ) : (
         <View style={styles.row}>
           <Text variant="label" tone={p.tone} uppercase style={styles.label}>
             {label}
           </Text>
+          {arrow && (
+            <ArrowRight
+              size={17}
+              color={labelColour}
+              strokeWidth={2}
+              style={styles.arrow}
+            />
+          )}
         </View>
       )}
     </AnimatedPressable>
@@ -83,11 +107,12 @@ export const Button = ({
 
 const styles = StyleSheet.create({
   base: {
-    minHeight: 54,
+    minHeight: 56,
     borderWidth: StyleSheet.hairlineWidth * 2,
     alignItems: 'center',
     justifyContent: 'center',
   },
   row: { flexDirection: 'row', alignItems: 'center', minHeight: MIN_TOUCH - 12 },
   label: { letterSpacing: 1.4 },
+  arrow: { marginLeft: 10 },
 });

@@ -26,6 +26,16 @@ export type ColorTokens = {
   primaryPressed: string;
   onPrimary: string;
 
+  /**
+   * A deliberately dark surface used inside otherwise light screens — the
+   * question, the teaching moment, Reveal. Not the dark colour scheme; a
+   * change of environment for a moment that wants focus.
+   */
+  immersive: string;
+  immersiveRaised: string;
+  onImmersive: string;
+  onImmersiveMuted: string;
+
   /** Gold. Revelation, discovery, meaningful completion. Used sparingly. */
   accent: string;
   accentSoft: string;
@@ -66,9 +76,14 @@ export const lightColors: ColorTokens = {
   border: ramp.ivory300,
   borderStrong: ramp.ivory400,
 
-  primary: palette.ink,
-  primaryPressed: ramp.ink900,
-  onPrimary: palette.ivory,
+  primary: palette.forest,
+  primaryPressed: ramp.forestDeep,
+  onPrimary: palette.goldSoft,
+
+  immersive: ramp.night850,
+  immersiveRaised: ramp.night700,
+  onImmersive: '#F5EFE3',
+  onImmersiveMuted: 'rgba(245,239,227,0.62)',
 
   accent: palette.gold,
   accentSoft: palette.morning,
@@ -110,6 +125,13 @@ export const darkColors: ColorTokens = {
   primary: '#EEE9DD',
   primaryPressed: '#D9D3C6',
   onPrimary: ramp.night800,
+
+  // Already dark, so the immersive surface only needs to sit a shade deeper
+  // than the page rather than invert it.
+  immersive: ramp.night900,
+  immersiveRaised: ramp.night700,
+  onImmersive: '#F5EFE3',
+  onImmersiveMuted: 'rgba(245,239,227,0.62)',
 
   accent: ramp.goldDark,
   accentSoft: '#5A4A28',

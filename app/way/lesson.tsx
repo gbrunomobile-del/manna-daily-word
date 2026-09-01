@@ -7,9 +7,10 @@ import Animated, {
   FadeIn, FadeInDown, useSharedValue, useAnimatedStyle, withSequence, withTiming,
   withSpring, runOnJS,
 } from 'react-native-reanimated';
-import { X, Heart, ArrowRight, RotateCcw } from 'lucide-react-native';
+import { X, ArrowRight, RotateCcw } from 'lucide-react-native';
 import { Text } from '@/components/primitives/Text';
 import { Button } from '@/components/primitives/Button';
+import { LampIndicator } from '@/components/manna/LampIndicator';
 import { useTheme, MIN_TOUCH } from '@/theme';
 import { feedback } from '@/services/feedback';
 import { useWay } from '@/store/way';
@@ -17,7 +18,7 @@ import { useGathered } from '@/store/gathered';
 import { useProgress } from '@/store/progress';
 import { QUESTIONS, CHAPTER_QUESTIONS, KIND_LABEL, type Question } from '@/data/way-questions';
 
-const MAX_HEARTS = 3;
+const MAX_LAMPS = 3;
 const PASS_MARK = 3;
 
 /** Deterministic-enough shuffle; only used for presentation order. */
@@ -120,7 +121,7 @@ export default function WayLesson() {
   const total = questions.length;
 
   const [qIdx, setQIdx] = useState(0);
-  const [hearts, setHearts] = useState(MAX_HEARTS);
+  const [hearts, setHearts] = useState(MAX_LAMPS);
   const [showResult, setShowResult] = useState(false);
   const [correct, setCorrect] = useState(false);
   const [score, setScore] = useState(0);
@@ -594,17 +595,7 @@ export default function WayLesson() {
         <View style={[s.progress, { backgroundColor: t.colors.surface }]}>
           <View style={[s.progressFill, { backgroundColor: t.colors.accent, width: `${(qIdx / total) * 100}%` }]} />
         </View>
-        <View style={s.hearts}>
-          {Array.from({ length: MAX_HEARTS }).map((_, i) => (
-            <Heart
-              key={i}
-              size={17}
-              fill={i < hearts ? '#B4574F' : 'transparent'}
-              color={i < hearts ? '#B4574F' : t.colors.border}
-              strokeWidth={1.5}
-            />
-          ))}
-        </View>
+        <LampIndicator remaining={hearts} total={MAX_LAMPS} size={21} />
       </View>
 
       <ScrollView contentContainerStyle={s.content} keyboardShouldPersistTaps="handled">

@@ -1,12 +1,23 @@
 /**
- * MANNA brand palette — the seven canonical colours.
+ * MANNA brand palette — the canonical colours.
  * Never reference these directly in components; use semantic tokens instead.
  */
 export const palette = {
   ivory: '#F8F4EA',
   ink: '#18201C',
+
+  /** Deep green for primary actions and immersive surfaces. */
+  forest: '#14382E',
+  /** Softer green, retained for secondary emphasis. */
   livingGreen: '#356653',
-  gold: '#D7AD5A',
+
+  /** Core illumination. Revelation, understanding, meaningful completion. */
+  gold: '#D4A23D',
+  /** Lighter gold, for text on dark ground and secondary illumination. */
+  goldSoft: '#E8C979',
+  /** The warmer earlier gold, kept for large fills where the core reads harsh. */
+  goldWarm: '#D7AD5A',
+
   morning: '#F2DDAF',
   livingWater: '#92BFC1',
   fig: '#72505B',
@@ -28,9 +39,13 @@ export const ramp = {
   ink400: '#4A544D',
 
   night900: '#0C100D',
+  night850: '#101917',
   night800: '#111612',
   night700: '#171E19',
   night600: '#1D2620',
+
+  forestDeep: '#0F2A22',
+  forestSoft: '#1C4A3C',
 
   goldDark: '#C8A75E',
   goldDeep: '#A88434',
