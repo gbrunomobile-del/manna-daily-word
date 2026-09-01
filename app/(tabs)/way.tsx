@@ -110,7 +110,7 @@ export default function TheWay() {
       <ScrollView contentContainerStyle={styles.tree} showsVerticalScrollIndicator={false}>
         {SCREEN_ART.way && (
           <View style={styles.treeHeader}>
-            <ScreenHeader art={SCREEN_ART.way} title="Learn the story" eyebrow="Sixteen topics" />
+            <ScreenHeader art={SCREEN_ART.way} caption="The Way" title="Learn the story" eyebrow="Sixteen topics" />
           </View>
         )}
         {SKILLS.map((skill, i) => {
@@ -154,20 +154,26 @@ export default function TheWay() {
                   }}
                   style={[
                     styles.node,
-                    {
-                      backgroundColor: art ? t.colors.surface : t.colors.surface,
-                      borderColor: complete
-                        ? t.colors.accent
-                        : locked
-                        ? t.colors.border + '55'
-                        : t.colors.border,
-                      borderWidth: complete ? 2 : 1,
-                      opacity: locked ? 0.42 : 1,
-                    },
+                    // With transparent artwork the engraving sits straight on the
+                    // page; the card chrome is only needed behind an emoji.
+                    art
+                      ? { opacity: locked ? 0.3 : 1 }
+                      : {
+                          backgroundColor: t.colors.surface,
+                          borderColor: complete
+                            ? t.colors.accent
+                            : locked
+                            ? t.colors.border + '55'
+                            : t.colors.border,
+                          borderWidth: complete ? 2 : 1,
+                          borderRadius: 26,
+                          overflow: 'hidden',
+                          opacity: locked ? 0.42 : 1,
+                        },
                   ]}
                 >
                   {art ? (
-                    <Image source={art} style={styles.art} resizeMode="cover" />
+                    <Image source={art} style={styles.art} resizeMode="contain" />
                   ) : (
                     <Text style={styles.emoji}>{skill.emoji}</Text>
                   )}
@@ -223,8 +229,8 @@ const styles = StyleSheet.create({
   thread: { position: 'absolute', width: 2, height: ROW_H - NODE + 12, borderRadius: 1 },
   nodeWrap: { position: 'absolute', width: NODE + 40, alignItems: 'center', marginLeft: -20 },
   node: {
-    width: NODE, height: NODE, borderRadius: 26,
-    alignItems: 'center', justifyContent: 'center', overflow: 'hidden',
+    width: NODE, height: NODE,
+    alignItems: 'center', justifyContent: 'center',
   },
   art: { width: '100%', height: '100%' },
   emoji: { fontSize: 40 },
