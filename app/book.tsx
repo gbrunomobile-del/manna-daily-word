@@ -1,56 +1,96 @@
-import React, { useEffect, useState, useCallback } from 'react';
-import { View, ScrollView, Pressable, StyleSheet, ActivityIndicator } from 'react-native';
+import React, { useEffect, useState, useCallback, useMemo } from 'react';
+import {
+  View, ScrollView, Pressable, StyleSheet, ActivityIndicator, Modal,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
-import { ChevronLeft, Check } from 'lucide-react-native';
+import {
+  ChevronLeft, ChevronRight, Check, Type, X,
+} from 'lucide-react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Text } from '@/components/primitives/Text';
 import { Button } from '@/components/primitives/Button';
-import { useTheme } from '@/theme';
+import { useTheme, MIN_TOUCH } from '@/theme';
 import { feedback } from '@/services/feedback';
 import { getBook } from '@/data/books';
+import { VERSIONS, DEFAULT_VERSION, getVersion } from '@/data/versions';
+import { fetchChapter, metInTheWay, type Verse } from '@/services/bible';
 import { useGathered, chapterId } from '@/store/gathered';
 
-async function fetchChapter(reference: string): Promise<string> {
-  const url = `https://bible-api.com/${encodeURIComponent(reference)}?translation=web`;
-  const res = await fetch(url);
-  if (!res.ok) throw new Error('Could not load that chapter.');
-  const data = await res.json();
-  return (data.text ?? '').trim();
-}
+/** Reading sizes, in points. Stored so the choice persists. */
+const SIZES = [17, 19, 21, 24] as const;
+const SIZE_KEY = 'manna.readerSize';
+const VERSION_KEY = 'manna.version';
 
 export default function BookScreen() {
   const t = useTheme();
   const router = useRouter();
-  const { name } = useLocalSearchParams<{ name: string }>();
+  const { name, chapter: chapterParam } = useLocalSearchParams<{ name: string; chapter?: string }>();
   const bookName = name ?? '';
   const book = getBook(bookName);
 
   const { chapters, gather, hydrate, hydrated } = useGathered();
-  const [openChapter, setOpenChapter] = useState<number | null>(null);
-  const [text, setText] = useState('');
+
+  const [openChapter, setOpenChapter] = useState<number | null>(
+    chapterParam ? Number(chapterParam) : null,
+  );
+  const [verses, setVerses] = useState<Verse[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [version, setVersion] = useState(DEFAULT_VERSION);
+  const [sizeIdx, setSizeIdx] = useState(1);
+  const [showVersions, setShowVersions] = useState(false);
+  const [showSizes, setShowSizes] = useState(false);
 
   useEffect(() => { if (!hydrated) void hydrate(); }, [hydrated, hydrate]);
 
-  const isGathered = (n: number) =>
-    chapters[chapterId(`${bookName} ${n}`)] !== undefined;
+  // Restore reading preferences.
+  useEffect(() => {
+    void AsyncStorage.multiGet([VERSION_KEY, SIZE_KEY]).then((pairs) => {
+      const map = Object.fromEntries(pairs);
+      if (map[VERSION_KEY]) setVersion(map[VERSION_KEY]);
+      if (map[SIZE_KEY]) {
+        const i = SIZES.indexOf(Number(map[SIZE_KEY]) as typeof SIZES[number]);
+        if (i >= 0) setSizeIdx(i);
+      }
+    });
+  }, []);
 
-  const openReader = useCallback(async (n: number) => {
-    feedback.select();
-    setOpenChapter(n);
+  const isGathered = useCallback(
+    (n: number) => chapters[chapterId(`${bookName} ${n}`)] !== undefined,
+    [chapters, bookName],
+  );
+
+  const load = useCallback(async (n: number, v: string) => {
     setLoading(true);
     setError('');
-    setText('');
     try {
-      setText(await fetchChapter(`${bookName} ${n}`));
+      setVerses(await fetchChapter(bookName, n, v));
     } catch {
       setError('Could not load that chapter. Check your connection.');
+      setVerses([]);
     } finally {
       setLoading(false);
     }
   }, [bookName]);
+
+  useEffect(() => {
+    if (openChapter !== null) void load(openChapter, version);
+  }, [openChapter, version, load]);
+
+  const changeVersion = useCallback(async (id: string) => {
+    feedback.select();
+    setVersion(id);
+    setShowVersions(false);
+    await AsyncStorage.setItem(VERSION_KEY, id);
+  }, []);
+
+  const changeSize = useCallback(async (i: number) => {
+    feedback.select();
+    setSizeIdx(i);
+    await AsyncStorage.setItem(SIZE_KEY, String(SIZES[i]));
+  }, []);
 
   const markGathered = useCallback(async () => {
     if (openChapter === null) return;
@@ -58,10 +98,17 @@ export default function BookScreen() {
     await gather(`${bookName} ${openChapter}`);
   }, [openChapter, bookName, gather]);
 
+  const gatheredCount = useMemo(() => {
+    if (!book) return 0;
+    let n = 0;
+    for (let c = 1; c <= book.chapters; c++) if (isGathered(c)) n++;
+    return n;
+  }, [book, isGathered]);
+
   if (!book) {
     return (
-      <SafeAreaView style={[styles.flex, { backgroundColor: t.colors.background }]}>
-        <View style={styles.centre}>
+      <SafeAreaView style={[s.flex, { backgroundColor: t.colors.background }]}>
+        <View style={s.centre}>
           <Text variant="body" tone="muted">That book was not found.</Text>
           <Button label="Go back" variant="secondary" onPress={() => router.back()} />
         </View>
@@ -71,60 +118,205 @@ export default function BookScreen() {
 
   // ── Reader ─────────────────────────────────────────────────────────────────
   if (openChapter !== null) {
-    const alreadyGathered = isGathered(openChapter);
+    const already = isGathered(openChapter);
+    const size = SIZES[sizeIdx];
+    const v = getVersion(version);
+
     return (
-      <SafeAreaView style={[styles.flex, { backgroundColor: t.colors.background }]} edges={['top']}>
-        <View style={[styles.header, { borderBottomColor: t.colors.border + '44' }]}>
-          <Pressable onPress={() => setOpenChapter(null)} hitSlop={10} style={styles.back}>
+      <SafeAreaView style={[s.flex, { backgroundColor: t.colors.background }]} edges={['top']}>
+        {/* Reader bar */}
+        <View style={[s.bar, { borderBottomColor: t.colors.border + '44' }]}>
+          <Pressable onPress={() => setOpenChapter(null)} hitSlop={10} style={s.iconBtn}>
             <ChevronLeft size={22} color={t.colors.textMuted} strokeWidth={1.8} />
           </Pressable>
-          <Text variant="body" style={{ color: t.colors.text, fontFamily: t.fonts.sansSemi }}>
-            {book.name} {openChapter}
-          </Text>
+
+          <Pressable
+            onPress={() => { feedback.select(); setShowVersions(true); }}
+            style={[s.pill, { backgroundColor: t.colors.surface, borderColor: t.colors.border }]}
+          >
+            <Text variant="body" style={{ color: t.colors.text, fontFamily: t.fonts.sansSemi }}>
+              {book.name} {openChapter}
+            </Text>
+            <View style={[s.divider, { backgroundColor: t.colors.border }]} />
+            <Text variant="caption" style={{ color: t.colors.accent, fontFamily: t.fonts.sansSemi }}>
+              {v.short}
+            </Text>
+          </Pressable>
+
+          <Pressable
+            onPress={() => { feedback.select(); setShowSizes((x) => !x); }}
+            hitSlop={10}
+            style={s.iconBtn}
+          >
+            <Type size={19} color={t.colors.textMuted} strokeWidth={1.8} />
+          </Pressable>
         </View>
 
+        {/* Text size row */}
+        {showSizes && (
+          <Animated.View
+            entering={FadeIn.duration(180)}
+            style={[s.sizeRow, { backgroundColor: t.colors.surface, borderBottomColor: t.colors.border + '44' }]}
+          >
+            {SIZES.map((px, i) => (
+              <Pressable
+                key={px}
+                onPress={() => changeSize(i)}
+                style={[
+                  s.sizeBtn,
+                  i === sizeIdx && { backgroundColor: t.colors.accent + '22', borderColor: t.colors.accent },
+                  i !== sizeIdx && { borderColor: t.colors.border },
+                ]}
+              >
+                <Text style={{ fontSize: 11 + i * 3, color: t.colors.text }}>A</Text>
+              </Pressable>
+            ))}
+          </Animated.View>
+        )}
+
         {loading ? (
-          <View style={styles.centre}><ActivityIndicator color={t.colors.accent} /></View>
+          <View style={s.centre}><ActivityIndicator color={t.colors.accent} /></View>
         ) : error ? (
-          <View style={styles.centre}>
+          <View style={s.centre}>
             <Text variant="body" tone="muted" style={{ textAlign: 'center' }}>{error}</Text>
           </View>
         ) : (
-          <ScrollView contentContainerStyle={styles.readerContent} showsVerticalScrollIndicator={false}>
-            {alreadyGathered && (
-              <View style={[styles.gatheredBanner, { backgroundColor: t.colors.accent + '15', borderColor: t.colors.accent + '38' }]}>
+          <ScrollView contentContainerStyle={s.reader} showsVerticalScrollIndicator={false}>
+            {already && (
+              <View style={[s.banner, { backgroundColor: t.colors.accent + '14', borderColor: t.colors.accent + '38' }]}>
                 <Check size={13} color={t.colors.accent} strokeWidth={2.2} />
-                <Text variant="caption" style={{ color: t.colors.accent, letterSpacing: 0.6 }}>
-                  You have gathered this chapter before
+                <Text variant="caption" style={{ color: t.colors.accent }}>
+                  Gathered
                 </Text>
               </View>
             )}
 
-            <Text
-              variant="scripture"
-              style={{ color: t.colors.text, fontStyle: alreadyGathered ? 'italic' : 'normal' }}
-            >
-              {text}
+            <Text variant="hero" style={{ color: t.colors.text, marginBottom: 4 }}>
+              {book.name} {openChapter}
+            </Text>
+            <Text variant="caption" tone="muted" style={{ marginBottom: 22 }}>
+              {v.name}
             </Text>
 
-            <View style={{ height: 24 }} />
-            {!alreadyGathered && (
-              <Button label="Mark as gathered" variant="primary" onPress={markGathered} />
+            {/* The chapter, verse by verse */}
+            <View>
+              {verses.map((verse) => {
+                const taught = metInTheWay(book.name, openChapter, verse.number);
+                return (
+                  <View key={verse.number} style={s.verseRow}>
+                    <Text
+                      style={[
+                        s.verseNum,
+                        {
+                          color: taught ? t.colors.accent : t.colors.textMuted,
+                          fontFamily: t.fonts.sansSemi,
+                          lineHeight: size * 1.62,
+                        },
+                      ]}
+                    >
+                      {verse.number}
+                    </Text>
+                    <Text
+                      variant="scripture"
+                      style={{
+                        flex: 1,
+                        color: t.colors.text,
+                        fontSize: size,
+                        lineHeight: size * 1.62,
+                        // Verses met in a lesson carry a faint gold ground —
+                        // over time the page fills in with what you have learned.
+                        backgroundColor: taught ? t.colors.accent + '16' : 'transparent',
+                      }}
+                    >
+                      {verse.text}
+                    </Text>
+                  </View>
+                );
+              })}
+            </View>
+
+            {!already && (
+              <View style={{ marginTop: 28 }}>
+                <Button label="Mark as gathered" variant="primary" onPress={markGathered} />
+              </View>
             )}
-            <View style={{ height: 48 }} />
+
+            {/* Chapter navigation */}
+            <View style={s.navRow}>
+              <Pressable
+                disabled={openChapter <= 1}
+                onPress={() => { feedback.select(); setOpenChapter(openChapter - 1); }}
+                style={[s.navBtn, { borderColor: t.colors.border, opacity: openChapter <= 1 ? 0.35 : 1 }]}
+              >
+                <ChevronLeft size={17} color={t.colors.text} strokeWidth={2} />
+                <Text variant="caption" style={{ color: t.colors.text }}>Previous</Text>
+              </Pressable>
+
+              <Pressable
+                disabled={openChapter >= book.chapters}
+                onPress={() => { feedback.select(); setOpenChapter(openChapter + 1); }}
+                style={[s.navBtn, { borderColor: t.colors.border, opacity: openChapter >= book.chapters ? 0.35 : 1 }]}
+              >
+                <Text variant="caption" style={{ color: t.colors.text }}>Next</Text>
+                <ChevronRight size={17} color={t.colors.text} strokeWidth={2} />
+              </Pressable>
+            </View>
+
+            <View style={{ height: 60 }} />
           </ScrollView>
         )}
+
+        {/* Version picker */}
+        <Modal visible={showVersions} animationType="slide" transparent onRequestClose={() => setShowVersions(false)}>
+          <Pressable style={s.backdrop} onPress={() => setShowVersions(false)} />
+          <View style={[s.sheet, { backgroundColor: t.colors.background, borderColor: t.colors.border }]}>
+            <View style={s.sheetHead}>
+              <Text variant="title" style={{ color: t.colors.text }}>Translation</Text>
+              <Pressable onPress={() => setShowVersions(false)} hitSlop={10}>
+                <X size={20} color={t.colors.textMuted} strokeWidth={1.8} />
+              </Pressable>
+            </View>
+
+            {VERSIONS.map((item) => {
+              const active = item.id === version;
+              return (
+                <Pressable
+                  key={item.id}
+                  onPress={() => changeVersion(item.id)}
+                  style={[
+                    s.versionRow,
+                    {
+                      backgroundColor: active ? t.colors.accent + '14' : 'transparent',
+                      borderColor: active ? t.colors.accent + '44' : t.colors.border + '77',
+                    },
+                  ]}
+                >
+                  <View style={{ flex: 1 }}>
+                    <Text variant="body" style={{ color: t.colors.text, fontFamily: active ? t.fonts.sansSemi : t.fonts.sans }}>
+                      {item.name}
+                    </Text>
+                    <Text variant="caption" tone="muted" style={{ marginTop: 2 }}>{item.note}</Text>
+                  </View>
+                  {active && <Check size={17} color={t.colors.accent} strokeWidth={2.4} />}
+                </Pressable>
+              );
+            })}
+
+            <Text variant="caption" tone="muted" style={s.sheetNote}>
+              These translations are in the public domain. Licensed texts such as
+              the ESV and NIV require an agreement with their publishers.
+            </Text>
+          </View>
+        </Modal>
       </SafeAreaView>
     );
   }
 
   // ── Chapter picker ─────────────────────────────────────────────────────────
-  const gatheredCount = Array.from({ length: book.chapters }, (_, i) => i + 1).filter(isGathered).length;
-
   return (
-    <SafeAreaView style={[styles.flex, { backgroundColor: t.colors.background }]} edges={['top']}>
-      <View style={[styles.header, { borderBottomColor: t.colors.border + '44' }]}>
-        <Pressable onPress={() => router.back()} hitSlop={10} style={styles.back}>
+    <SafeAreaView style={[s.flex, { backgroundColor: t.colors.background }]} edges={['top']}>
+      <View style={[s.bar, { borderBottomColor: t.colors.border + '44' }]}>
+        <Pressable onPress={() => router.back()} hitSlop={10} style={s.iconBtn}>
           <ChevronLeft size={22} color={t.colors.textMuted} strokeWidth={1.8} />
         </Pressable>
         <View style={{ flex: 1 }}>
@@ -135,22 +327,22 @@ export default function BookScreen() {
         </View>
       </View>
 
-      <ScrollView contentContainerStyle={styles.pickerContent} showsVerticalScrollIndicator={false}>
-        <Animated.View entering={FadeIn.duration(350)}>
+      <ScrollView contentContainerStyle={s.picker} showsVerticalScrollIndicator={false}>
+        <Animated.View entering={FadeIn.duration(320)}>
           <Text variant="body" tone="muted">
             {gatheredCount} of {book.chapters} chapters gathered
           </Text>
         </Animated.View>
 
-        <Animated.View entering={FadeInDown.delay(60).duration(400)} style={styles.chapterGrid}>
+        <Animated.View entering={FadeInDown.delay(60).duration(400)} style={s.grid}>
           {Array.from({ length: book.chapters }, (_, i) => i + 1).map((n) => {
             const done = isGathered(n);
             return (
               <Pressable
                 key={n}
-                onPress={() => openReader(n)}
+                onPress={() => { feedback.select(); setOpenChapter(n); }}
                 style={[
-                  styles.chapter,
+                  s.chapter,
                   {
                     backgroundColor: done ? t.colors.accent : t.colors.surface,
                     borderColor: done ? t.colors.accent : t.colors.border,
@@ -177,25 +369,58 @@ export default function BookScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const s = StyleSheet.create({
   flex: { flex: 1 },
   centre: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 16, paddingHorizontal: 24 },
-  header: {
-    flexDirection: 'row', alignItems: 'center', gap: 8,
-    paddingHorizontal: 16, paddingVertical: 14,
+  bar: {
+    flexDirection: 'row', alignItems: 'center', gap: 10,
+    paddingHorizontal: 14, paddingVertical: 12,
     borderBottomWidth: StyleSheet.hairlineWidth,
   },
-  back: { padding: 4 },
-  pickerContent: { paddingHorizontal: 24, paddingTop: 20 },
-  chapterGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 9, marginTop: 18 },
+  iconBtn: { padding: 6, minWidth: 34 },
+  pill: {
+    flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
+    gap: 10, borderWidth: 1, borderRadius: 999, paddingVertical: 9, paddingHorizontal: 16,
+    minHeight: MIN_TOUCH - 8,
+  },
+  divider: { width: StyleSheet.hairlineWidth, height: 15 },
+  sizeRow: {
+    flexDirection: 'row', justifyContent: 'center', gap: 10,
+    paddingVertical: 12, borderBottomWidth: StyleSheet.hairlineWidth,
+  },
+  sizeBtn: {
+    width: 44, height: 40, borderRadius: 11, borderWidth: 1.5,
+    alignItems: 'center', justifyContent: 'center',
+  },
+  reader: { paddingHorizontal: 24, paddingTop: 22 },
+  banner: {
+    alignSelf: 'flex-start', flexDirection: 'row', alignItems: 'center', gap: 6,
+    borderWidth: 1, borderRadius: 999, paddingHorizontal: 12, paddingVertical: 6, marginBottom: 16,
+  },
+  verseRow: { flexDirection: 'row', gap: 9, marginBottom: 10 },
+  verseNum: { fontSize: 11, minWidth: 20, textAlign: 'right', paddingTop: 1 },
+  navRow: { flexDirection: 'row', gap: 12, marginTop: 34 },
+  navBtn: {
+    flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
+    gap: 6, borderWidth: 1, borderRadius: 12, paddingVertical: 14, minHeight: MIN_TOUCH,
+  },
+  backdrop: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(0,0,0,0.35)' },
+  sheet: {
+    position: 'absolute', left: 0, right: 0, bottom: 0,
+    borderTopWidth: 1, borderTopLeftRadius: 24, borderTopRightRadius: 24,
+    paddingHorizontal: 22, paddingTop: 20, paddingBottom: 40, gap: 9,
+  },
+  sheetHead: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 },
+  versionRow: {
+    flexDirection: 'row', alignItems: 'center', gap: 12,
+    borderWidth: 1, borderRadius: 14, paddingHorizontal: 16, paddingVertical: 13,
+    minHeight: MIN_TOUCH,
+  },
+  sheetNote: { marginTop: 12, lineHeight: 17 },
+  picker: { paddingHorizontal: 24, paddingTop: 20 },
+  grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 9, marginTop: 18 },
   chapter: {
     width: 48, height: 48, borderRadius: 12, borderWidth: 1,
     alignItems: 'center', justifyContent: 'center',
-  },
-  readerContent: { paddingHorizontal: 24, paddingTop: 20 },
-  gatheredBanner: {
-    flexDirection: 'row', alignItems: 'center', gap: 7,
-    borderWidth: 1, borderRadius: 12,
-    paddingHorizontal: 13, paddingVertical: 9, marginBottom: 20,
   },
 });

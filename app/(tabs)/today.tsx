@@ -104,7 +104,7 @@ export default function Today() {
         {SCREEN_ART.today ? (
           <ScreenHeader
             art={SCREEN_ART.today}
-            eyebrow={returning ? 'Welcome back' : greeting()}
+            eyebrow={returning ? 'Welcome back' : undefined}
             title={
               returning
                 ? 'Your portion is waiting.'
