@@ -326,7 +326,7 @@ export default function WayLesson() {
                 </Text>
               </>
             ) : (
-              <Text variant="h1" style={[s.teachingText, { color: t.colors.onImmersive }]}>
+              <Text variant="h1" style={[s.teachingLead, { color: t.colors.onImmersive }]}>
                 {q.insight}
               </Text>
             )}
@@ -384,7 +384,7 @@ export default function WayLesson() {
           <>
             {q.kind === 'whosaid' && (
               <View style={[s.quote, { borderLeftColor: t.colors.accent }]}>
-                <Text variant="scripture" style={{ color: t.colors.text }}>“{q.quote}”</Text>
+                <Text variant="scripture" style={{ color: t.colors.onImmersive }}>“{q.quote}”</Text>
               </View>
             )}
             <View style={s.options}>
@@ -394,6 +394,7 @@ export default function WayLesson() {
                   label={opt}
                   marker={MARKERS[i]}
                   state={answerState(i === q.answer, choice === i)}
+                  onDark
                   onPress={() => { setChoice(i); settle(i === q.answer); }}
                 />
               ))}
@@ -410,6 +411,7 @@ export default function WayLesson() {
                 key={String(v)}
                 label={v ? 'True' : 'False'}
                 state={answerState(v === q.answer, choice === v)}
+                onDark
                 onPress={() => { setChoice(v); settle(v === q.answer); }}
               />
             ))}
@@ -419,8 +421,8 @@ export default function WayLesson() {
       case 'cloze':
         return (
           <>
-            <View style={[s.passage, { backgroundColor: t.colors.surface, borderColor: t.colors.border }]}>
-              <Text variant="scripture" style={{ color: t.colors.text }}>{q.text}</Text>
+            <View style={[s.passage, { backgroundColor: t.colors.immersiveRaised, borderColor: 'rgba(245,239,227,0.14)' }]}>
+              <Text variant="scripture" style={{ color: t.colors.onImmersive }}>{q.text}</Text>
             </View>
             <View style={s.options}>
               {q.options.map((opt, i) => (
@@ -429,6 +431,7 @@ export default function WayLesson() {
                   label={opt}
                   marker={MARKERS[i]}
                   state={answerState(i === q.answer, choice === i)}
+                  onDark
                   onPress={() => { setChoice(i); settle(i === q.answer); }}
                 />
               ))}
@@ -669,13 +672,26 @@ export default function WayLesson() {
   const promptText = q.kind === 'whosaid' ? 'Who said this?' : q.prompt;
 
   return (
-    <SafeAreaView style={[s.flex, { backgroundColor: t.colors.background }]}>
+    <SafeAreaView style={[s.flex, { backgroundColor: t.colors.immersive }]}>
+      {/* The topic's engraving sits at the foot and dissolves upward —
+          atmosphere for the question, never competing with it. */}
+      {!isChapter && TOPIC_ART[topic] && (
+        <View style={s.environment} pointerEvents="none">
+          <Image source={TOPIC_ART[topic]} style={s.environmentImage} resizeMode="contain" />
+          <LinearGradient
+            colors={[t.colors.immersive, t.colors.immersive + '00']}
+            locations={[0, 0.6]}
+            style={StyleSheet.absoluteFill}
+          />
+        </View>
+      )}
+
       {/* Top bar */}
       <View style={s.topBar}>
         <Pressable onPress={() => router.back()} hitSlop={10} style={{ padding: 4 }}>
-          <X size={20} color={t.colors.textMuted} strokeWidth={1.8} />
+          <X size={20} color={t.colors.onImmersiveMuted} strokeWidth={1.8} />
         </Pressable>
-        <View style={[s.progress, { backgroundColor: t.colors.surface }]}>
+        <View style={[s.progress, { backgroundColor: 'rgba(245,239,227,0.14)' }]}>
           <View style={[s.progressFill, { backgroundColor: t.colors.accent, width: `${(qIdx / total) * 100}%` }]} />
         </View>
         <LampIndicator remaining={hearts} total={MAX_LAMPS} size={21} />
@@ -683,10 +699,16 @@ export default function WayLesson() {
 
       <ScrollView contentContainerStyle={s.content} keyboardShouldPersistTaps="handled">
         <Animated.View entering={FadeIn.duration(280)} style={shakeStyle}>
-          <Text variant="caption" tone="muted" uppercase>
+          <Text variant="label" uppercase style={{ color: t.colors.onImmersiveMuted }}>
             {KIND_LABEL[q.kind]} · {qIdx + 1} of {total}
           </Text>
-          <Text variant="title" style={[s.prompt, { color: t.colors.text }]}>{promptText}</Text>
+          <Text variant="h1" style={[s.prompt, { color: t.colors.onImmersive }]}>
+            {promptText}
+          </Text>
+
+          <View style={s.divider}>
+            <Ornament width={104} opacity={0.45} />
+          </View>
 
           {renderBody()}
 
@@ -736,7 +758,12 @@ const s = StyleSheet.create({
   progressFill: { height: '100%', borderRadius: 3 },
   hearts: { flexDirection: 'row', gap: 4 },
   content: { paddingHorizontal: 24, paddingBottom: 40 },
-  prompt: { fontSize: 21, lineHeight: 29, marginTop: 8, marginBottom: 22 },
+  environment: {
+    position: 'absolute', left: 0, right: 0, bottom: -40, height: 320, opacity: 0.22,
+  },
+  environmentImage: { width: '100%', height: '100%' },
+  divider: { alignItems: 'center', marginBottom: 26 },
+  prompt: { marginTop: 12, marginBottom: 26 },
   quote: { borderLeftWidth: 2, paddingLeft: 16, paddingVertical: 4, marginBottom: 20 },
   passage: { borderWidth: 1, borderRadius: 16, padding: 18, marginBottom: 20 },
   options: { gap: 11 },
@@ -759,8 +786,16 @@ const s = StyleSheet.create({
     alignItems: 'center', justifyContent: 'center',
   },
   teachingBody: { alignItems: 'center', marginTop: 40, flex: 1, justifyContent: 'center' },
-  keyword: { textAlign: 'center', marginTop: 28, letterSpacing: 1 },
+  // Instrument Serif has tall ascenders, so any line box tighter than about
+  // 1.2x the font size clips the top of capitals on iOS.
+  keyword: {
+    textAlign: 'center', marginTop: 28, letterSpacing: 1,
+    lineHeight: 58, paddingTop: 6,
+  },
+  /** Supporting copy beneath a keyword — sits at bodyLarge. */
   teachingText: { textAlign: 'center', marginTop: 22, lineHeight: 27 },
+  /** The insight when it leads on its own — sits at h1, so it needs more room. */
+  teachingLead: { textAlign: 'center', marginTop: 26, lineHeight: 38, paddingTop: 4 },
   teachingCta: { marginTop: 40 },
   insight: { borderWidth: 1, borderRadius: 16, padding: 18, marginTop: 22 },
   next: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, marginTop: 16, borderWidth: 1, borderRadius: 12, paddingVertical: 14, minHeight: MIN_TOUCH },
