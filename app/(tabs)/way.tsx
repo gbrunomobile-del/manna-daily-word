@@ -1,13 +1,14 @@
 import React, { useEffect } from 'react';
-import { View, ScrollView, Pressable, StyleSheet, Dimensions, Image, ImageSourcePropType } from 'react-native';
+import { View, ScrollView, Pressable, StyleSheet, Dimensions, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { useRouter } from 'expo-router';
 import Animated, { FadeInDown, FadeIn } from 'react-native-reanimated';
+import Svg, { Path } from 'react-native-svg';
 import { Check, Lock } from 'lucide-react-native';
 import { Text } from '@/components/primitives/Text';
 import { ScreenHeader } from '@/components/manna/ScreenHeader';
-import { SCREEN_ART } from '@/components/manna/screen-art';
+import { SCREEN_ART, TOPIC_ART } from '@/components/manna/screen-art';
 import { useTheme } from '@/theme';
 import { feedback } from '@/services/feedback';
 import { useWay } from '@/store/way';
@@ -19,27 +20,10 @@ const ROW_H = 168;
 const LANES = [0.24, 0.5, 0.76];   // left, centre, right — as a fraction of width
 
 /**
- * Art lands here as it is generated. Any topic without an image falls back
- * to its emoji, so the tree stays complete while the set is being filled in.
+ * Art now lives in screen-art so the tree, Today and the lesson environment
+ * all draw from one place.
  */
-const ART: Record<string, ImageSourcePropType> = {
-  creation: require('../../assets/creation.png'),
-  'the-fall': require('../../assets/the-fall.png'),
-  noah: require('../../assets/noah.png'),
-  abraham: require('../../assets/abraham.png'),
-  joseph: require('../../assets/joseph.png'),
-  moses: require('../../assets/moses.png'),
-  'the-law': require('../../assets/the-law.png'),
-  david: require('../../assets/david.png'),
-  isaiah: require('../../assets/isaiah.png'),
-  birth: require('../../assets/birth.png'),
-  ministry: require('../../assets/ministry.png'),
-  miracles: require('../../assets/miracles.png'),
-  cross: require('../../assets/cross.png'),
-  acts: require('../../assets/acts.png'),
-  letters: require('../../assets/letters.png'),
-  revelation: require('../../assets/revelation.png'),
-};
+const ART = TOPIC_ART;
 
 interface Skill {
   id: string;
@@ -79,12 +63,46 @@ function statusOf(skill: Skill, completed: string[], attempted: string[]): Statu
   return attempted.includes(skill.id) ? 'attempted' : 'available';
 }
 
+/**
+ * The thread between two topics.
+ *
+ * Drawn as a shallow S-curve rather than a straight rule, because the nodes
+ * zigzag and a vertical bar joined nothing. Gold once the topic above it is
+ * gathered, so the path fills in behind you as you go.
+ */
+const Thread = ({ fromX, toX, lit, colour }: {
+  fromX: number; toX: number; lit: boolean; colour: string;
+}) => {
+  const h = ROW_H - NODE + 34;
+  // Control points pulled vertically give a slack, hand-drawn fall rather than
+  // the taut arc of a game path.
+  const d = `M ${fromX} 0 C ${fromX} ${h * 0.45}, ${toX} ${h * 0.55}, ${toX} ${h}`;
+  return (
+    <Svg width={W} height={h} style={styles.thread} pointerEvents="none">
+      <Path
+        d={d}
+        stroke={colour}
+        strokeWidth={lit ? 2 : 1.5}
+        strokeOpacity={lit ? 0.75 : 0.28}
+        strokeLinecap="round"
+        fill="none"
+        strokeDasharray={lit ? undefined : '5 7'}
+      />
+    </Svg>
+  );
+};
+
 export default function TheWay() {
   const t = useTheme();
   const router = useRouter();
   const { completed, attempted, xp, hydrate, hydrated } = useWay();
 
   useEffect(() => { if (!hydrated) void hydrate(); }, [hydrated, hydrate]);
+
+  /** Where you are now: the first topic open to you but not yet gathered. */
+  const currentId = SKILLS.find(
+    (sk) => !completed.includes(sk.id) && sk.unlocksAfter.every((id) => completed.includes(id)),
+  )?.id;
 
   return (
     <SafeAreaView style={[styles.flex, { backgroundColor: t.colors.background }]} edges={['top']}>
@@ -117,6 +135,7 @@ export default function TheWay() {
           const status = statusOf(skill, completed, attempted);
           const locked = status === 'locked';
           const complete = status === 'complete';
+          const current = skill.id === currentId;
           const art = ART[skill.id];
 
           const x = LANES[skill.lane] * W;
@@ -130,15 +149,11 @@ export default function TheWay() {
             >
               {/* Thread to the next topic */}
               {next && (
-                <View
-                  style={[
-                    styles.thread,
-                    {
-                      backgroundColor: complete ? t.colors.accent + '55' : t.colors.border + '66',
-                      left: (x + LANES[next.lane] * W) / 2 - 1,
-                      top: NODE - 6,
-                    },
-                  ]}
+                <Thread
+                  fromX={x}
+                  toX={LANES[next.lane] * W}
+                  lit={complete}
+                  colour={complete ? t.colors.accent : t.colors.textMuted}
                 />
               )}
 
@@ -157,7 +172,7 @@ export default function TheWay() {
                     // With transparent artwork the engraving sits straight on the
                     // page; the card chrome is only needed behind an emoji.
                     art
-                      ? { opacity: locked ? 0.3 : 1 }
+                      ? { opacity: locked ? 0.3 : complete ? 0.92 : 1 }
                       : {
                           backgroundColor: t.colors.surface,
                           borderColor: complete
@@ -173,7 +188,19 @@ export default function TheWay() {
                   ]}
                 >
                   {art ? (
-                    <Image source={art} style={styles.art} resizeMode="contain" />
+                    <>
+                      {/* A ring of light around the topic you are on now. */}
+                      {current && (
+                        <View
+                          style={[
+                            styles.focus,
+                            { borderColor: t.colors.accent, backgroundColor: t.colors.accent + '10' },
+                          ]}
+                          pointerEvents="none"
+                        />
+                      )}
+                      <Image source={art} style={styles.art} resizeMode="contain" />
+                    </>
                   ) : (
                     <Text style={styles.emoji}>{skill.emoji}</Text>
                   )}
@@ -195,7 +222,7 @@ export default function TheWay() {
                   style={[
                     styles.title,
                     { color: locked ? t.colors.textMuted : t.colors.text,
-                      fontFamily: complete ? t.fonts.sansSemi : t.fonts.sans },
+                      fontFamily: complete || current ? t.fonts.sansSemi : t.fonts.sans },
                   ]}
                   numberOfLines={1}
                 >
@@ -226,13 +253,17 @@ const styles = StyleSheet.create({
   tree: { paddingTop: 28 },
   treeHeader: { paddingHorizontal: 24, paddingBottom: 34 },
   row: { height: ROW_H, width: '100%', position: 'relative' },
-  thread: { position: 'absolute', width: 2, height: ROW_H - NODE + 12, borderRadius: 1 },
+  thread: { position: 'absolute', left: 0, top: NODE - 14 },
   nodeWrap: { position: 'absolute', width: NODE + 40, alignItems: 'center', marginLeft: -20 },
   node: {
     width: NODE, height: NODE,
     alignItems: 'center', justifyContent: 'center',
   },
   art: { width: '100%', height: '100%' },
+  focus: {
+    position: 'absolute', top: -6, left: -6, right: -6, bottom: -6,
+    borderRadius: (NODE + 12) / 2, borderWidth: 1.5,
+  },
   emoji: { fontSize: 40 },
   badge: {
     position: 'absolute', bottom: 6, right: 6,
