@@ -6,11 +6,13 @@ import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 import { ChevronLeft, ChevronRight, Check, ArrowRight, HelpCircle } from 'lucide-react-native';
 import { Text } from '@/components/primitives/Text';
 import { Button } from '@/components/primitives/Button';
+import { LampIndicator } from '@/components/manna/LampIndicator';
+import { Ornament } from '@/components/manna/Ornament';
 import { useTheme } from '@/theme';
 import { feedback } from '@/services/feedback';
 import { getDayReading, passagesForDay } from '@/data/year-plan';
 import { useGathered, chapterId } from '@/store/gathered';
-import { useProgress, planDay } from '@/store/progress';
+import { useProgress, planDay, currentStreak } from '@/store/progress';
 import { hasChapterQuestions } from '@/data/way-questions';
 
 interface Passage {
@@ -45,7 +47,7 @@ export default function DailyReading() {
   const { day: dayParam } = useLocalSearchParams<{ day: string }>();
   const [day, setDay] = useState(Number(dayParam) || 1);
 
-  const { startDate, completedLessonIds } = useProgress();
+  const { startDate, completedLessonIds, gatheredDates } = useProgress();
   const today = planDay(startDate);
 
   /** Whether this chapter's questions have been answered. */
@@ -55,7 +57,7 @@ export default function DailyReading() {
   );
 
   const reading = getDayReading(day);
-  const { gather, hasGathered, hydrate, hydrated } = useGathered();
+  const { gather, hasGathered, hydrate, hydrated, chapters } = useGathered();
   const recordDay = useProgress((s) => s.gather);
 
   const [complete, setComplete] = useState(false);
@@ -109,22 +111,63 @@ export default function DailyReading() {
   }
 
   if (complete) {
+    const streak = currentStreak(gatheredDates);
+    const chapterCount = Object.keys(chapters).length;
+
     return (
-      <SafeAreaView style={[styles.flex, { backgroundColor: t.colors.background }]}>
-        <View style={styles.centre}>
-          <Animated.View entering={FadeInDown.duration(700)} style={{ alignItems: 'center', gap: 22 }}>
-            <View style={[styles.vessel, { borderColor: t.colors.accent }]}>
-              <Check size={30} color={t.colors.accent} strokeWidth={2} />
-            </View>
-            <Text variant="title" style={{ color: t.colors.text, textAlign: 'center' }}>
-              Gathered.
-            </Text>
-            <Text variant="body" tone="muted" style={{ textAlign: 'center', lineHeight: 22 }}>
-              Day {day} is complete. These chapters are part of your journey now — you will see them lit wherever they appear again.
-            </Text>
-            <Button label="Return" variant="primary" onPress={() => router.back()} />
+      <SafeAreaView style={[styles.flex, { backgroundColor: t.colors.immersive }]}>
+        <ScrollView contentContainerStyle={styles.gathered} showsVerticalScrollIndicator={false}>
+          {/* The lamp, lit and breathing. Nothing bursts or explodes here —
+              the day is closed quietly. */}
+          <Animated.View entering={FadeIn.duration(700)} style={styles.lampWrap}>
+            <LampIndicator remaining={1} total={1} size={78} />
           </Animated.View>
-        </View>
+
+          <Animated.View entering={FadeInDown.delay(200).duration(620)} style={styles.gatheredHead}>
+            <Text variant="display" uppercase style={[styles.gatheredTitle, { color: t.colors.accent }]}>
+              Gathered
+            </Text>
+            <Text variant="bodyLarge" style={[styles.gatheredLead, { color: t.colors.onImmersive }]}>
+              You have taken today&apos;s portion.
+            </Text>
+            <Text variant="body" style={[styles.gatheredLead, { color: t.colors.onImmersiveMuted }]}>
+              Wisdom for today. Strength for tomorrow.
+            </Text>
+          </Animated.View>
+
+          {/* Only figures that mean something — no points, no score. */}
+          <Animated.View entering={FadeInDown.delay(340).duration(560)} style={styles.figures}>
+            {[
+              { value: String(passages.length), label: passages.length === 1 ? 'passage' : 'passages' },
+              { value: String(streak), label: streak === 1 ? 'day gathered' : 'days gathered' },
+              { value: String(chapterCount), label: 'chapters in all' },
+            ].map((f) => (
+              <View key={f.label} style={styles.figure}>
+                <Text variant="h2" style={{ color: t.colors.onImmersive }}>{f.value}</Text>
+                <Text variant="caption" style={{ color: t.colors.onImmersiveMuted, marginTop: 3 }}>
+                  {f.label}
+                </Text>
+              </View>
+            ))}
+          </Animated.View>
+
+          <Animated.View entering={FadeInDown.delay(480).duration(600)} style={styles.psalm}>
+            <Ornament width={108} opacity={0.4} />
+            <Text
+              variant="scripture"
+              style={[styles.psalmText, { color: t.colors.onImmersive, fontFamily: t.fonts.serifItalic }]}
+            >
+              Your word is a lamp to my feet, and a light for my path.
+            </Text>
+            <Text variant="reference" uppercase style={{ color: t.colors.accent, marginTop: 16 }}>
+              Psalm 119:105
+            </Text>
+          </Animated.View>
+
+          <Animated.View entering={FadeInDown.delay(620).duration(520)} style={styles.gatheredCta}>
+            <Button label="Continue journey" variant="primary" arrow onPress={() => router.back()} />
+          </Animated.View>
+        </ScrollView>
       </SafeAreaView>
     );
   }
@@ -301,4 +344,15 @@ const styles = StyleSheet.create({
     width: 76, height: 76, borderRadius: 38, borderWidth: 1.5,
     alignItems: 'center', justifyContent: 'center',
   },
+  gathered: { flexGrow: 1, paddingHorizontal: 32, paddingTop: 56, paddingBottom: 48 },
+  lampWrap: { alignItems: 'center' },
+  gatheredHead: { alignItems: 'center', marginTop: 30 },
+  // Display type needs a line box well over the font size or the capitals clip.
+  gatheredTitle: { letterSpacing: 5, lineHeight: 58, paddingTop: 6, textAlign: 'center' },
+  gatheredLead: { textAlign: 'center', marginTop: 12, lineHeight: 26 },
+  figures: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 44 },
+  figure: { flex: 1, alignItems: 'center' },
+  psalm: { alignItems: 'center', marginTop: 52 },
+  psalmText: { textAlign: 'center', marginTop: 22, lineHeight: 34 },
+  gatheredCta: { marginTop: 52 },
 });
