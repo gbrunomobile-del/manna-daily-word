@@ -1,7 +1,8 @@
 import React, { useState, useCallback, useMemo, useRef } from 'react';
-import { View, Pressable, ScrollView, StyleSheet, TextInput, type LayoutRectangle } from 'react-native';
+import { View, Pressable, ScrollView, StyleSheet, TextInput, Image, type LayoutRectangle } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter, useLocalSearchParams } from 'expo-router';
+import { LinearGradient } from 'expo-linear-gradient';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, {
   FadeIn, FadeInDown, useSharedValue, useAnimatedStyle, withSequence, withTiming,
@@ -13,6 +14,7 @@ import { Button } from '@/components/primitives/Button';
 import { AnswerCard, type AnswerState } from '@/components/primitives/AnswerCard';
 import { LampIndicator } from '@/components/manna/LampIndicator';
 import { Ornament } from '@/components/manna/Ornament';
+import { TOPIC_ART } from '@/components/manna/screen-art';
 import { useTheme, MIN_TOUCH } from '@/theme';
 import { feedback } from '@/services/feedback';
 import { useWay } from '@/store/way';
