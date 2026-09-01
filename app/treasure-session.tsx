@@ -250,13 +250,27 @@ export default function TreasureSession() {
    * The same rung feeds both the blanks and the tiles, so what is hidden and
    * what you are offered can never disagree — they did, which is why a verse
    * with one blank was asking for words in order.
+   *
+   * It is then filtered against the verse as actually fetched: a curated word
+   * that does not appear in the WEB wording would otherwise leave a tile with
+   * no gap to put it in.
    */
-  const rung: string[] = live.omissions.length
-    ? live.omissions[Math.min(
-        live.omissions.length - 1,
-        live.strength < 30 ? 1 : live.strength < 60 ? 2 : live.omissions.length - 1,
-      )] ?? live.omissions[0]
-    : words.filter((w) => w.replace(/[^A-Za-z]/g, '').length > 4).slice(0, 3);
+  const bare = (w: string) => w.replace(/[^A-Za-z’']/g, '').toLowerCase();
+
+  const rung: string[] = (() => {
+    const ladder = live.omissions.length
+      ? live.omissions[Math.min(
+          live.omissions.length - 1,
+          live.strength < 30 ? 1 : live.strength < 60 ? 2 : live.omissions.length - 1,
+        )] ?? live.omissions[0]
+      : words.filter((w) => bare(w).length > 4).slice(0, 3);
+
+    const present = new Set(words.map(bare));
+    const kept = ladder.filter((w) => present.has(bare(w)));
+    // If nothing matched, fall back rather than showing an exercise with no
+    // gaps at all.
+    return kept.length ? kept : words.filter((w) => bare(w).length > 4).slice(0, 3);
+  })();
 
   const body = () => {
     switch (phase) {

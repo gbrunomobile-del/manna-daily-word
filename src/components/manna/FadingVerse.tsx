@@ -74,8 +74,11 @@ export const FadingVerse = ({
       if (i >= 0) { out.add(i); used.add(i); }
     }
 
-    // Below the curated ladder's reach, keep taking content words until the
-    // proportion matches the requested assistance.
+    // Curated metadata is authoritative. Topping it up to hit a proportion
+    // would open more gaps than the caller has words to fill — the fallback
+    // below exists for verses with no metadata at all, not as a supplement.
+    if (omissions.length) return out;
+
     const target = Math.round(words.length * (1 - assistance));
     if (out.size < target) {
       const candidates = words
@@ -137,6 +140,12 @@ export const FadingVerse = ({
         })}
       </Text>
 
+      {/* Scripture always carries its reference — knowing where a verse sits is
+          half of knowing it. */}
+      <Text variant="reference" uppercase style={[styles.reference, { color: t.colors.accent }]}>
+        {reference}
+      </Text>
+
       {/* The blanks are drawn under the text as faint gold rules — stippling
           rather than a gap, so the page still reads as a verse. */}
       {hidden.size > 0 && (
@@ -148,4 +157,5 @@ export const FadingVerse = ({
 
 const styles = StyleSheet.create({
   wrap: { alignItems: 'center' },
+  reference: { marginTop: 20, opacity: 0.85 },
 });
