@@ -18,6 +18,7 @@ import { getDayReading, passagesForDay, TOTAL_DAYS } from '@/data/year-plan';
 import { DEFAULT_VERSION } from '@/data/versions';
 import { useGathered } from '@/store/gathered';
 import { useWay } from '@/store/way';
+import { useTreasure, treasuredCount, readyCount } from '@/store/treasure';
 import {
   useProgress, weekDots, currentStreak, gatheredToday, isReturning, planDay,
 } from '@/store/progress';
@@ -82,11 +83,18 @@ export default function Today() {
   const { gatheredDates, startDate, hydrate: hydrateProgress, hydrated: progressReady } = useProgress();
   const { hasGathered, hydrate: hydrateGathered, hydrated: gatheredReady, chapters } = useGathered();
   const { completed, hydrate: hydrateWay, hydrated: wayReady } = useWay();
+  const {
+    items: treasureItems, hydrate: hydrateTreasure, hydrated: treasureReadyState,
+  } = useTreasure();
+
+  const treasureKept = treasuredCount(treasureItems);
+  const treasureReady = readyCount(treasureItems);
 
   useEffect(() => {
     if (!progressReady) void hydrateProgress();
     if (!gatheredReady) void hydrateGathered();
     if (!wayReady) void hydrateWay();
+    if (!treasureReadyState) void hydrateTreasure();
     void AsyncStorage.getItem('manna_user').then((raw) => {
       if (raw) { try { setName(JSON.parse(raw).name ?? ''); } catch { /* ignore */ } }
     });
@@ -299,8 +307,33 @@ export default function Today() {
           </Animated.View>
         )}
 
+        {/* Treasure — a quiet line, not a second card competing with the lesson */}
+        <Animated.View entering={FadeInDown.delay(250).duration(440)} style={styles.treasureBlock}>
+          <Text variant="label" tone="muted" uppercase>Treasure</Text>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Open Treasure, Scripture memory"
+            onPress={() => { feedback.select(); router.push('/treasure'); }}
+            style={[styles.treasure, { borderTopColor: t.colors.border }]}
+          >
+            <View style={{ flex: 1 }}>
+              <Text variant="h3" style={{ color: t.colors.text }}>
+                {treasureReady > 0
+                  ? `${treasureReady} ${treasureReady === 1 ? 'Scripture is' : 'Scriptures are'} ready to remember.`
+                  : treasureKept > 0
+                  ? `${treasureKept} ${treasureKept === 1 ? 'Scripture' : 'Scriptures'} treasured.`
+                  : 'Begin keeping the Word.'}
+              </Text>
+              <Text variant="caption" tone="muted" style={{ marginTop: 4 }}>
+                Keep the Word you have gathered.
+              </Text>
+            </View>
+            <ArrowRight size={18} color={t.colors.accent} strokeWidth={2} />
+          </Pressable>
+        </Animated.View>
+
         {/* Quiet footer stat */}
-        <Animated.View entering={FadeInDown.delay(280).duration(440)} style={styles.footer}>
+        <Animated.View entering={FadeInDown.delay(320).duration(440)} style={styles.footer}>
           <Ornament width={96} opacity={0.3} />
           <Text variant="caption" tone="muted" style={{ marginTop: 14 }}>
             {Object.keys(chapters).length} chapters gathered so far
@@ -346,6 +379,12 @@ const styles = StyleSheet.create({
   dayLine: { marginTop: 14, textAlign: 'center' },
 
   lessonBlock: { marginTop: 52, gap: 14 },
+  treasureBlock: { marginTop: 48, gap: 14 },
+  treasure: {
+    flexDirection: 'row', alignItems: 'center', gap: 14,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    paddingTop: 18, minHeight: MIN_TOUCH,
+  },
   lesson: { borderRadius: 22, padding: 22, gap: 18 },
   lessonHead: { flexDirection: 'row', alignItems: 'center', gap: 16 },
   lessonArt: { width: 52, height: 52 },
