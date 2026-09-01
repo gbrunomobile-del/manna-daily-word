@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import {
   View, ScrollView, Pressable, StyleSheet, ActivityIndicator, Modal,
+  Text as RNText,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter, useLocalSearchParams } from 'expo-router';
@@ -215,42 +216,38 @@ export default function BookScreen() {
               {v.name}
             </Text>
 
-            {/* The chapter, verse by verse */}
-            <View>
+            {/*
+              The chapter reads as prose, not a list. Verse numbers sit inline
+              and small so they mark the text without interrupting it — a row
+              per verse turned Scripture into a table.
+            */}
+            <Text
+              variant="scripture"
+              style={{ color: t.colors.text, fontSize: size, lineHeight: size * 1.74 }}
+            >
               {verses.map((verse) => {
                 const taught = wasTaught(openChapter, verse.number);
                 return (
-                  <View key={verse.number} style={s.verseRow}>
-                    <Text
-                      style={[
-                        s.verseNum,
-                        {
-                          color: taught ? t.colors.accent : t.colors.textMuted,
-                          fontFamily: t.fonts.sansSemi,
-                          lineHeight: size * 1.62,
-                        },
-                      ]}
-                    >
-                      {verse.number}
-                    </Text>
-                    <Text
-                      variant="scripture"
+                  <RNText key={verse.number}>
+                    <RNText
                       style={{
-                        flex: 1,
-                        color: t.colors.text,
-                        fontSize: size,
-                        lineHeight: size * 1.62,
-                        // Verses met in a lesson carry a faint gold ground —
-                        // over time the page fills in with what you have learned.
-                        backgroundColor: taught ? t.colors.accent + '16' : 'transparent',
+                        color: taught ? t.colors.accent : t.colors.textMuted,
+                        fontFamily: t.fonts.sansSemi,
+                        fontSize: Math.round(size * 0.56),
                       }}
                     >
+                      {verse.number}  
+                    </RNText>
+                    {/* Verses met in a lesson carry a faint gold ground —
+                        over time the page fills in with what you have learned. */}
+                    <RNText style={taught ? { backgroundColor: t.colors.illumination } : undefined}>
                       {verse.text}
-                    </Text>
-                  </View>
+                    </RNText>
+                    {'  '}
+                  </RNText>
                 );
               })}
-            </View>
+            </Text>
 
             {!already && (
               <View style={{ marginTop: 28 }}>
