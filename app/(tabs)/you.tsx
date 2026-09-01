@@ -59,7 +59,7 @@ const Meter = ({ area, read, total }: { area: string; read: number; total: numbe
 
 export default function You() {
   const t = useTheme();
-  const { daysGathered, gatheredDates, hydrate: hydrateProgress, hydrated: progressReady } = useProgress();
+  const { daysGathered, gatheredDates, totalSeconds, hydrate: hydrateProgress, hydrated: progressReady } = useProgress();
   const { chapters, hydrate: hydrateGathered, hydrated: gatheredReady } = useGathered();
   const { completed, xp, hydrate: hydrateWay, hydrated: wayReady } = useWay();
 
@@ -124,7 +124,7 @@ export default function You() {
     { label: 'Days gathered', value: String(daysGathered) },
     { label: 'Day streak', value: String(streak) },
     { label: 'Chapters', value: String(chapterCount) },
-    { label: 'Topics', value: String(completed.length) },
+    { label: 'Min in the Word', value: String(Math.round(totalSeconds / 60)) },
   ];
 
   return (

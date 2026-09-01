@@ -17,6 +17,7 @@ import { getBook } from '@/data/books';
 import { VERSIONS, DEFAULT_VERSION, getVersion } from '@/data/versions';
 import { fetchChapter, type Verse } from '@/services/bible';
 import { useGathered, chapterId } from '@/store/gathered';
+import { useTimeInWord } from '@/store/progress';
 
 /** Reading sizes, in points. Stored so the choice persists. */
 const SIZES = [17, 19, 21, 24] as const;
@@ -31,6 +32,9 @@ export default function BookScreen() {
   const book = getBook(bookName);
 
   const { chapters, gather, hydrate, hydrated } = useGathered();
+
+  // Reading a chapter is time in the Word.
+  useTimeInWord();
 
   const [openChapter, setOpenChapter] = useState<number | null>(
     chapterParam ? Number(chapterParam) : null,

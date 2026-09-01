@@ -1,3 +1,5 @@
+import { useEffect, useRef } from 'react';
+import { AppState } from 'react-native';
 import { create } from 'zustand';
 import { localRepository, StorageKeys } from '@/services/storage';
 
@@ -17,6 +19,8 @@ export type ProgressState = {
 type Actions = {
   hydrate: () => Promise<void>;
   gather: (lessonId: string, seconds: number) => Promise<void>;
+  /** Add time spent reading or in a lesson. Kept separate from gathering. */
+  addSeconds: (seconds: number) => Promise<void>;
   toggleSaved: (passageId: string) => Promise<void>;
   reset: () => Promise<void>;
 };
@@ -48,6 +52,14 @@ export const useProgress = create<ProgressState & Actions>((set, get) => ({
     }
 
     set(state);
+  },
+
+  addSeconds: async (seconds) => {
+    if (seconds <= 0) return;
+    const s = get();
+    const next: ProgressState = { ...s, totalSeconds: s.totalSeconds + seconds, hydrated: true };
+    set(next);
+    await localRepository.set(StorageKeys.progress, next);
   },
 
   gather: async (lessonId, seconds) => {
@@ -87,6 +99,40 @@ export const useProgress = create<ProgressState & Actions>((set, get) => ({
     await localRepository.remove(StorageKeys.progress);
   },
 }));
+
+/**
+ * Count the time spent on a reading or lesson screen.
+ *
+ * Only counts while the app is actually in the foreground, and a single visit
+ * is capped, so a phone left open on a chapter overnight does not claim you
+ * read for nine hours. The figure is meant to be true rather than flattering.
+ */
+const MAX_SESSION_SECONDS = 45 * 60;
+
+export const useTimeInWord = () => {
+  const addSeconds = useProgress((s) => s.addSeconds);
+  const since = useRef<number | null>(Date.now());
+  const banked = useRef(0);
+
+  useEffect(() => {
+    const stop = () => {
+      if (since.current === null) return;
+      banked.current += Math.round((Date.now() - since.current) / 1000);
+      since.current = null;
+    };
+    const start = () => { if (since.current === null) since.current = Date.now(); };
+
+    const sub = AppState.addEventListener('change', (next) => {
+      if (next === 'active') start(); else stop();
+    });
+
+    return () => {
+      stop();
+      sub.remove();
+      void addSeconds(Math.min(banked.current, MAX_SESSION_SECONDS));
+    };
+  }, [addSeconds]);
+};
 
 /** Last seven days, most recent last. Missing days are simply not filled. */
 export const weekDots = (gatheredDates: readonly string[]): boolean[] => {

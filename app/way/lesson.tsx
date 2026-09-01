@@ -19,7 +19,7 @@ import { useTheme, MIN_TOUCH } from '@/theme';
 import { feedback } from '@/services/feedback';
 import { useWay } from '@/store/way';
 import { useGathered } from '@/store/gathered';
-import { useProgress } from '@/store/progress';
+import { useProgress, useTimeInWord } from '@/store/progress';
 import { QUESTIONS, CHAPTER_QUESTIONS, KIND_LABEL, type Question } from '@/data/way-questions';
 
 const MAX_LAMPS = 3;
@@ -118,6 +118,9 @@ export default function WayLesson() {
   const { recordAttempt } = useWay();
   const { gather } = useGathered();
   const recordDay = useProgress((s) => s.gather);
+
+  // A lesson counts as time in the Word.
+  useTimeInWord();
 
   const questions = isChapter
     ? (CHAPTER_QUESTIONS[chapter] ?? [])

@@ -12,7 +12,7 @@ import { useTheme } from '@/theme';
 import { feedback } from '@/services/feedback';
 import { getDayReading, passagesForDay } from '@/data/year-plan';
 import { useGathered, chapterId } from '@/store/gathered';
-import { useProgress, planDay, currentStreak } from '@/store/progress';
+import { useProgress, planDay, currentStreak, useTimeInWord } from '@/store/progress';
 import { hasChapterQuestions } from '@/data/way-questions';
 
 interface Passage {
@@ -47,7 +47,7 @@ export default function DailyReading() {
   const { day: dayParam } = useLocalSearchParams<{ day: string }>();
   const [day, setDay] = useState(Number(dayParam) || 1);
 
-  const { startDate, completedLessonIds, gatheredDates } = useProgress();
+  const { startDate, completedLessonIds, gatheredDates, totalSeconds } = useProgress();
   const today = planDay(startDate);
 
   /** Whether this chapter's questions have been answered. */
@@ -61,6 +61,9 @@ export default function DailyReading() {
   const recordDay = useProgress((s) => s.gather);
 
   const [complete, setComplete] = useState(false);
+
+  // The daily portion counts as time in the Word.
+  useTimeInWord();
 
   useEffect(() => { if (!hydrated) void hydrate(); }, [hydrated, hydrate]);
 
@@ -113,6 +116,7 @@ export default function DailyReading() {
   if (complete) {
     const streak = currentStreak(gatheredDates);
     const chapterCount = Object.keys(chapters).length;
+    const minutes = Math.round(totalSeconds / 60);
 
     return (
       <SafeAreaView style={[styles.flex, { backgroundColor: t.colors.immersive }]}>
@@ -139,6 +143,8 @@ export default function DailyReading() {
           <Animated.View entering={FadeInDown.delay(340).duration(560)} style={styles.figures}>
             {[
               { value: String(passages.length), label: passages.length === 1 ? 'passage' : 'passages' },
+              // Only shown once there is a minute to show — “0 min” says nothing.
+              ...(minutes > 0 ? [{ value: String(minutes), label: 'min in the Word' }] : []),
               { value: String(streak), label: streak === 1 ? 'day gathered' : 'days gathered' },
               { value: String(chapterCount), label: 'chapters in all' },
             ].map((f) => (
