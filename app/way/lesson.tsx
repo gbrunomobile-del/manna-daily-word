@@ -460,11 +460,11 @@ export default function WayLesson() {
               autoCapitalize="none"
               autoCorrect={false}
               style={[s.input, {
-                backgroundColor: t.colors.surface,
+                backgroundColor: t.colors.immersiveRaised,
                 borderColor: showResult
-                  ? (correct ? '#1A5535' : '#5E1A1A')
-                  : t.colors.border,
-                color: t.colors.text,
+                  ? (correct ? t.colors.accent : t.colors.memory)
+                  : 'rgba(245,239,227,0.22)',
+                color: t.colors.onImmersive,
               }]}
               accessibilityLabel="Your answer"
             />
@@ -496,9 +496,9 @@ export default function WayLesson() {
         return (
           <>
             {/* The line being built */}
-            <View style={[s.buildArea, { borderColor: showResult ? (correct ? '#1A5535' : '#5E1A1A') : t.colors.border }]}>
+            <View style={[s.buildArea, { borderColor: showResult ? (correct ? t.colors.accent : t.colors.memory) : 'rgba(245,239,227,0.22)' }]}>
               {chosen.length === 0 ? (
-                <Text variant="body" tone="muted">Tap the words in order</Text>
+                <Text variant="body" style={{ color: t.colors.onImmersiveMuted }}>Tap the words in order</Text>
               ) : (
                 <View style={s.tiles}>
                   {built.map((bi, pos) => (
@@ -513,7 +513,7 @@ export default function WayLesson() {
                       colours={{
                         bg: t.colors.accent + '22',
                         border: t.colors.accent + '55',
-                        text: t.colors.text,
+                        text: t.colors.onImmersive,
                       }}
                     />
                   ))}
@@ -537,12 +537,12 @@ export default function WayLesson() {
                     disabled={used || showResult}
                     onPress={() => setBuilt((b) => [...b, i])}
                     style={[s.tile, {
-                      backgroundColor: used ? 'transparent' : t.colors.surface,
-                      borderColor: used ? t.colors.border + '55' : t.colors.border,
+                      backgroundColor: used ? 'transparent' : t.colors.immersiveRaised,
+                      borderColor: used ? 'rgba(245,239,227,0.14)' : 'rgba(245,239,227,0.22)',
                       opacity: used ? 0.35 : 1,
                     }]}
                   >
-                    <Text variant="body" style={{ color: t.colors.text }}>{w}</Text>
+                    <Text variant="body" style={{ color: t.colors.onImmersive }}>{w}</Text>
                   </Pressable>
                 );
               })}
@@ -596,22 +596,22 @@ export default function WayLesson() {
                       onPress={() => setActiveText(isActive ? null : i)}
                       style={[s.matchCard, {
                         backgroundColor: showResult
-                          ? (right ? '#1A5535' : '#5E1A1A')
-                          : isActive ? t.colors.accent + '22' : t.colors.surface,
+                          ? (right ? t.colors.accent + '20' : 'rgba(114,80,91,0.24)')
+                          : isActive ? t.colors.accent + '1E' : t.colors.immersiveRaised,
                         borderColor: showResult
-                          ? (right ? '#1A5535' : '#5E1A1A')
-                          : isActive ? t.colors.accent : t.colors.border,
+                          ? (right ? t.colors.accent : t.colors.memory)
+                          : isActive ? t.colors.accent : 'rgba(245,239,227,0.18)',
                         opacity: linked && !isActive && !showResult ? 0.55 : 1,
                       }]}
                     >
                       <Text
                         variant="body"
-                        style={{ color: showResult ? '#F8F4EA' : t.colors.text, fontSize: 14, lineHeight: 20 }}
+                        style={{ color: t.colors.onImmersive, fontSize: 14, lineHeight: 20 }}
                       >
                         {p.text}
                       </Text>
                       {linked && (
-                        <Text variant="caption" style={{ color: showResult ? '#F8F4EA' : t.colors.accent, marginTop: 6 }}>
+                        <Text variant="caption" style={{ color: t.colors.accent, marginTop: 6 }}>
                           {q.pairs[links[i]].reference}
                         </Text>
                       )}
@@ -638,12 +638,12 @@ export default function WayLesson() {
                       setActiveText(null);
                     }}
                     style={[s.tile, {
-                      backgroundColor: used ? 'transparent' : t.colors.surface,
-                      borderColor: used ? t.colors.border + '55' : t.colors.border,
+                      backgroundColor: used ? 'transparent' : t.colors.immersiveRaised,
+                      borderColor: used ? 'rgba(245,239,227,0.14)' : 'rgba(245,239,227,0.22)',
                       opacity: used ? 0.35 : activeText === null ? 0.6 : 1,
                     }]}
                   >
-                    <Text variant="body" style={{ color: t.colors.text }}>
+                    <Text variant="body" style={{ color: t.colors.onImmersive }}>
                       {q.pairs[ri].reference}
                     </Text>
                   </Pressable>
