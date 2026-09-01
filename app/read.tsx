@@ -3,14 +3,14 @@ import { View, ScrollView, Pressable, StyleSheet, ActivityIndicator } from 'reac
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
-import { ChevronLeft, Check } from 'lucide-react-native';
+import { ChevronLeft, ChevronRight, Check } from 'lucide-react-native';
 import { Text } from '@/components/primitives/Text';
 import { Button } from '@/components/primitives/Button';
 import { useTheme } from '@/theme';
 import { feedback } from '@/services/feedback';
 import { getDayReading, passagesForDay } from '@/data/year-plan';
 import { useGathered } from '@/store/gathered';
-import { useProgress } from '@/store/progress';
+import { useProgress, planDay } from '@/store/progress';
 
 interface Passage {
   reference: string;
@@ -33,7 +33,10 @@ export default function DailyReading() {
   const t = useTheme();
   const router = useRouter();
   const { day: dayParam } = useLocalSearchParams<{ day: string }>();
-  const day = Number(dayParam) || 1;
+  const [day, setDay] = useState(Number(dayParam) || 1);
+
+  const { startDate } = useProgress();
+  const today = planDay(startDate);
 
   const reading = getDayReading(day);
   const { gather, hasGathered, hydrate, hydrated } = useGathered();
@@ -130,7 +133,13 @@ export default function DailyReading() {
         <View style={{ flex: 1 }}>
           <Text variant="caption" tone="muted" uppercase>Day {day} of 365</Text>
           <Text variant="body" style={{ color: t.colors.text, fontFamily: t.fonts.sansSemi }}>
-            Today&apos;s portion
+            {day === today
+              ? "Today's portion"
+              : day === today - 1
+              ? "Yesterday's portion"
+              : day < today
+              ? `${today - day} days back`
+              : 'Still ahead'}
           </Text>
         </View>
       </View>
@@ -193,6 +202,28 @@ export default function DailyReading() {
 
           <View style={{ height: 20 }} />
           <Button label="Mark as gathered" variant="primary" onPress={handleComplete} />
+
+          {/* Move between days — a missed day is not lost, just behind you. */}
+          <View style={styles.dayNav}>
+            <Pressable
+              disabled={day <= 1}
+              onPress={() => { feedback.select(); setDay(day - 1); }}
+              style={[styles.dayBtn, { borderColor: t.colors.border, opacity: day <= 1 ? 0.35 : 1 }]}
+            >
+              <ChevronLeft size={17} color={t.colors.text} strokeWidth={2} />
+              <Text variant="caption" style={{ color: t.colors.text }}>Day {day - 1}</Text>
+            </Pressable>
+
+            <Pressable
+              disabled={day >= 365}
+              onPress={() => { feedback.select(); setDay(day + 1); }}
+              style={[styles.dayBtn, { borderColor: t.colors.border, opacity: day >= 365 ? 0.35 : 1 }]}
+            >
+              <Text variant="caption" style={{ color: t.colors.text }}>Day {day + 1}</Text>
+              <ChevronRight size={17} color={t.colors.text} strokeWidth={2} />
+            </Pressable>
+          </View>
+
           <View style={{ height: 40 }} />
         </ScrollView>
       )}
@@ -213,6 +244,11 @@ const styles = StyleSheet.create({
   passage: { borderWidth: 1, borderRadius: 18, padding: 20, marginBottom: 16 },
   passageHead: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   gatheredPill: { paddingHorizontal: 9, paddingVertical: 3, borderRadius: 10 },
+  dayNav: { flexDirection: 'row', gap: 12, marginTop: 28 },
+  dayBtn: {
+    flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
+    gap: 6, borderWidth: 1, borderRadius: 12, paddingVertical: 14,
+  },
   vessel: {
     width: 76, height: 76, borderRadius: 38, borderWidth: 1.5,
     alignItems: 'center', justifyContent: 'center',
