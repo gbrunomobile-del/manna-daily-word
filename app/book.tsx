@@ -7,7 +7,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 import {
-  ChevronLeft, ChevronRight, Check, Type, X,
+  ChevronLeft, ChevronRight, Check, Type, X, Bookmark, HelpCircle,
 } from 'lucide-react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Text } from '@/components/primitives/Text';
@@ -18,7 +18,8 @@ import { getBook } from '@/data/books';
 import { VERSIONS, DEFAULT_VERSION, getVersion } from '@/data/versions';
 import { fetchChapter, type Verse } from '@/services/bible';
 import { useGathered, chapterId } from '@/store/gathered';
-import { useTimeInWord } from '@/store/progress';
+import { useProgress, useTimeInWord } from '@/store/progress';
+import { hasChapterQuestions } from '@/data/way-questions';
 
 /** Reading sizes, in points. Stored so the choice persists. */
 const SIZES = [17, 19, 21, 24] as const;
@@ -33,6 +34,11 @@ export default function BookScreen() {
   const book = getBook(bookName);
 
   const { chapters, gather, hydrate, hydrated } = useGathered();
+  const savedPassageIds = useProgress((p) => p.savedPassageIds);
+  const toggleSaved = useProgress((p) => p.toggleSaved);
+
+  /** The verse a reader has tapped, if any — opens the actions sheet. */
+  const [selected, setSelected] = useState<Verse | null>(null);
 
   // Reading a chapter is time in the Word.
   useTimeInWord();
@@ -240,7 +246,10 @@ export default function BookScreen() {
                     </RNText>
                     {/* Verses met in a lesson carry a faint gold ground —
                         over time the page fills in with what you have learned. */}
-                    <RNText style={taught ? { backgroundColor: t.colors.illumination } : undefined}>
+                    <RNText
+                      onPress={() => { feedback.select(); setSelected(verse); }}
+                      style={taught ? { backgroundColor: t.colors.illumination } : undefined}
+                    >
                       {verse.text}
                     </RNText>
                     {'  '}
@@ -279,6 +288,74 @@ export default function BookScreen() {
             <View style={{ height: 60 }} />
           </ScrollView>
         )}
+
+        {/* Verse actions */}
+        <Modal
+          visible={selected !== null}
+          animationType="slide"
+          transparent
+          onRequestClose={() => setSelected(null)}
+        >
+          <Pressable style={s.backdrop} onPress={() => setSelected(null)} />
+          <View style={[s.sheet, { backgroundColor: t.colors.background, borderColor: t.colors.border }]}>
+            {selected && (() => {
+              const ref = `${book.name} ${openChapter}:${selected.number}`;
+              const saved = savedPassageIds.includes(ref);
+              const chapterKey = chapterId(`${book.name} ${openChapter}`);
+              return (
+                <>
+                  <View style={s.sheetHead}>
+                    <Text variant="reference" uppercase style={{ color: t.colors.accent }}>
+                      {ref}
+                    </Text>
+                    <Pressable onPress={() => setSelected(null)} hitSlop={10}>
+                      <X size={20} color={t.colors.textMuted} strokeWidth={1.8} />
+                    </Pressable>
+                  </View>
+
+                  <Text variant="scripture" style={{ color: t.colors.text, marginBottom: 22 }}>
+                    {selected.text}
+                  </Text>
+
+                  <Pressable
+                    onPress={async () => {
+                      feedback.success?.();
+                      await toggleSaved(ref);
+                    }}
+                    style={[s.action, { borderTopColor: t.colors.border }]}
+                  >
+                    <Bookmark
+                      size={18}
+                      color={saved ? t.colors.accent : t.colors.textMuted}
+                      fill={saved ? t.colors.accent : 'transparent'}
+                      strokeWidth={1.7}
+                    />
+                    <Text variant="bodyLarge" style={{ color: t.colors.text }}>
+                      {saved ? 'Saved' : 'Save this verse'}
+                    </Text>
+                  </Pressable>
+
+                  {/* Only offered where the chapter actually has questions. */}
+                  {hasChapterQuestions(chapterKey) && (
+                    <Pressable
+                      onPress={() => {
+                        feedback.select();
+                        setSelected(null);
+                        router.push({ pathname: '/way/lesson', params: { chapter: chapterKey } });
+                      }}
+                      style={[s.action, { borderTopColor: t.colors.border }]}
+                    >
+                      <HelpCircle size={18} color={t.colors.textMuted} strokeWidth={1.7} />
+                      <Text variant="bodyLarge" style={{ color: t.colors.text }}>
+                        Questions on this chapter
+                      </Text>
+                    </Pressable>
+                  )}
+                </>
+              );
+            })()}
+          </View>
+        </Modal>
 
         {/* Version picker */}
         <Modal visible={showVersions} animationType="slide" transparent onRequestClose={() => setShowVersions(false)}>
@@ -431,6 +508,11 @@ const s = StyleSheet.create({
     minHeight: MIN_TOUCH,
   },
   sheetNote: { marginTop: 12, lineHeight: 17 },
+  action: {
+    flexDirection: 'row', alignItems: 'center', gap: 14,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    paddingVertical: 16, minHeight: MIN_TOUCH,
+  },
   picker: { paddingHorizontal: 24, paddingTop: 20 },
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 9, marginTop: 18 },
   chapter: {

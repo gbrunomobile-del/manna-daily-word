@@ -59,7 +59,7 @@ const Meter = ({ area, read, total }: { area: string; read: number; total: numbe
 
 export default function You() {
   const t = useTheme();
-  const { daysGathered, gatheredDates, totalSeconds, hydrate: hydrateProgress, hydrated: progressReady } = useProgress();
+  const { daysGathered, gatheredDates, totalSeconds, savedPassageIds, hydrate: hydrateProgress, hydrated: progressReady } = useProgress();
   const { chapters, hydrate: hydrateGathered, hydrated: gatheredReady } = useGathered();
   const { completed, xp, hydrate: hydrateWay, hydrated: wayReady } = useWay();
 
@@ -184,6 +184,26 @@ export default function You() {
         </Card>
 
         {/* Build and update state — so it is always clear which version is running. */}
+        <Text variant="reference" tone="muted" uppercase style={styles.sectionLabel}>
+          Saved verses
+        </Text>
+        <Card>
+          {savedPassageIds.length === 0 ? (
+            <>
+              <Text variant="h3">Nothing gathered here yet.</Text>
+              <Text variant="body" tone="secondary" style={styles.empty}>
+                Tap any verse while reading to keep it.
+              </Text>
+            </>
+          ) : (
+            savedPassageIds.map((ref) => (
+              <View key={ref} style={styles.versionRow}>
+                <Text variant="bodySmall">{ref}</Text>
+              </View>
+            ))
+          )}
+        </Card>
+
         <Text variant="reference" tone="muted" uppercase style={styles.sectionLabel}>
           Version
         </Text>
