@@ -2,13 +2,18 @@ import React from 'react';
 import { View, Pressable, StyleSheet } from 'react-native';
 import { Tabs } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Sunrise, Route, BookOpen, User, Compass } from 'lucide-react-native';
+import { Sunrise, Route, BookOpen, Compass, Flame } from 'lucide-react-native';
 import { Text } from '@/components/primitives/Text';
 import { useTheme, MIN_TOUCH } from '@/theme';
 import { feedback } from '@/services/feedback';
 
-const ICONS = { today: Sunrise, journey: Route, bible: BookOpen, way: Compass, you: User } as const;
-const LABELS = { today: 'Today', journey: 'Journey', bible: 'Bible', way: 'The Way', you: 'You' } as const;
+/**
+ * Five destinations. “You” is deliberately absent — it lives as a profile
+ * mark in the top right of Today, which keeps the bar to the number iOS is
+ * comfortable with and gives the fifth slot to something used daily.
+ */
+const ICONS = { today: Sunrise, journey: Route, bible: BookOpen, way: Compass, treasure: Flame } as const;
+const LABELS = { today: 'Today', journey: 'Journey', bible: 'Bible', way: 'The Way', treasure: 'Treasure' } as const;
 type TabKey = keyof typeof ICONS;
 
 type TabBarProps = {
@@ -19,6 +24,44 @@ type TabBarProps = {
 const TabBar = ({ state, navigation }: TabBarProps) => {
   const t = useTheme();
   const insets = useSafeAreaInsets();
+
+  const item = (
+    key: string,
+    Icon: typeof Sunrise,
+    label: string,
+    focused: boolean,
+    onPress: () => void,
+  ) => (
+    <Pressable
+      key={key}
+      accessibilityRole="tab"
+      accessibilityState={{ selected: focused }}
+      accessibilityLabel={label}
+      onPress={onPress}
+      style={styles.item}
+    >
+      <Icon
+        size={20}
+        strokeWidth={focused ? 1.9 : 1.5}
+        color={focused ? t.colors.accent : t.colors.textMuted}
+        opacity={focused ? 1 : 0.7}
+      />
+      <Text
+        variant="caption"
+        numberOfLines={1}
+        style={[
+          styles.label,
+          {
+            color: focused ? t.colors.textPrimary : t.colors.textMuted,
+            fontFamily: focused ? t.fonts.sansSemi : t.fonts.sans,
+            opacity: focused ? 1 : 0.75,
+          },
+        ]}
+      >
+        {label}
+      </Text>
+    </Pressable>
+  );
 
   return (
     <View
@@ -36,39 +79,10 @@ const TabBar = ({ state, navigation }: TabBarProps) => {
         const Icon = ICONS[key];
         if (!Icon) return null;
         const focused = state.index === index;
-        return (
-          <Pressable
-            key={route.key}
-            accessibilityRole="tab"
-            accessibilityState={{ selected: focused }}
-            accessibilityLabel={LABELS[key]}
-            onPress={() => {
-              feedback.select();
-              if (!focused) navigation.navigate(route.name);
-            }}
-            style={styles.item}
-          >
-            <Icon
-              size={21}
-              strokeWidth={focused ? 1.9 : 1.5}
-              color={focused ? t.colors.accent : t.colors.textMuted}
-              opacity={focused ? 1 : 0.7}
-            />
-            <Text
-              variant="caption"
-              style={[
-                styles.label,
-                {
-                  color: focused ? t.colors.textPrimary : t.colors.textMuted,
-                  fontFamily: focused ? t.fonts.sansSemi : t.fonts.sans,
-                  opacity: focused ? 1 : 0.75,
-                },
-              ]}
-            >
-              {LABELS[key]}
-            </Text>
-          </Pressable>
-        );
+        return item(route.key, Icon, LABELS[key], focused, () => {
+          feedback.select();
+          if (!focused) navigation.navigate(route.name);
+        });
       })}
     </View>
   );
@@ -81,7 +95,9 @@ export default function TabsLayout() {
       <Tabs.Screen name="journey" />
       <Tabs.Screen name="bible" />
       <Tabs.Screen name="way" />
-      <Tabs.Screen name="you" />
+      <Tabs.Screen name="treasure" />
+      {/* Still a route, reached from the profile mark on Today rather than the bar. */}
+      <Tabs.Screen name="you" options={{ href: null }} />
     </Tabs>
   );
 }

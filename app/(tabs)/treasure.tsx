@@ -4,7 +4,6 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { useRouter } from 'expo-router';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
-import { ChevronLeft } from 'lucide-react-native';
 import { Text } from '@/components/primitives/Text';
 import { Button } from '@/components/primitives/Button';
 import { EngravedLamp } from '@/components/manna/LampIndicator';
@@ -43,12 +42,6 @@ export default function TreasureHome() {
   return (
     <SafeAreaView style={[styles.flex, { backgroundColor: t.colors.background }]} edges={['top']}>
       <StatusBar style={t.scheme === 'dark' ? 'light' : 'dark'} />
-
-      <View style={styles.bar}>
-        <Pressable onPress={() => router.back()} hitSlop={10} style={styles.back}>
-          <ChevronLeft size={22} color={t.colors.textMuted} strokeWidth={1.8} />
-        </Pressable>
-      </View>
 
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <Animated.View entering={FadeIn.duration(600)} style={styles.lamp}>
@@ -162,7 +155,7 @@ const styles = StyleSheet.create({
   flex: { flex: 1 },
   bar: { flexDirection: 'row', paddingHorizontal: 14, paddingTop: 6 },
   back: { padding: 6 },
-  content: { paddingHorizontal: 32, paddingTop: 8 },
+  content: { paddingHorizontal: 32, paddingTop: 28 },
   lamp: { alignItems: 'center' },
   head: { alignItems: 'center', marginTop: 18 },
   title: { textAlign: 'center', marginTop: 8 },

@@ -6,7 +6,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
-import { ArrowRight } from 'lucide-react-native';
+import { ArrowRight, User } from 'lucide-react-native';
 import { Text } from '@/components/primitives/Text';
 import { Button } from '@/components/primitives/Button';
 import { Ornament } from '@/components/manna/Ornament';
@@ -137,6 +137,20 @@ export default function Today() {
       <StatusBar style={t.scheme === 'dark' ? 'light' : 'dark'} />
 
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+        {/* Profile sits here rather than in the bar, which keeps the tabs to
+            five and gives the fifth to something used every day. */}
+        <View style={styles.topRow}>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="You"
+            onPress={() => { feedback.select(); router.push('/you'); }}
+            hitSlop={10}
+            style={[styles.profile, { borderColor: t.colors.border }]}
+          >
+            <User size={17} color={t.colors.textMuted} strokeWidth={1.7} />
+          </Pressable>
+        </View>
+
         {/* Greeting */}
         <Animated.View entering={FadeIn.duration(420)}>
           <Text variant="label" tone="muted" uppercase>
@@ -349,6 +363,11 @@ export default function Today() {
 const styles = StyleSheet.create({
   flex: { flex: 1 },
   content: { paddingHorizontal: 24, paddingTop: 20 },
+  topRow: { flexDirection: 'row', justifyContent: 'flex-end', marginBottom: 18 },
+  profile: {
+    width: 38, height: 38, borderRadius: 19, borderWidth: 1,
+    alignItems: 'center', justifyContent: 'center',
+  },
 
   gathered: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',

@@ -106,7 +106,11 @@ export default function TreasureSession() {
         // another day rather than ending the session with an error.
         if (alive) skip();
       })
-      .finally(() => { if (alive) setLoading(false); });
+      // Always clears, even when this effect has been superseded — skip() and
+      // the empty-text path both change the current verse, which tears this
+      // effect down before it settles. Guarding this line left the spinner up
+      // for good.
+      .finally(() => setLoading(false));
     return () => { alive = false; };
   }, [live?.id, live?.text]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -237,9 +241,22 @@ export default function TreasureSession() {
 
   // ── Phases ─────────────────────────────────────────────────────────────────
   const words = live.text.split(/\s+/);
-  const blanks = live.omissions[0] ?? [];
   const phrases = phrasesOf(live.text);
   const scrambled = stableScramble(live.id, phrases);
+
+  /**
+   * Which rung of the omission ladder this verse is on.
+   *
+   * The same rung feeds both the blanks and the tiles, so what is hidden and
+   * what you are offered can never disagree — they did, which is why a verse
+   * with one blank was asking for words in order.
+   */
+  const rung: string[] = live.omissions.length
+    ? live.omissions[Math.min(
+        live.omissions.length - 1,
+        live.strength < 30 ? 1 : live.strength < 60 ? 2 : live.omissions.length - 1,
+      )] ?? live.omissions[0]
+    : words.filter((w) => w.replace(/[^A-Za-z]/g, '').length > 4).slice(0, 3);
 
   const body = () => {
     switch (phase) {
@@ -272,32 +289,36 @@ export default function TreasureSession() {
         );
 
       case 'missing': {
-        const targets = blanks.length ? blanks : words.filter((w) => w.length > 4).slice(0, 3);
+        const targets = rung;
+        const offered = stableScramble(live.id + ':w', targets);
         const done = placed.length >= targets.length;
         return (
           <>
             <FadingVerse
               text={live.text}
-              assistance={0.6}
-              omissions={live.omissions}
+              assistance={0.5}
+              omissions={[rung]}
               reference={reference}
             />
             <Text variant="caption" style={[s.instruction, { color: t.colors.onImmersiveMuted }]}>
-              {done ? 'Well kept.' : 'Choose the missing words, in order.'}
+              {done
+                ? 'Well kept.'
+                : targets.length === 1
+                ? 'Choose the missing word.'
+                : `Choose the missing words, in order · ${placed.length} of ${targets.length}`}
             </Text>
 
             <View style={s.tiles}>
-              {stableScramble(live.id + ':w', targets).map((w, i) => {
+              {offered.map((w, i) => {
                 const used = placed.includes(i);
                 return (
                   <Pressable
                     key={`${w}-${i}`}
                     disabled={used || done}
                     onPress={() => {
-                      const order = stableScramble(live.id + ':w', targets);
-                      const correct = targets[placed.length];
-                      if (order[i] === correct) { feedback.select(); setPlaced((p) => [...p, i]); }
-                      else { feedback.error?.(); setSlips((n) => n + 1); }
+                      if (offered[i] === targets[placed.length]) {
+                        feedback.select(); setPlaced((p) => [...p, i]);
+                      } else { feedback.error?.(); setSlips((n) => n + 1); }
                     }}
                     style={[s.tile, {
                       backgroundColor: used ? 'transparent' : t.colors.immersiveRaised,
