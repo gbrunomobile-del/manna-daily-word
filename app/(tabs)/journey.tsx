@@ -57,6 +57,7 @@ export default function Journey() {
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <ScreenHeader
           art={SCREEN_ART.journey}
+          caption="Journey"
           eyebrow="The Journey"
           title="A year in the Word"
         />

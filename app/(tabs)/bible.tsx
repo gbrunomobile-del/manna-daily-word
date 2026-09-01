@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { View, ScrollView, StyleSheet, Pressable, TextInput } from 'react-native';
+import { View, ScrollView, StyleSheet, Pressable, TextInput, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { useRouter } from 'expo-router';
@@ -11,6 +11,8 @@ import { SCREEN_ART } from '@/components/manna/screen-art';
 import { useTheme, MIN_TOUCH } from '@/theme';
 import { feedback } from '@/services/feedback';
 import { BOOKS, type Book } from '@/data/books';
+import { searchVerses, type VerseHit } from '@/services/bible';
+import { DEFAULT_VERSION } from '@/data/versions';
 import { useGathered, chapterId, TOTAL_CHAPTERS } from '@/store/gathered';
 
 type Testament = 'OT' | 'NT';
@@ -34,6 +36,28 @@ export default function Bible() {
   };
 
   const searching = query.trim().length > 0;
+
+  // Verse search runs alongside the book filter: typing “John” finds the book,
+  // typing “fear not” finds the verses. Debounced so it does not fire per
+  // keystroke, and only once the query is long enough to be meaningful.
+  const [hits, setHits] = useState<VerseHit[]>([]);
+  const [searchingText, setSearchingText] = useState(false);
+
+  useEffect(() => {
+    const q = query.trim();
+    if (q.length < 3) { setHits([]); return; }
+
+    let cancelled = false;
+    setSearchingText(true);
+    const timer = setTimeout(() => {
+      searchVerses(q, DEFAULT_VERSION)
+        .then((r) => { if (!cancelled) setHits(r); })
+        .catch(() => { if (!cancelled) setHits([]); })
+        .finally(() => { if (!cancelled) setSearchingText(false); });
+    }, 350);
+
+    return () => { cancelled = true; clearTimeout(timer); };
+  }, [query]);
 
   const visible = useMemo(() => {
     if (searching) {
@@ -66,6 +90,7 @@ export default function Bible() {
       >
         <ScreenHeader
           art={SCREEN_ART.bible}
+          caption="Bible"
           eyebrow="World English Bible"
           title="Read freely"
           subtitle={`${totalGathered} of ${TOTAL_CHAPTERS} chapters gathered`}
@@ -108,6 +133,45 @@ export default function Bible() {
                 </Pressable>
               );
             })}
+          </View>
+        )}
+
+        {/* Verse results, when the query is long enough to search text. */}
+        {searching && query.trim().length >= 3 && (
+          <View style={styles.group}>
+            <View style={styles.hitsHead}>
+              <Text variant="caption" tone="muted" uppercase style={styles.groupName}>
+                Verses
+              </Text>
+              {searchingText && <ActivityIndicator size="small" color={t.colors.accent} />}
+            </View>
+
+            {hits.map((h) => (
+              <Pressable
+                key={`${h.book}-${h.chapter}-${h.verse}`}
+                onPress={() => {
+                  feedback.select();
+                  router.push(
+                    `/book?name=${encodeURIComponent(h.book)}&chapter=${h.chapter}`,
+                  );
+                }}
+                style={[styles.hit, { backgroundColor: t.colors.surface, borderColor: t.colors.border }]}
+              >
+                <Text variant="reference" style={{ color: t.colors.accent, marginBottom: 4 }}>
+                  {h.book} {h.chapter}:{h.verse}
+                </Text>
+                <Text variant="body" style={{ color: t.colors.text, lineHeight: 21 }} numberOfLines={3}>
+                  {h.text}
+                </Text>
+              </Pressable>
+            ))}
+
+            {!searchingText && hits.length === 0 && (
+              <Text variant="body" tone="muted">
+                No verses found for that wording. Search matches the words as
+                written, so a different phrasing may find it.
+              </Text>
+            )}
           </View>
         )}
 
@@ -193,6 +257,8 @@ const styles = StyleSheet.create({
   switchItem: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingVertical: 9, borderRadius: 999 },
   group: { marginTop: 26 },
   groupName: { marginBottom: 10, letterSpacing: 1 },
+  hitsHead: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  hit: { borderWidth: 1, borderRadius: 14, padding: 15, marginBottom: 8 },
   book: {
     flexDirection: 'row', alignItems: 'center', gap: 14,
     borderWidth: 1, borderRadius: 14,

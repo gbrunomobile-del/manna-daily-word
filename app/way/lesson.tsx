@@ -107,10 +107,14 @@ export default function WayLesson() {
       x.kind === 'match' ? x.pairs.map((p) => p.reference) : [],
     );
 
-    // Chapter questions gather the verses they touch, but leave the skill tree
-    // alone — answering them is reading, not progress through The Way.
+    // Chapter questions gather the verses they touch and record that the
+    // chapter has been answered, but leave the skill tree alone — answering
+    // them is reading, not progress through The Way.
     if (isChapter) {
-      await gather([...verses, ...matchRefs]);
+      await Promise.all([
+        gather([...verses, ...matchRefs]),
+        recordDay(`chapter-${chapter}`, 0),
+      ]);
       return;
     }
 

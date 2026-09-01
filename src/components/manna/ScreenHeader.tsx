@@ -7,6 +7,8 @@ import { useTheme } from '@/theme';
 interface Props {
   /** The engraved plate. Omitted until the artwork exists; the header still works. */
   art?: ImageSourcePropType;
+  /** Name of the screen, set under the plate — as a caption sits under a plate. */
+  caption?: string;
   /** Small uppercase line above the title. */
   eyebrow?: string;
   /** The screen's heading. */
@@ -27,7 +29,7 @@ const ARCH_H = 118;
  * takes the theme's border and surface colours and adapts to dark mode — and
  * so the same plate can be reframed later without regenerating artwork.
  */
-export const ScreenHeader = ({ art, eyebrow, title, subtitle, align = 'center' }: Props) => {
+export const ScreenHeader = ({ art, caption, eyebrow, title, subtitle, align = 'center' }: Props) => {
   const t = useTheme();
   const centred = align === 'center';
 
@@ -51,6 +53,15 @@ export const ScreenHeader = ({ art, eyebrow, title, subtitle, align = 'center' }
             pointerEvents="none"
             style={[styles.archInner, { borderColor: t.colors.accent + '33' }]}
           />
+        </Animated.View>
+      )}
+
+      {art && caption && (
+        <Animated.View entering={FadeIn.delay(140).duration(600)} style={styles.captionWrap}>
+          <Text variant="title" style={[styles.caption, { color: t.colors.text }]}>
+            {caption}
+          </Text>
+          <View style={[styles.captionRule, { backgroundColor: t.colors.accent }]} />
         </Animated.View>
       )}
 
@@ -111,6 +122,9 @@ const styles = StyleSheet.create({
     borderBottomRightRadius: 6,
   },
   art: { width: '78%', height: '78%' },
+  captionWrap: { alignItems: 'center', gap: 7, marginTop: -4 },
+  caption: { fontSize: 23, letterSpacing: 0.2 },
+  captionRule: { width: 26, height: 1, opacity: 0.55 },
   eyebrow: { marginBottom: 6, letterSpacing: 1.2 },
   subtitle: { marginTop: 6 },
 });

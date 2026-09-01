@@ -53,6 +53,51 @@ export async function fetchChapter(
   return verses;
 }
 
+/** A verse found by search, with enough context to open it. */
+export interface VerseHit {
+  book: string;
+  chapter: number;
+  verse: number;
+  text: string;
+}
+
+/**
+ * Search the text of a translation.
+ *
+ * This is a word match rather than a semantic one — searching “fear not” finds
+ * verses containing those words, not verses about courage. That covers the
+ * common case of half-remembering a phrase and wanting to find where it sits.
+ */
+export async function searchVerses(
+  query: string,
+  version = 'WEB',
+  limit = 40,
+): Promise<VerseHit[]> {
+  const q = query.trim();
+  if (q.length < 3) return [];
+
+  const url =
+    `https://bolls.life/v2/find/${version}` +
+    `?search=${encodeURIComponent(q)}&match_case=false&match_whole=false&limit=${limit}`;
+
+  const res = await fetch(url);
+  if (!res.ok) throw new Error('Search failed.');
+
+  const body = await res.json();
+  // The endpoint has returned both a bare array and a wrapped object; accept either.
+  const rows: { book: number; chapter: number; verse: number; text: string }[] =
+    Array.isArray(body) ? body : (body?.results ?? []);
+
+  return rows
+    .map((r) => ({
+      book: BOOKS[r.book - 1]?.name ?? '',
+      chapter: r.chapter,
+      verse: r.verse,
+      text: clean(r.text),
+    }))
+    .filter((h) => h.book && h.text);
+}
+
 /**
  * Verses encountered in The Way, as "genesis-1-31" keys.
  *

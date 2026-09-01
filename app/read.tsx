@@ -45,8 +45,14 @@ export default function DailyReading() {
   const { day: dayParam } = useLocalSearchParams<{ day: string }>();
   const [day, setDay] = useState(Number(dayParam) || 1);
 
-  const { startDate } = useProgress();
+  const { startDate, completedLessonIds } = useProgress();
   const today = planDay(startDate);
+
+  /** Whether this chapter's questions have been answered. */
+  const answered = useCallback(
+    (id: string) => completedLessonIds.includes(`chapter-${id}`),
+    [completedLessonIds],
+  );
 
   const reading = getDayReading(day);
   const { gather, hasGathered, hydrate, hydrated } = useGathered();
@@ -202,25 +208,33 @@ export default function DailyReading() {
                 )}
 
                 {/* Only where the chapter has something worth asking about. */}
-                {hasChapterQuestions(chapterId(`${p.book} ${p.chapter}`)) && (
-                  <Pressable
-                    accessibilityRole="button"
-                    accessibilityLabel={`Answer questions on ${p.reference}`}
-                    onPress={() => {
-                      feedback.select();
-                      router.push({
-                        pathname: '/way/lesson',
-                        params: { chapter: chapterId(`${p.book} ${p.chapter}`) },
-                      });
-                    }}
-                    style={[styles.gatherOne, { borderTopColor: t.colors.border + '88' }]}
-                  >
-                    <HelpCircle size={15} color={t.colors.textMuted} strokeWidth={2} />
-                    <Text variant="caption" tone="muted">
-                      Three questions on this reading
-                    </Text>
-                  </Pressable>
-                )}
+                {hasChapterQuestions(chapterId(`${p.book} ${p.chapter}`)) && (() => {
+                  const id = chapterId(`${p.book} ${p.chapter}`);
+                  const isAnswered = answered(id);
+                  return (
+                    <Pressable
+                      accessibilityRole="button"
+                      accessibilityLabel={`Answer questions on ${p.reference}`}
+                      onPress={() => {
+                        feedback.select();
+                        router.push({ pathname: '/way/lesson', params: { chapter: id } });
+                      }}
+                      style={[styles.gatherOne, { borderTopColor: t.colors.border + '88' }]}
+                    >
+                      {isAnswered ? (
+                        <Check size={15} color={t.colors.accent} strokeWidth={2.2} />
+                      ) : (
+                        <HelpCircle size={15} color={t.colors.textMuted} strokeWidth={2} />
+                      )}
+                      <Text
+                        variant="caption"
+                        style={{ color: isAnswered ? t.colors.accent : t.colors.textMuted }}
+                      >
+                        {isAnswered ? 'Questions answered' : 'Three questions on this reading'}
+                      </Text>
+                    </Pressable>
+                  );
+                })()}
               </Animated.View>
             );
           })}
