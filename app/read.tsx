@@ -1,9 +1,9 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { View, ScrollView, Pressable, StyleSheet, ActivityIndicator } from 'react-native';
+import { View, ScrollView, Pressable, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
-import { ChevronLeft, ChevronRight, Check } from 'lucide-react-native';
+import { ChevronLeft, ChevronRight, Check, ArrowRight } from 'lucide-react-native';
 import { Text } from '@/components/primitives/Text';
 import { Button } from '@/components/primitives/Button';
 import { useTheme } from '@/theme';
@@ -14,19 +14,28 @@ import { useProgress, planDay } from '@/store/progress';
 
 interface Passage {
   reference: string;
-  text: string;
   label: string;
-  alreadyGathered: boolean;
+  /** Where tapping this passage opens the reader. */
+  book: string;
+  chapter: number;
 }
 
 const LABELS = ['Old Testament', 'New Testament', 'Psalm', 'Proverb'];
 
-async function fetchPassage(reference: string): Promise<string> {
-  const url = `https://bible-api.com/${encodeURIComponent(reference)}?translation=web`;
-  const res = await fetch(url);
-  if (!res.ok) throw new Error(`Could not load ${reference}`);
-  const data = await res.json();
-  return (data.text ?? '').trim();
+/**
+ * Resolve the opening chapter of a plan reference so it can be opened in the
+ * reader: "Genesis 1-2" and "Genesis 50 - Exodus 2" both start at Genesis 50/1.
+ *
+ * The plan writes "Psalm 23" where the canon lists the book as "Psalms", so
+ * that one name is normalised here rather than in the plan, which reads better
+ * as a reference.
+ */
+function openAt(reference: string): { book: string; chapter: number } | null {
+  const first = reference.split(' - ')[0].trim();
+  const m = first.match(/^(.+?)\s+(\d+)(?:-\d+)?$/);
+  if (!m) return null;
+  const book = m[1].trim() === 'Psalm' ? 'Psalms' : m[1].trim();
+  return { book, chapter: Number(m[2]) };
 }
 
 export default function DailyReading() {
@@ -42,44 +51,33 @@ export default function DailyReading() {
   const { gather, hasGathered, hydrate, hydrated } = useGathered();
   const recordDay = useProgress((s) => s.gather);
 
-  const [passages, setPassages] = useState<Passage[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
   const [complete, setComplete] = useState(false);
 
   useEffect(() => { if (!hydrated) void hydrate(); }, [hydrated, hydrate]);
 
-  useEffect(() => {
-    if (!reading) { setLoading(false); setError('That day is not in the plan.'); return; }
-    let cancelled = false;
+  /**
+   * The passages are derived, not fetched — the reader loads the text when a
+   * passage is opened. This screen is the day's plan, not the page itself.
+   */
+  const passages: Passage[] = React.useMemo(
+    () =>
+      passagesForDay(day)
+        .map((reference, i) => {
+          const at = openAt(reference);
+          if (!at) return null;
+          return { reference, label: LABELS[i] ?? '', ...at };
+        })
+        .filter(Boolean) as Passage[],
+    [day],
+  );
 
-    const load = async () => {
-      setLoading(true);
-      setError('');
-      const refs = passagesForDay(day);
-      try {
-        const results = await Promise.all(
-          refs.map(async (ref, i) => {
-            const alreadyGathered = hasGathered(ref);
-            try {
-              const text = await fetchPassage(ref);
-              return { reference: ref, text, label: LABELS[i] ?? '', alreadyGathered };
-            } catch {
-              return { reference: ref, text: '', label: LABELS[i] ?? '', alreadyGathered };
-            }
-          }),
-        );
-        if (!cancelled) setPassages(results);
-      } catch {
-        if (!cancelled) setError('Could not load this reading. Check your connection.');
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
-    };
+  const allGathered = passages.length > 0 && passages.every((p) => hasGathered(p.reference));
 
-    void load();
-    return () => { cancelled = true; };
-  }, [day, reading, hasGathered]);
+  /** Gather one passage on its own — the day need not be done in one sitting. */
+  const gatherOne = useCallback(async (reference: string) => {
+    feedback.success?.();
+    await gather(reference);
+  }, [gather]);
 
   const handleComplete = useCallback(async () => {
     feedback.success?.();
@@ -144,64 +142,73 @@ export default function DailyReading() {
         </View>
       </View>
 
-      {loading ? (
-        <View style={styles.centre}>
-          <ActivityIndicator color={t.colors.accent} />
-          <Text variant="caption" tone="muted" style={{ marginTop: 12 }}>Gathering the Word…</Text>
-        </View>
-      ) : error ? (
-        <View style={styles.centre}>
-          <Text variant="body" tone="muted" style={{ textAlign: 'center', paddingHorizontal: 32 }}>{error}</Text>
-        </View>
-      ) : (
+      {(
         <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-          {passages.map((p, i) => (
-            <Animated.View
-              key={p.reference}
-              entering={FadeIn.delay(i * 90).duration(420)}
-              style={[
-                styles.passage,
-                {
-                  backgroundColor: p.alreadyGathered ? t.colors.accent + '0E' : t.colors.surface,
-                  borderColor: p.alreadyGathered ? t.colors.accent + '38' : t.colors.border,
-                },
-              ]}
-            >
-              <View style={styles.passageHead}>
-                <Text variant="caption" tone="muted" uppercase>{p.label}</Text>
-                {p.alreadyGathered && (
-                  <View style={[styles.gatheredPill, { backgroundColor: t.colors.accent + '20' }]}>
-                    <Text style={{ color: t.colors.accent, fontSize: 10, letterSpacing: 0.6 }}>
-                      GATHERED
-                    </Text>
-                  </View>
-                )}
-              </View>
-
-              <Text variant="reference" style={{ color: t.colors.accent, marginTop: 4, marginBottom: 12 }}>
-                {p.reference}
-              </Text>
-
-              {p.text ? (
-                <Text
-                  variant="scripture"
-                  style={{
-                    color: t.colors.text,
-                    fontStyle: p.alreadyGathered ? 'italic' : 'normal',
+          {passages.map((p, i) => {
+            const done = hasGathered(p.reference);
+            return (
+              <Animated.View
+                key={p.reference}
+                entering={FadeIn.delay(i * 80).duration(400)}
+                style={[
+                  styles.passage,
+                  {
+                    backgroundColor: done ? t.colors.accent + '0E' : t.colors.surface,
+                    borderColor: done ? t.colors.accent + '38' : t.colors.border,
+                  },
+                ]}
+              >
+                <Pressable
+                  accessibilityRole="button"
+                  accessibilityLabel={`Read ${p.reference}`}
+                  onPress={() => {
+                    feedback.select();
+                    router.push(
+                      `/book?name=${encodeURIComponent(p.book)}&chapter=${p.chapter}`,
+                    );
                   }}
                 >
-                  {p.text}
-                </Text>
-              ) : (
-                <Text variant="body" tone="muted">
-                  This passage could not be loaded. You can still mark the day as gathered.
-                </Text>
-              )}
-            </Animated.View>
-          ))}
+                  <View style={styles.passageHead}>
+                    <Text variant="caption" tone="muted" uppercase>{p.label}</Text>
+                    {done && (
+                      <View style={[styles.gatheredPill, { backgroundColor: t.colors.accent + '20' }]}>
+                        <Text style={{ color: t.colors.accent, fontSize: 10, letterSpacing: 0.6 }}>
+                          GATHERED
+                        </Text>
+                      </View>
+                    )}
+                  </View>
 
-          <View style={{ height: 20 }} />
-          <Button label="Mark as gathered" variant="primary" onPress={handleComplete} />
+                  <View style={styles.refRow}>
+                    <Text variant="title" style={{ color: t.colors.text, flex: 1 }}>
+                      {p.reference}
+                    </Text>
+                    <ArrowRight size={19} color={t.colors.accent} strokeWidth={2} />
+                  </View>
+                </Pressable>
+
+                {!done && (
+                  <Pressable
+                    accessibilityRole="button"
+                    onPress={() => gatherOne(p.reference)}
+                    style={[styles.gatherOne, { borderTopColor: t.colors.border + '88' }]}
+                  >
+                    <Check size={15} color={t.colors.accent} strokeWidth={2.2} />
+                    <Text variant="caption" style={{ color: t.colors.accent }}>
+                      Mark as gathered
+                    </Text>
+                  </Pressable>
+                )}
+              </Animated.View>
+            );
+          })}
+
+          <View style={{ height: 14 }} />
+          <Button
+            label={allGathered ? 'Complete this day' : 'Gather the whole day'}
+            variant="primary"
+            onPress={handleComplete}
+          />
 
           {/* Move between days — a missed day is not lost, just behind you. */}
           <View style={styles.dayNav}>
@@ -241,8 +248,13 @@ const styles = StyleSheet.create({
   },
   back: { padding: 4 },
   content: { paddingHorizontal: 20, paddingTop: 20 },
-  passage: { borderWidth: 1, borderRadius: 18, padding: 20, marginBottom: 16 },
+  passage: { borderWidth: 1, borderRadius: 18, padding: 20, marginBottom: 14 },
   passageHead: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  refRow: { flexDirection: 'row', alignItems: 'center', gap: 12, marginTop: 6 },
+  gatherOne: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 7,
+    borderTopWidth: StyleSheet.hairlineWidth, marginTop: 16, paddingTop: 14, minHeight: 44,
+  },
   gatheredPill: { paddingHorizontal: 9, paddingVertical: 3, borderRadius: 10 },
   dayNav: { flexDirection: 'row', gap: 12, marginTop: 28 },
   dayBtn: {
