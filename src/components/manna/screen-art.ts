@@ -44,3 +44,12 @@ export const TOPIC_ART: Record<string, ImageSourcePropType> = {
   letters: require('../../../assets/letters.png'),
   revelation: require('../../../assets/revelation.png'),
 };
+
+/**
+ * The Doré lamp, separated into a still vessel and its flame so the flame can
+ * be animated over it. Both share one crop, so they align when stacked.
+ */
+export const LAMP_ART = {
+  lamp: require('../../../assets/manna_lamp.png'),
+  flame: require('../../../assets/manna_flame.png'),
+};

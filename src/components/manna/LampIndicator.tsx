@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { View, StyleSheet } from 'react-native';
+import { View, StyleSheet, Image, type ImageSourcePropType } from 'react-native';
 import Animated, {
   useAnimatedStyle, useSharedValue, withTiming, withRepeat, withSequence,
 } from 'react-native-reanimated';
@@ -111,6 +111,61 @@ export const LampIndicator = ({ remaining, total = 3, size = 22 }: Props) => (
   </View>
 );
 
+/**
+ * ENGRAVED LAMP
+ *
+ * The Doré lamp, in two layers: a still vessel with the flame animated over
+ * it. The two images were separated from a single engraving and share one
+ * crop, so the flame sits on the wick when they are stacked.
+ *
+ * Used where the lamp is the subject and has room — the Gathered screen. The
+ * drawn LampIndicator above stays for small utility indicators, where engraved
+ * linework would be illegible.
+ */
+export const EngravedLamp = ({
+  lamp, flame, size = 200,
+}: {
+  lamp: ImageSourcePropType;
+  flame: ImageSourcePropType;
+  size?: number;
+}) => {
+  const breath = useSharedValue(0);
+
+  useEffect(() => {
+    breath.value = withRepeat(
+      withSequence(
+        withTiming(1, { duration: 900 }),
+        withTiming(0, { duration: 1150 }),
+      ),
+      -1,
+      false,
+    );
+  }, [breath]);
+
+  // Gentler than the small indicator: at this size a strong pulse reads as
+  // flickering rather than burning.
+  const flameStyle = useAnimatedStyle(() => ({
+    opacity: 0.72 + breath.value * 0.28,
+    transform: [
+      { translateY: -breath.value * (size * 0.008) },
+      { scaleY: 0.97 + breath.value * 0.07 },
+      { scaleX: 1.01 - breath.value * 0.02 },
+    ],
+  }));
+
+  return (
+    <View style={[styles.engraved, { width: size, height: size }]}>
+      <Image source={lamp} style={styles.engravedImage} resizeMode="contain" />
+      <Animated.View style={[styles.engravedLayer, flameStyle]} pointerEvents="none">
+        <Image source={flame} style={styles.engravedImage} resizeMode="contain" />
+      </Animated.View>
+    </View>
+  );
+};
+
 const styles = StyleSheet.create({
   row: { flexDirection: 'row', gap: 7, alignItems: 'center' },
+  engraved: { alignItems: 'center', justifyContent: 'center' },
+  engravedLayer: { ...StyleSheet.absoluteFillObject },
+  engravedImage: { width: '100%', height: '100%' },
 });

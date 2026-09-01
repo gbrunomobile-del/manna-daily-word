@@ -6,7 +6,8 @@ import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 import { ChevronLeft, ChevronRight, Check, ArrowRight, HelpCircle } from 'lucide-react-native';
 import { Text } from '@/components/primitives/Text';
 import { Button } from '@/components/primitives/Button';
-import { LampIndicator } from '@/components/manna/LampIndicator';
+import { EngravedLamp } from '@/components/manna/LampIndicator';
+import { LAMP_ART } from '@/components/manna/screen-art';
 import { Ornament } from '@/components/manna/Ornament';
 import { useTheme } from '@/theme';
 import { feedback } from '@/services/feedback';
@@ -124,7 +125,7 @@ export default function DailyReading() {
           {/* The lamp, lit and breathing. Nothing bursts or explodes here —
               the day is closed quietly. */}
           <Animated.View entering={FadeIn.duration(700)} style={styles.lampWrap}>
-            <LampIndicator remaining={1} total={1} size={78} />
+            <EngravedLamp lamp={LAMP_ART.lamp} flame={LAMP_ART.flame} size={210} />
           </Animated.View>
 
           <Animated.View entering={FadeInDown.delay(200).duration(620)} style={styles.gatheredHead}>
@@ -350,9 +351,9 @@ const styles = StyleSheet.create({
     width: 76, height: 76, borderRadius: 38, borderWidth: 1.5,
     alignItems: 'center', justifyContent: 'center',
   },
-  gathered: { flexGrow: 1, paddingHorizontal: 32, paddingTop: 56, paddingBottom: 48 },
+  gathered: { flexGrow: 1, paddingHorizontal: 32, paddingTop: 32, paddingBottom: 48 },
   lampWrap: { alignItems: 'center' },
-  gatheredHead: { alignItems: 'center', marginTop: 30 },
+  gatheredHead: { alignItems: 'center', marginTop: 14 },
   // Display type needs a line box well over the font size or the capitals clip.
   gatheredTitle: { letterSpacing: 5, lineHeight: 58, paddingTop: 6, textAlign: 'center' },
   gatheredLead: { textAlign: 'center', marginTop: 12, lineHeight: 26 },
