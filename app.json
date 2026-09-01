@@ -8,11 +8,6 @@
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "icon": "./assets/icon.png",
-    "splash": {
-      "backgroundColor": "#18201C",
-      "resizeMode": "contain",
-      "image": "./assets/icon.png"
-    },
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "com.scripturepath.app",
@@ -32,8 +27,16 @@
     "plugins": [
       "expo-router",
       "expo-font",
-      "expo-splash-screen",
       "expo-apple-authentication",
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/splash-icon.png",
+          "imageWidth": 180,
+          "resizeMode": "contain",
+          "backgroundColor": "#18201C"
+        }
+      ],
       [
         "expo-system-ui",
         {
