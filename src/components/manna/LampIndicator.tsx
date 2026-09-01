@@ -26,19 +26,29 @@ const Lamp = ({ lit, offset = 0, size = 22 }: LampProps) => {
 
   useEffect(() => {
     if (!lit) { breath.value = withTiming(0, { duration: 400 }); return; }
+    // Staggered per lamp so a row does not pulse in unison, and quick enough
+    // to read as a flame rather than a slow fade.
+    const up = 780 + offset * 190;
+    const down = 960 + offset * 150;
     breath.value = withRepeat(
       withSequence(
-        withTiming(1, { duration: 1500 + offset * 220 }),
-        withTiming(0, { duration: 1500 + offset * 220 }),
+        withTiming(1, { duration: up }),
+        withTiming(0, { duration: down }),
       ),
       -1,
       false,
     );
   }, [lit, offset, breath]);
 
+  // A flame should rise and brighten, not swell evenly in both directions —
+  // hence the upward shift alongside the vertical scale.
   const flame = useAnimatedStyle(() => ({
-    opacity: lit ? 0.78 + breath.value * 0.22 : 0,
-    transform: [{ scaleY: 1 + breath.value * 0.12 }],
+    opacity: lit ? 0.58 + breath.value * 0.42 : 0,
+    transform: [
+      { translateY: -breath.value * 1.6 },
+      { scaleY: 0.93 + breath.value * 0.19 },
+      { scaleX: 1.02 - breath.value * 0.04 },
+    ],
   }));
 
   const vessel = lit ? t.colors.accent : t.colors.border;
