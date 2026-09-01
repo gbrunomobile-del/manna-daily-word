@@ -2,17 +2,20 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { View, ScrollView, Pressable, StyleSheet, Image, ImageSourcePropType } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
-import { Check, ArrowRight } from 'lucide-react-native';
+import { ArrowRight } from 'lucide-react-native';
 import { Text } from '@/components/primitives/Text';
+import { Button } from '@/components/primitives/Button';
 import { Ornament } from '@/components/manna/Ornament';
 import { SCREEN_ART } from '@/components/manna/screen-art';
-import { ScreenHeader } from '@/components/manna/ScreenHeader';
 import { useTheme, MIN_TOUCH } from '@/theme';
 import { feedback } from '@/services/feedback';
+import { fetchChapter } from '@/services/bible';
 import { getDayReading, passagesForDay, TOTAL_DAYS } from '@/data/year-plan';
+import { DEFAULT_VERSION } from '@/data/versions';
 import { useGathered } from '@/store/gathered';
 import { useWay } from '@/store/way';
 import {
@@ -62,6 +65,15 @@ const WAY_ART: Record<string, ImageSourcePropType> = {
 
 const LABELS = ['Old Testament', 'New Testament', 'Psalm', 'Proverb'];
 
+/** Opening chapter of a plan reference, so the portion can be previewed. */
+function openAt(reference: string): { book: string; chapter: number } | null {
+  const first = reference.split(' - ')[0].trim();
+  const m = first.match(/^(.+?)\s+(\d+)(?:-\d+)?$/);
+  if (!m) return null;
+  const book = m[1].trim() === 'Psalm' ? 'Psalms' : m[1].trim();
+  return { book, chapter: Number(m[2]) };
+}
+
 export default function Today() {
   const t = useTheme();
   const router = useRouter();
@@ -95,126 +107,121 @@ export default function Today() {
   // The next topic in The Way that hasn't been passed.
   const nextTopic = WAY_ORDER.find((id) => !completed.includes(id)) ?? null;
 
+  /**
+   * The opening verse of today's Old Testament portion, shown as a taste of
+   * what is waiting. Fetched rather than stored: the plan holds references,
+   * and inventing an excerpt would mean inventing Scripture.
+   */
+  const [excerpt, setExcerpt] = useState<string>('');
+  const otOpen = reading ? openAt(reading.ot) : null;
+
+  useEffect(() => {
+    if (!otOpen) { setExcerpt(''); return; }
+    let alive = true;
+    fetchChapter(otOpen.book, otOpen.chapter, DEFAULT_VERSION)
+      .then((vs) => { if (alive && vs[0]) setExcerpt(vs[0].text); })
+      .catch(() => { /* the portion still reads fine without it */ });
+    return () => { alive = false; };
+  }, [otOpen?.book, otOpen?.chapter]);
+
   return (
     <SafeAreaView style={[styles.flex, { backgroundColor: t.colors.background }]} edges={['top']}>
       <StatusBar style={t.scheme === 'dark' ? 'light' : 'dark'} />
 
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         {/* Greeting */}
-        {SCREEN_ART.today ? (
-          <ScreenHeader
-            art={SCREEN_ART.today}
-            caption="Today"
-            eyebrow={returning ? 'Welcome back' : undefined}
-            title={
-              returning
-                ? 'Your portion is waiting.'
-                : name
-                ? `${greeting()}, ${name}.`
-                : 'Gather truth. Daily.'
-            }
-          />
-        ) : (
-          <Animated.View entering={FadeIn.duration(420)}>
-            <Text variant="caption" tone="muted" uppercase>
-              {returning ? 'Welcome back' : greeting()}
-            </Text>
-            <Text variant="hero" style={{ color: t.colors.text, marginTop: 6 }}>
-              {returning
-                ? 'Your portion is waiting.'
-                : name
-                ? `${greeting()}, ${name}.`
-                : 'Gather truth. Daily.'}
-            </Text>
-          </Animated.View>
-        )}
-
-        {/* Streak — stated, never scolded */}
-        <Animated.View
-          entering={FadeInDown.delay(70).duration(440)}
-          style={[styles.streak, { backgroundColor: t.colors.surface, borderColor: t.colors.border }]}
-        >
-          <View style={styles.streakHead}>
-            <View>
-              <Text variant="title" style={{ color: t.colors.accent }}>
-                {streak}
-              </Text>
-              <Text variant="caption" tone="muted">
-                {streak === 1 ? 'day gathered' : 'days gathered'}
-              </Text>
-            </View>
-            <View style={styles.dots}>
-              {dots.map((filled, i) => (
-                <View
-                  key={i}
-                  style={[
-                    styles.dot,
-                    {
-                      backgroundColor: filled ? t.colors.accent : 'transparent',
-                      borderColor: filled ? t.colors.accent : t.colors.border,
-                    },
-                  ]}
-                />
-              ))}
-            </View>
-          </View>
-          {returning && (
-            <Text variant="caption" tone="muted" style={{ marginTop: 10 }}>
-              However long it has been, today counts.
-            </Text>
-          )}
+        <Animated.View entering={FadeIn.duration(420)}>
+          <Text variant="label" tone="muted" uppercase>
+            {returning ? 'Welcome back' : greeting()}
+          </Text>
+          <Text variant="hero" style={{ color: t.colors.text, marginTop: 8 }}>
+            {returning
+              ? 'Your portion is waiting.'
+              : name
+              ? `${greeting()}, ${name}.`
+              : 'Gather truth. Daily.'}
+          </Text>
         </Animated.View>
 
-        {/* Today's portion */}
-        {reading && (
-          <Animated.View entering={FadeInDown.delay(140).duration(440)}>
-            <View style={styles.sectionHead}>
-              <Ornament width={128} opacity={0.5} />
-            </View>
-
-            <Pressable
-              accessibilityRole="button"
-              accessibilityLabel={`Read day ${day} of the year plan`}
-              onPress={() => { feedback.select(); router.push(`/read?day=${day}`); }}
-              style={[
-                styles.portion,
-                {
-                  backgroundColor: doneToday ? t.colors.accent + '10' : t.colors.surface,
-                  borderColor: doneToday ? t.colors.accent + '44' : t.colors.border,
-                },
-              ]}
-            >
-              <View style={styles.portionHead}>
-                <Text variant="caption" tone="muted" uppercase>
-                  Day {day} of {TOTAL_DAYS}
-                </Text>
-                {doneToday && (
-                  <View style={[styles.tick, { backgroundColor: t.colors.accent }]}>
-                    <Check size={12} color={t.colors.background} strokeWidth={3} />
-                  </View>
-                )}
+        {/* Days gathered — stated quietly, on a hairline rather than in a card */}
+        <Animated.View
+          entering={FadeInDown.delay(70).duration(440)}
+          style={[styles.gathered, { borderColor: t.colors.border }]}
+        >
+          <View>
+            <Text variant="h2" style={{ color: t.colors.text }}>{streak}</Text>
+            <Text variant="caption" tone="muted">
+              {streak === 1 ? 'day gathered' : 'days gathered'}
+            </Text>
+          </View>
+          <View style={styles.dots}>
+            {dots.map((filled, i) => (
+              <View
+                key={i}
+                style={[
+                  styles.dotRing,
+                  { borderColor: filled ? t.colors.accent : t.colors.border },
+                ]}
+              >
+                {filled && <View style={[styles.dotCore, { backgroundColor: t.colors.accent }]} />}
               </View>
+            ))}
+          </View>
+        </Animated.View>
 
-              <Text variant="title" style={{ color: t.colors.text, marginTop: 6, marginBottom: 14 }}>
-                {doneToday ? 'Gathered today' : "Today's portion"}
+        {returning && (
+          <Text variant="bodySmall" tone="muted" style={{ marginTop: 12 }}>
+            However long it has been, today counts.
+          </Text>
+        )}
+
+        {/* Today's portion — the engraving sits behind it and dissolves */}
+        {reading && (
+          <Animated.View entering={FadeInDown.delay(140).duration(440)} style={styles.portion}>
+            {SCREEN_ART.today && (
+              <View style={styles.portionArt} pointerEvents="none">
+                <Image source={SCREEN_ART.today} style={styles.portionImage} resizeMode="contain" />
+                <LinearGradient
+                  colors={[t.colors.background + '00', t.colors.background]}
+                  locations={[0, 0.82]}
+                  style={StyleSheet.absoluteFill}
+                />
+              </View>
+            )}
+
+            <Text variant="label" tone="muted" uppercase>Today&apos;s portion</Text>
+            <Text variant="h1" style={{ color: t.colors.text, marginTop: 8 }}>
+              {reading.ot}
+            </Text>
+
+            {!!excerpt && (
+              <Text
+                variant="scripture"
+                style={[styles.excerpt, { color: t.colors.textSecondary, fontFamily: t.fonts.serifItalic }]}
+                numberOfLines={3}
+              >
+                {excerpt}
               </Text>
+            )}
 
+            {/* The whole portion, as hairline rows */}
+            <View style={styles.refs}>
               {refs.map((ref, i) => {
                 const done = hasGathered(ref);
                 return (
-                  <View key={ref} style={styles.refRow}>
+                  <View key={ref} style={[styles.refRow, { borderTopColor: t.colors.border }]}>
                     <View
                       style={[
                         styles.refDot,
-                        { backgroundColor: done ? t.colors.accent : t.colors.border },
+                        {
+                          backgroundColor: done ? t.colors.accent : 'transparent',
+                          borderColor: done ? t.colors.accent : t.colors.border,
+                        },
                       ]}
                     />
                     <Text
                       variant="body"
-                      style={{
-                        color: done ? t.colors.textMuted : t.colors.text,
-                        flex: 1,
-                      }}
+                      style={{ flex: 1, color: done ? t.colors.textMuted : t.colors.text }}
                     >
                       {ref}
                     </Text>
@@ -222,59 +229,85 @@ export default function Today() {
                   </View>
                 );
               })}
+            </View>
 
-              <View style={[styles.cta, { borderTopColor: t.colors.border + '77' }]}>
-                <Text variant="body" style={{ color: t.colors.accent, fontFamily: t.fonts.sansSemi }}>
-                  {doneToday
-                    ? 'Read again'
-                    : portionDone > 0
-                    ? `Continue · ${portionDone} of ${refs.length} gathered`
-                    : 'Begin reading'}
-                </Text>
-                <ArrowRight size={17} color={t.colors.accent} strokeWidth={2} />
-              </View>
-            </Pressable>
+            <Button
+              label={
+                doneToday ? 'Read again'
+                : portionDone > 0 ? `Continue · ${portionDone} of ${refs.length}`
+                : 'Begin reading'
+              }
+              arrow
+              onPress={() => { feedback.select(); router.push(`/read?day=${day}`); }}
+              style={styles.portionCta}
+            />
+
+            <Text variant="caption" tone="muted" style={styles.dayLine}>
+              Day {day} of {TOTAL_DAYS}
+            </Text>
           </Animated.View>
         )}
 
-        {/* Next on The Way */}
+        {/* Daily lesson */}
         {nextTopic && (
-          <Animated.View entering={FadeInDown.delay(210).duration(440)}>
-            <Text variant="caption" tone="muted" uppercase style={styles.sectionLabel}>
-              Next on The Way
-            </Text>
+          <Animated.View entering={FadeInDown.delay(210).duration(440)} style={styles.lessonBlock}>
+            <Text variant="label" tone="muted" uppercase>Daily lesson</Text>
+
             <Pressable
               accessibilityRole="button"
-              accessibilityLabel={`Start ${WAY_TITLES[nextTopic]}`}
+              accessibilityLabel={`Continue ${WAY_TITLES[nextTopic]}`}
               onPress={() => {
                 feedback.select();
                 router.push({ pathname: '/way/lesson', params: { skillId: nextTopic } });
               }}
-              style={[styles.wayCard, { backgroundColor: t.colors.surface, borderColor: t.colors.border }]}
+              style={[styles.lesson, { backgroundColor: t.colors.primary }]}
             >
-              <Image source={WAY_ART[nextTopic]} style={styles.wayArt} resizeMode="cover" />
-              <View style={{ flex: 1 }}>
-                <Text variant="body" style={{ color: t.colors.text, fontFamily: t.fonts.sansSemi }}>
-                  {WAY_TITLES[nextTopic]}
-                </Text>
-                <Text variant="caption" tone="muted" style={{ marginTop: 2 }}>
-                  Five questions · {completed.length} of {WAY_ORDER.length} gathered
+              <View style={styles.lessonHead}>
+                <Image source={WAY_ART[nextTopic]} style={styles.lessonArt} resizeMode="contain" />
+                <View style={{ flex: 1 }}>
+                  <Text variant="h2" style={{ color: t.colors.onImmersive }}>
+                    {WAY_TITLES[nextTopic]}
+                  </Text>
+                  <Text variant="caption" style={{ color: t.colors.onImmersiveMuted, marginTop: 3 }}>
+                    {completed.length} of {WAY_ORDER.length} gathered
+                  </Text>
+                </View>
+                <Text variant="h3" style={{ color: t.colors.onPrimary }}>
+                  {Math.round((completed.length / WAY_ORDER.length) * 100)}%
                 </Text>
               </View>
-              <ArrowRight size={18} color={t.colors.accent} strokeWidth={2} />
+
+              <View style={[styles.lessonTrack, { backgroundColor: 'rgba(245,239,227,0.16)' }]}>
+                <View
+                  style={[
+                    styles.lessonFill,
+                    {
+                      backgroundColor: t.colors.accent,
+                      width: `${Math.max((completed.length / WAY_ORDER.length) * 100, 2)}%`,
+                    },
+                  ]}
+                />
+              </View>
+
+              <View style={styles.lessonCta}>
+                <Text variant="label" uppercase style={{ color: t.colors.onPrimary, letterSpacing: 1.4 }}>
+                  Continue lesson
+                </Text>
+                <ArrowRight size={17} color={t.colors.onPrimary} strokeWidth={2} />
+              </View>
             </Pressable>
           </Animated.View>
         )}
 
         {/* Quiet footer stat */}
         <Animated.View entering={FadeInDown.delay(280).duration(440)} style={styles.footer}>
-          <Ornament width={96} opacity={0.32} />
-          <Text variant="caption" tone="muted" style={{ marginTop: 12 }}>
+          <Ornament width={96} opacity={0.3} />
+          <Text variant="caption" tone="muted" style={{ marginTop: 14 }}>
             {Object.keys(chapters).length} chapters gathered so far
           </Text>
         </Animated.View>
 
-        <View style={{ height: 70 }} />
+        <View style={{ height: 80 }} />
       </ScrollView>
     </SafeAreaView>
   );
@@ -282,27 +315,46 @@ export default function Today() {
 
 const styles = StyleSheet.create({
   flex: { flex: 1 },
-  content: { paddingHorizontal: 24, paddingTop: 16 },
-  streak: { borderWidth: 1, borderRadius: 18, padding: 18, marginTop: 22 },
-  streakHead: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  dots: { flexDirection: 'row', gap: 7 },
-  dot: { width: 11, height: 11, borderRadius: 6, borderWidth: 1 },
-  sectionHead: { alignItems: 'center', marginTop: 30, marginBottom: 14 },
-  sectionLabel: { marginTop: 30, marginBottom: 10, letterSpacing: 1 },
-  portion: { borderWidth: 1, borderRadius: 20, padding: 20 },
-  portionHead: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  tick: { width: 22, height: 22, borderRadius: 11, alignItems: 'center', justifyContent: 'center' },
-  refRow: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 5 },
-  refDot: { width: 6, height: 6, borderRadius: 3 },
-  cta: {
+  content: { paddingHorizontal: 24, paddingTop: 20 },
+
+  gathered: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-    borderTopWidth: StyleSheet.hairlineWidth, marginTop: 14, paddingTop: 14,
-    minHeight: MIN_TOUCH,
+    borderBottomWidth: StyleSheet.hairlineWidth, paddingBottom: 18, marginTop: 28,
   },
-  wayCard: {
-    flexDirection: 'row', alignItems: 'center', gap: 14,
-    borderWidth: 1, borderRadius: 18, padding: 14, minHeight: MIN_TOUCH,
+  dots: { flexDirection: 'row', gap: 9 },
+  dotRing: {
+    width: 14, height: 14, borderRadius: 7, borderWidth: 1,
+    alignItems: 'center', justifyContent: 'center',
   },
-  wayArt: { width: 54, height: 54, borderRadius: 14 },
-  footer: { alignItems: 'center', marginTop: 40 },
+  dotCore: { width: 6, height: 6, borderRadius: 3 },
+
+  portion: { marginTop: 44 },
+  // The engraving sits behind the portion and dissolves into the page rather
+  // than being boxed — atmosphere, not an illustration slot.
+  portionArt: {
+    position: 'absolute', top: -34, right: -46, width: 250, height: 250, opacity: 0.5,
+  },
+  portionImage: { width: '100%', height: '100%' },
+  excerpt: { marginTop: 16 },
+  refs: { marginTop: 28 },
+  refRow: {
+    flexDirection: 'row', alignItems: 'center', gap: 12,
+    borderTopWidth: StyleSheet.hairlineWidth, paddingVertical: 13,
+  },
+  refDot: { width: 8, height: 8, borderRadius: 4, borderWidth: 1 },
+  portionCta: { marginTop: 26 },
+  dayLine: { marginTop: 14, textAlign: 'center' },
+
+  lessonBlock: { marginTop: 52, gap: 14 },
+  lesson: { borderRadius: 22, padding: 22, gap: 18 },
+  lessonHead: { flexDirection: 'row', alignItems: 'center', gap: 16 },
+  lessonArt: { width: 52, height: 52 },
+  lessonTrack: { height: 3, borderRadius: 2, overflow: 'hidden' },
+  lessonFill: { height: '100%', borderRadius: 2 },
+  lessonCta: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+    minHeight: MIN_TOUCH - 20,
+  },
+
+  footer: { alignItems: 'center', marginTop: 56 },
 });
