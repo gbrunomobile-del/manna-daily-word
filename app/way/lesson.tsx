@@ -7,10 +7,12 @@ import Animated, {
   FadeIn, FadeInDown, useSharedValue, useAnimatedStyle, withSequence, withTiming,
   withSpring, runOnJS,
 } from 'react-native-reanimated';
-import { X, ArrowRight, RotateCcw } from 'lucide-react-native';
+import { X, ArrowRight, RotateCcw, Check } from 'lucide-react-native';
 import { Text } from '@/components/primitives/Text';
 import { Button } from '@/components/primitives/Button';
+import { AnswerCard, type AnswerState } from '@/components/primitives/AnswerCard';
 import { LampIndicator } from '@/components/manna/LampIndicator';
+import { Ornament } from '@/components/manna/Ornament';
 import { useTheme, MIN_TOUCH } from '@/theme';
 import { feedback } from '@/services/feedback';
 import { useWay } from '@/store/way';
@@ -205,6 +207,32 @@ export default function WayLesson() {
     if (ok) { feedback.success?.(); setScore((s) => s + 1); } else { wrong(); }
   }, [wrong]);
 
+  /**
+   * Choosing and committing are now separate: tapping an answer selects it,
+   * and Check submits. That gives a moment to reconsider, and makes the
+   * teaching screen feel like a consequence rather than an interruption.
+   */
+  const checkChoice = useCallback(() => {
+    if (choice === null) return;
+    const answer = 'answer' in q ? q.answer : null;
+    settle(choice === answer);
+  }, [choice, q, settle]);
+
+  /** How an option should look, given the selection and whether it is checked. */
+  const answerState = useCallback(
+    (isAnswer: boolean, isPicked: boolean): AnswerState => {
+      if (!showResult) return isPicked ? 'selected' : 'default';
+      if (isAnswer) return 'correct';
+      if (isPicked) return 'incorrect';
+      return 'disabled';
+    },
+    [showResult],
+  );
+
+  /** Formats that select first and submit second. */
+  const isChoiceKind =
+    q.kind === 'mcq' || q.kind === 'tf' || q.kind === 'cloze' || q.kind === 'whosaid';
+
   const finish = useCallback(async (finalScore: number) => {
     setDone(true);
     const verses = questions
@@ -272,6 +300,83 @@ export default function WayLesson() {
   }
 
   // ── Answer surfaces ────────────────────────────────────────────────────────
+  // The reward is the teaching, not the verdict — so the result takes the whole
+  // screen rather than appearing as a panel beneath the question.
+  if (showResult) {
+    return (
+      <SafeAreaView style={[s.flex, { backgroundColor: t.colors.immersive }]}>
+        <ScrollView contentContainerStyle={s.teaching} showsVerticalScrollIndicator={false}>
+          <Animated.View entering={FadeIn.duration(420)} style={s.teachingTop}>
+            <View
+              style={[
+                s.ring,
+                {
+                  borderColor: correct ? t.colors.accent : 'rgba(245,239,227,0.28)',
+                  backgroundColor: correct ? t.colors.accent + '18' : 'transparent',
+                },
+              ]}
+            >
+              {correct && <Check size={26} color={t.colors.accent} strokeWidth={2.4} />}
+            </View>
+
+            <Text
+              variant="label"
+              uppercase
+              style={{ color: correct ? t.colors.accent : t.colors.onImmersiveMuted, marginTop: 18 }}
+            >
+              {correct ? 'Well done' : 'Not quite'}
+            </Text>
+          </Animated.View>
+
+          <Animated.View entering={FadeInDown.delay(120).duration(520)} style={s.teachingBody}>
+            <Ornament width={116} opacity={0.4} />
+
+            <Text variant="h1" style={[s.teachingText, { color: t.colors.onImmersive }]}>
+              {q.insight}
+            </Text>
+
+            {'verse' in q && q.verse && (
+              <Text variant="reference" uppercase style={{ color: t.colors.accent, marginTop: 22 }}>
+                {q.verse}
+              </Text>
+            )}
+
+            {!correct && q.kind === 'type' && (
+              <Text variant="body" style={{ color: t.colors.onImmersiveMuted, marginTop: 20 }}>
+                The word is “{q.answer}”.
+              </Text>
+            )}
+            {!correct && q.kind === 'wordbank' && (
+              <Text
+                variant="scripture"
+                style={{ color: t.colors.onImmersiveMuted, marginTop: 20, textAlign: 'center' }}
+              >
+                {q.answer.join(' ')}
+              </Text>
+            )}
+          </Animated.View>
+
+          <Animated.View entering={FadeInDown.delay(260).duration(460)} style={s.teachingCta}>
+            <Button
+              label={qIdx >= total - 1 || hearts <= 0 ? 'See results' : 'Continue'}
+              variant="primary"
+              arrow
+              onPress={next}
+            />
+            {hearts < MAX_LAMPS && (
+              <Text
+                variant="caption"
+                style={{ color: t.colors.onImmersiveMuted, marginTop: 16, textAlign: 'center' }}
+              >
+                {hearts === 1 ? 'One lamp remaining.' : `${hearts} lamps remaining.`}
+              </Text>
+            )}
+          </Animated.View>
+        </ScrollView>
+      </SafeAreaView>
+    );
+  }
+
   const optionStyle = (isAnswer: boolean, isPicked: boolean) => {
     let bg = t.colors.surface, border = t.colors.border, fg = t.colors.text;
     if (showResult && isAnswer) { bg = '#1A5535'; border = '#1A5535'; fg = '#F8F4EA'; }
@@ -669,6 +774,15 @@ const s = StyleSheet.create({
   matchCols: { marginBottom: 4 },
   matchCol: { gap: 10 },
   matchCard: { borderWidth: 1.5, borderRadius: 14, padding: 14 },
+  teaching: { flexGrow: 1, paddingHorizontal: 32, paddingTop: 40, paddingBottom: 44 },
+  teachingTop: { alignItems: 'center' },
+  ring: {
+    width: 72, height: 72, borderRadius: 36, borderWidth: 1.5,
+    alignItems: 'center', justifyContent: 'center',
+  },
+  teachingBody: { alignItems: 'center', marginTop: 40, flex: 1, justifyContent: 'center' },
+  teachingText: { textAlign: 'center', marginTop: 26 },
+  teachingCta: { marginTop: 40 },
   insight: { borderWidth: 1, borderRadius: 16, padding: 18, marginTop: 22 },
   next: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, marginTop: 16, borderWidth: 1, borderRadius: 12, paddingVertical: 14, minHeight: MIN_TOUCH },
 });
