@@ -3,14 +3,15 @@ import { View, ScrollView, Pressable, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
-import { ChevronLeft, ChevronRight, Check, ArrowRight } from 'lucide-react-native';
+import { ChevronLeft, ChevronRight, Check, ArrowRight, HelpCircle } from 'lucide-react-native';
 import { Text } from '@/components/primitives/Text';
 import { Button } from '@/components/primitives/Button';
 import { useTheme } from '@/theme';
 import { feedback } from '@/services/feedback';
 import { getDayReading, passagesForDay } from '@/data/year-plan';
-import { useGathered } from '@/store/gathered';
+import { useGathered, chapterId } from '@/store/gathered';
 import { useProgress, planDay } from '@/store/progress';
+import { hasChapterQuestions } from '@/data/way-questions';
 
 interface Passage {
   reference: string;
@@ -196,6 +197,27 @@ export default function DailyReading() {
                     <Check size={15} color={t.colors.accent} strokeWidth={2.2} />
                     <Text variant="caption" style={{ color: t.colors.accent }}>
                       Mark as gathered
+                    </Text>
+                  </Pressable>
+                )}
+
+                {/* Only where the chapter has something worth asking about. */}
+                {hasChapterQuestions(chapterId(`${p.book} ${p.chapter}`)) && (
+                  <Pressable
+                    accessibilityRole="button"
+                    accessibilityLabel={`Answer questions on ${p.reference}`}
+                    onPress={() => {
+                      feedback.select();
+                      router.push({
+                        pathname: '/way/lesson',
+                        params: { chapter: chapterId(`${p.book} ${p.chapter}`) },
+                      });
+                    }}
+                    style={[styles.gatherOne, { borderTopColor: t.colors.border + '88' }]}
+                  >
+                    <HelpCircle size={15} color={t.colors.textMuted} strokeWidth={2} />
+                    <Text variant="caption" tone="muted">
+                      Three questions on this reading
                     </Text>
                   </Pressable>
                 )}

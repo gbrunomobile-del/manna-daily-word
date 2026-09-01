@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { View, ScrollView, StyleSheet, Pressable, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
@@ -9,7 +9,10 @@ import { Text } from '@/components/primitives/Text';
 import { Card } from '@/components/primitives/Card';
 import { MannaMark } from '@/components/manna/MannaMark';
 import { useTheme } from '@/theme';
-import { useProgress } from '@/store/progress';
+import { useProgress, currentStreak } from '@/store/progress';
+import { useGathered, chapterId, TOTAL_CHAPTERS } from '@/store/gathered';
+import { useWay } from '@/store/way';
+import { BOOKS } from '@/data/books';
 import { feedback } from '@/services/feedback';
 
 /** Short form of the running update id — enough to match against eas update:list. */
@@ -22,21 +25,28 @@ const formatWhen = (d: Date | null) => {
   });
 };
 
-const KNOWLEDGE = [
-  { area: 'Old Testament', value: 0.72 },
-  { area: 'Jesus', value: 0.91 },
-  { area: 'Paul', value: 0.58 },
-  { area: 'Prophecy', value: 0.36 },
-  { area: 'Biblical context', value: 0.68 },
-] as const;
+/**
+ * How the canon is grouped on this screen. Every figure below is counted from
+ * chapters actually gathered — nothing here is estimated or seeded.
+ */
+const SECTIONS: { area: string; groups: string[] }[] = [
+  { area: 'Law', groups: ['Law'] },
+  { area: 'History', groups: ['History'] },
+  { area: 'Poetry', groups: ['Poetry'] },
+  { area: 'Prophets', groups: ['Major Prophets', 'Minor Prophets'] },
+  { area: 'Gospels', groups: ['Gospels'] },
+  { area: 'Letters', groups: ["Paul's Letters", 'General Letters'] },
+  { area: 'Revelation', groups: ['Prophecy'] },
+];
 
-const Meter = ({ area, value }: { area: string; value: number }) => {
+const Meter = ({ area, read, total }: { area: string; read: number; total: number }) => {
   const t = useTheme();
+  const value = total === 0 ? 0 : read / total;
   return (
     <View style={styles.meter}>
       <View style={styles.meterHead}>
         <Text variant="bodySmall">{area}</Text>
-        <Text variant="caption" tone="muted">{Math.round(value * 100)}%</Text>
+        <Text variant="caption" tone="muted">{read} of {total}</Text>
       </View>
       <View style={[styles.track, { backgroundColor: t.colors.surfacePressed }]}>
         <View
@@ -49,8 +59,35 @@ const Meter = ({ area, value }: { area: string; value: number }) => {
 
 export default function You() {
   const t = useTheme();
-  const { daysGathered, totalSeconds, completedLessonIds, savedPassageIds } = useProgress();
-  const minutes = Math.round(totalSeconds / 60);
+  const { daysGathered, gatheredDates, hydrate: hydrateProgress, hydrated: progressReady } = useProgress();
+  const { chapters, hydrate: hydrateGathered, hydrated: gatheredReady } = useGathered();
+  const { completed, xp, hydrate: hydrateWay, hydrated: wayReady } = useWay();
+
+  useEffect(() => {
+    if (!progressReady) void hydrateProgress();
+    if (!gatheredReady) void hydrateGathered();
+    if (!wayReady) void hydrateWay();
+  }, [progressReady, gatheredReady, wayReady, hydrateProgress, hydrateGathered, hydrateWay]);
+
+  const chapterCount = Object.keys(chapters).length;
+  const streak = currentStreak(gatheredDates);
+
+  /** Chapters gathered against chapters available, per section of the canon. */
+  const sections = useMemo(
+    () =>
+      SECTIONS.map(({ area, groups }) => {
+        const books = BOOKS.filter((b) => groups.includes(b.group));
+        const total = books.reduce((sum, b) => sum + b.chapters, 0);
+        let read = 0;
+        for (const b of books) {
+          for (let c = 1; c <= b.chapters; c++) {
+            if (chapters[chapterId(`${b.name} ${c}`)] !== undefined) read++;
+          }
+        }
+        return { area, read, total };
+      }),
+    [chapters],
+  );
 
   const [checking, setChecking] = useState(false);
   const [updateNote, setUpdateNote] = useState('');
@@ -85,9 +122,9 @@ export default function You() {
 
   const stats = [
     { label: 'Days gathered', value: String(daysGathered) },
-    { label: 'Minutes in the Word', value: String(minutes) },
-    { label: 'Lessons', value: String(completedLessonIds.length) },
-    { label: 'Saved', value: String(savedPassageIds.length) },
+    { label: 'Day streak', value: String(streak) },
+    { label: 'Chapters', value: String(chapterCount) },
+    { label: 'Topics', value: String(completed.length) },
   ];
 
   return (
@@ -118,25 +155,33 @@ export default function You() {
         </View>
 
         <Text variant="reference" tone="muted" uppercase style={styles.sectionLabel}>
-          Knowledge areas
+          Scripture gathered
         </Text>
         <Card>
-          {KNOWLEDGE.map((k) => <Meter key={k.area} area={k.area} value={k.value} />)}
+          {sections.map((s) => (
+            <Meter key={s.area} area={s.area} read={s.read} total={s.total} />
+          ))}
+          <View style={[styles.totalRow, { borderTopColor: t.colors.border + '88' }]}>
+            <Text variant="bodySmall">Whole Bible</Text>
+            <Text variant="caption" tone="accent">
+              {chapterCount} of {TOTAL_CHAPTERS} chapters
+            </Text>
+          </View>
         </Card>
 
-        {savedPassageIds.length === 0 ? (
-          <>
-            <Text variant="reference" tone="muted" uppercase style={styles.sectionLabel}>
-              Saved verses
-            </Text>
-            <Card>
-              <Text variant="h3">Nothing gathered here yet.</Text>
-              <Text variant="body" tone="secondary" style={styles.empty}>
-                When a passage speaks to you, save it and return here.
-              </Text>
-            </Card>
-          </>
-        ) : null}
+        <Text variant="reference" tone="muted" uppercase style={styles.sectionLabel}>
+          The Way
+        </Text>
+        <Card>
+          <View style={styles.versionRow}>
+            <Text variant="bodySmall">Topics gathered</Text>
+            <Text variant="caption" tone="muted">{completed.length} of 16</Text>
+          </View>
+          <View style={styles.versionRow}>
+            <Text variant="bodySmall">Experience</Text>
+            <Text variant="caption" tone="accent">{xp} XP</Text>
+          </View>
+        </Card>
 
         {/* Build and update state — so it is always clear which version is running. */}
         <Text variant="reference" tone="muted" uppercase style={styles.sectionLabel}>
@@ -195,6 +240,10 @@ const styles = StyleSheet.create({
   track: { height: 4, borderRadius: 999, overflow: 'hidden' },
   fill: { height: '100%', borderRadius: 999 },
   empty: { marginTop: 8 },
+  totalRow: {
+    flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
+    borderTopWidth: StyleSheet.hairlineWidth, marginTop: 6, paddingTop: 14,
+  },
   versionRow: {
     flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
     paddingVertical: 5,

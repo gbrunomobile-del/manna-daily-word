@@ -13,7 +13,7 @@ import { feedback } from '@/services/feedback';
 import { useWay } from '@/store/way';
 import { useGathered } from '@/store/gathered';
 import { useProgress } from '@/store/progress';
-import { QUESTIONS, KIND_LABEL, type Question } from '@/data/way-questions';
+import { QUESTIONS, CHAPTER_QUESTIONS, KIND_LABEL, type Question } from '@/data/way-questions';
 
 const MAX_HEARTS = 3;
 const PASS_MARK = 3;
@@ -34,14 +34,23 @@ const normalise = (s: string) =>
 export default function WayLesson() {
   const t = useTheme();
   const router = useRouter();
-  const { skillId } = useLocalSearchParams<{ skillId: string }>();
+  const { skillId, chapter } = useLocalSearchParams<{ skillId?: string; chapter?: string }>();
+
+  /**
+   * The same runner serves both banks: a Way topic, or the questions that
+   * follow a chapter in the daily plan. Chapter questions record nothing in
+   * The Way — they are about the reading, not the skill tree.
+   */
+  const isChapter = !!chapter;
   const topic = skillId ?? 'creation';
 
   const { recordAttempt } = useWay();
   const { gather } = useGathered();
   const recordDay = useProgress((s) => s.gather);
 
-  const questions = QUESTIONS[topic] ?? QUESTIONS.creation;
+  const questions = isChapter
+    ? (CHAPTER_QUESTIONS[chapter] ?? [])
+    : (QUESTIONS[topic] ?? QUESTIONS.creation);
   const total = questions.length;
 
   const [qIdx, setQIdx] = useState(0);
@@ -97,12 +106,20 @@ export default function WayLesson() {
     const matchRefs = questions.flatMap((x) =>
       x.kind === 'match' ? x.pairs.map((p) => p.reference) : [],
     );
+
+    // Chapter questions gather the verses they touch, but leave the skill tree
+    // alone — answering them is reading, not progress through The Way.
+    if (isChapter) {
+      await gather([...verses, ...matchRefs]);
+      return;
+    }
+
     await Promise.all([
       recordAttempt(topic, finalScore, total),
       gather([...verses, ...matchRefs]),
       finalScore >= PASS_MARK ? recordDay(`way-${topic}`, 0) : Promise.resolve(),
     ]);
-  }, [questions, recordAttempt, gather, recordDay, topic, total]);
+  }, [questions, recordAttempt, gather, recordDay, topic, total, isChapter]);
 
   const next = useCallback(() => {
     if (hearts <= 0 || qIdx >= total - 1) { void finish(score); return; }
@@ -120,14 +137,22 @@ export default function WayLesson() {
           <Animated.View entering={FadeInDown.duration(600)} style={{ alignItems: 'center', gap: 20 }}>
             <Text style={{ fontSize: 56 }}>{passed ? '✦' : '◇'}</Text>
             <Text variant="title" style={{ color: t.colors.text, textAlign: 'center' }}>
-              {passed ? 'Well gathered.' : 'Worth another look.'}
+              {isChapter
+                ? (passed ? 'Held onto.' : 'Worth reading again.')
+                : (passed ? 'Well gathered.' : 'Worth another look.')}
             </Text>
             <Text variant="body" tone="muted" style={{ textAlign: 'center', paddingHorizontal: 34, lineHeight: 22 }}>
-              {passed
+              {isChapter
+                ? `${score} of ${total}. The chapter is yours either way — these only help it stay.`
+                : passed
                 ? `${score} of ${total} correct. These verses are now part of your journey.`
                 : `${score} of ${total}. Nothing is lost — come back to it whenever you like.`}
             </Text>
-            <Button label="Return to The Way" variant="primary" onPress={() => router.back()} />
+            <Button
+              label={isChapter ? 'Back to the reading' : 'Return to The Way'}
+              variant="primary"
+              onPress={() => router.back()}
+            />
           </Animated.View>
         </View>
       </SafeAreaView>

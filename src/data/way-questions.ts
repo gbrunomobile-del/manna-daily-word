@@ -313,3 +313,156 @@ export const QUESTIONS: Record<string, Question[]> = {
 
 /** Topics that still use the older short set, pending expansion. */
 export const hasExpandedSet = (topicId: string): boolean => topicId in QUESTIONS;
+
+/**
+ * CHAPTER QUESTIONS — asked after a chapter in the daily plan.
+ *
+ * Keyed by chapter id ("genesis-1"), matching the gathered store's format.
+ *
+ * Editorial line: these ask about the promise and the weight of a chapter, not
+ * its incidentals. Genealogies, censuses and building measurements get no
+ * questions — which is why most chapters have none, and why the button simply
+ * does not appear rather than offering something trivial. Where a chapter IS
+ * largely a list, as Matthew 1 is, the questions go to what the list is for.
+ *
+ * Scripture quoted is the World English Bible, matching the app's default.
+ */
+export const CHAPTER_QUESTIONS: Record<string, Question[]> = {
+  'genesis-1': [
+    {
+      kind: 'cloze',
+      prompt: 'Complete the verse.',
+      text: 'God created man in his own ___. In God\u2019s image he created him; male and female he created them.',
+      options: ['image', 'likeness', 'shape', 'spirit'],
+      answer: 0,
+      insight: 'Said three times in one verse. Whatever else the chapter establishes, it will not let this one pass quietly.',
+      verse: 'Genesis 1:27',
+    },
+    {
+      kind: 'mcq',
+      prompt: 'What did God say when he saw everything he had made?',
+      options: ['That it was finished', 'That it was very good', 'That it was his', 'That it would endure'],
+      answer: 1,
+      insight: 'Six times “good”, and once at the end “very good” — the verdict is on the whole, not the parts.',
+      verse: 'Genesis 1:31',
+    },
+    {
+      kind: 'tf',
+      prompt: 'Humanity is given responsibility for the rest of creation.',
+      answer: true,
+      insight: 'Dominion, in the sense of stewardship. Made last, and made answerable for what came before.',
+      verse: 'Genesis 1:28',
+    },
+  ],
+
+  'genesis-2': [
+    {
+      kind: 'mcq',
+      prompt: 'What did God do to the seventh day?',
+      options: ['Left it empty', 'Blessed it and made it holy', 'Gave it to Adam', 'Named it'],
+      answer: 1,
+      insight: 'Rest is not what is left over once the work is done. It is blessed and set apart — part of the design, not the gap after it.',
+      verse: 'Genesis 2:3',
+    },
+    {
+      kind: 'tf',
+      prompt: 'The first thing God called “not good” was that the man was alone.',
+      answer: true,
+      insight: 'In a passage where everything is repeatedly called good, the first failure named is solitude.',
+      verse: 'Genesis 2:18',
+    },
+    {
+      kind: 'type',
+      prompt: 'Type the missing word.',
+      text: 'A man will leave his father and his mother, and will join with his wife, and they will be one ___.',
+      answer: 'flesh',
+      accept: ['flesh'],
+      insight: 'Quoted by Jesus and by Paul when either needed to say what marriage is. It starts here, in the second chapter.',
+      verse: 'Genesis 2:24',
+    },
+  ],
+
+  'matthew-1': [
+    {
+      kind: 'cloze',
+      prompt: 'Complete the angel\u2019s instruction to Joseph.',
+      text: 'You shall call his name Jesus, for it is he who shall ___ his people from their sins.',
+      options: ['save', 'lead', 'gather', 'judge'],
+      answer: 0,
+      insight: 'The name is the job. Jesus — Yeshua — means “the Lord saves”, so the sentence explains itself.',
+      verse: 'Matthew 1:21',
+    },
+    {
+      kind: 'mcq',
+      prompt: 'What does the name Immanuel mean?',
+      options: ['The Lord saves', 'God with us', 'Prince of peace', 'Son of David'],
+      answer: 1,
+      insight: 'Isaiah’s word, held for seven hundred years and produced here. The whole Gospel closes on the same promise: “I am with you always.”',
+      verse: 'Matthew 1:23',
+    },
+    {
+      kind: 'tf',
+      prompt: 'The genealogy of Jesus includes women with troubled histories.',
+      answer: true,
+      insight: 'Tamar, Rahab, Ruth and “Uriah’s wife”. A list designed to prove royal descent had no need to name them, and names them anyway.',
+      verse: 'Matthew 1:3-6',
+    },
+  ],
+
+  'psalms-1': [
+    {
+      kind: 'mcq',
+      prompt: 'The blessed man is compared to a tree planted by what?',
+      options: ['A road', 'Streams of water', 'The temple', 'A field'],
+      answer: 1,
+      insight: 'Planted, not growing wild — put there deliberately, and near enough to the water to survive a dry season.',
+      verse: 'Psalm 1:3',
+    },
+    {
+      kind: 'wordbank',
+      prompt: 'Build the verse.',
+      answer: ['his', 'delight', 'is', 'in', 'Yahweh\u2019s', 'law.'],
+      distractors: ['fear', 'strength'],
+      insight: 'Delight rather than duty. The psalm rests its whole argument on which of the two you bring to it.',
+      verse: 'Psalm 1:2',
+    },
+    {
+      kind: 'tf',
+      prompt: 'The psalm says the wicked are like chaff driven away by the wind.',
+      answer: true,
+      insight: 'Set against the rooted tree. One is planted and one is blown about — the whole psalm is that contrast.',
+      verse: 'Psalm 1:4',
+    },
+  ],
+
+  'proverbs-1': [
+    {
+      kind: 'cloze',
+      prompt: 'Complete the verse.',
+      text: 'The fear of Yahweh is the beginning of ___.',
+      options: ['knowledge', 'wisdom', 'understanding', 'peace'],
+      answer: 0,
+      insight: 'The beginning, not the sum. Everything the book goes on to teach assumes you have started here.',
+      verse: 'Proverbs 1:7',
+    },
+    {
+      kind: 'mcq',
+      prompt: 'Where does Wisdom call out?',
+      options: ['In the temple', 'In the streets and public squares', 'In the king\u2019s court', 'In the wilderness'],
+      answer: 1,
+      insight: 'Not hidden or reserved for the trained. She shouts in the market, where anyone might hear.',
+      verse: 'Proverbs 1:20-21',
+    },
+    {
+      kind: 'tf',
+      prompt: 'The chapter warns against being drawn along by those who plan harm.',
+      answer: true,
+      insight: '“My son, if sinners entice you, don’t consent.” The first practical instruction in the book is about the company you keep.',
+      verse: 'Proverbs 1:10',
+    },
+  ],
+};
+
+/** Whether a chapter has questions — most do not, and that is deliberate. */
+export const hasChapterQuestions = (chapter: string): boolean =>
+  chapter in CHAPTER_QUESTIONS;
