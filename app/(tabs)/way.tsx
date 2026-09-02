@@ -5,6 +5,7 @@ import { StatusBar } from 'expo-status-bar';
 import { useRouter } from 'expo-router';
 import Animated, { FadeInDown, FadeIn } from 'react-native-reanimated';
 import Svg, { Path } from 'react-native-svg';
+import { LinearGradient } from 'expo-linear-gradient';
 import { Check, Lock } from 'lucide-react-native';
 import { Text } from '@/components/primitives/Text';
 import { Button } from '@/components/primitives/Button';
@@ -73,6 +74,10 @@ function statusOf(skill: Skill, completed: string[], attempted: string[]): Statu
  * Drawn as a shallow S-curve rather than a straight rule, because the nodes
  * zigzag and a vertical bar joined nothing. Gold once the topic above it is
  * gathered, so the path fills in behind you as you go.
+ *
+ * A lit segment is drawn twice: a wide, very faint pass beneath a narrow solid
+ * one. That gives the line a little light around it without any glow effect,
+ * which is what keeps it reading as illumination rather than as neon.
  */
 const Thread = ({ fromX, toX, lit, colour }: {
   fromX: number; toX: number; lit: boolean; colour: string;
@@ -83,14 +88,24 @@ const Thread = ({ fromX, toX, lit, colour }: {
   const d = `M ${fromX} 0 C ${fromX} ${h * 0.45}, ${toX} ${h * 0.55}, ${toX} ${h}`;
   return (
     <Svg width={W} height={h} style={styles.thread} pointerEvents="none">
+      {lit && (
+        <Path
+          d={d}
+          stroke={colour}
+          strokeWidth={7}
+          strokeOpacity={0.1}
+          strokeLinecap="round"
+          fill="none"
+        />
+      )}
       <Path
         d={d}
         stroke={colour}
-        strokeWidth={lit ? 2 : 1.5}
-        strokeOpacity={lit ? 0.75 : 0.28}
+        strokeWidth={lit ? 2 : 1}
+        strokeOpacity={lit ? 0.85 : 0.22}
         strokeLinecap="round"
         fill="none"
-        strokeDasharray={lit ? undefined : '5 7'}
+        strokeDasharray={lit ? undefined : '3 9'}
       />
     </Svg>
   );
@@ -167,6 +182,22 @@ export default function TheWay() {
               entering={FadeInDown.delay(Math.min(i, 8) * 55).duration(420)}
               style={styles.row}
             >
+              {/*
+                The topic's own engraving, very faint and bled past both edges.
+                Read one at a time it is barely there; scrolled, the ground
+                changes beneath you as the story moves — a landscape assembled
+                from the artwork already present rather than a new backdrop.
+              */}
+              {art && !locked && (
+                <View style={styles.band} pointerEvents="none">
+                  <Image source={art} style={styles.bandImage} resizeMode="cover" />
+                  <LinearGradient
+                    colors={[t.colors.background, t.colors.background + '00', t.colors.background]}
+                    locations={[0, 0.5, 1]}
+                    style={StyleSheet.absoluteFill}
+                  />
+                </View>
+              )}
               {/* Thread to the next topic */}
               {next && (
                 <Thread
@@ -327,6 +358,11 @@ const styles = StyleSheet.create({
   tree: { paddingTop: 28 },
   treeHeader: { paddingHorizontal: 24, paddingBottom: 34 },
   row: { height: ROW_H, width: '100%', position: 'relative' },
+  band: {
+    position: 'absolute', left: -60, right: -60, top: 0, bottom: 0,
+    opacity: 0.07,
+  },
+  bandImage: { width: '100%', height: '100%' },
   thread: { position: 'absolute', left: 0, top: NODE - 14 },
   nodeWrap: { position: 'absolute', width: NODE + 40, alignItems: 'center', marginLeft: -20 },
   node: {
