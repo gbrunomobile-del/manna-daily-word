@@ -17,7 +17,7 @@ import { formatRef, type ScriptureRef } from '@/types/scripture';
 import { justTreasured, isDue, type MemoryItem, type Recall } from '@/services/memory';
 import { useTreasure } from '@/store/treasure';
 
-type Phase = 'read' | 'notice' | 'missing' | 'build' | 'reference' | 'whisper' | 'treasured' | 'done';
+type Phase = 'read' | 'notice' | 'missing' | 'build' | 'reference' | 'match' | 'whisper' | 'treasured' | 'done';
 
 /**
  * Three references for a verse, one of them right.
@@ -163,9 +163,31 @@ export default function TreasureSession() {
     return 'whisper';
   }, []);
 
+  /**
+   * Two other verses to sit alongside this one in a matching exercise.
+   *
+   * Drawn from the session, so they are verses already met rather than
+   * strangers — the test is telling apart things you know, not guessing at
+   * things you have never seen.
+   */
+  const matchGroup = useMemo(() => {
+    if (!live?.text) return [];
+    const others = session.filter((m) => m.id !== live.id && m.text).slice(0, 2);
+    return others.length === 2 ? [live, ...others] : [];
+  }, [live?.id, live?.text, session]); // eslint-disable-line react-hooks/exhaustive-deps
+
   useEffect(() => {
-    if (live?.text) setPhase(openingPhase(live));
-  }, [live?.id, live?.text]); // eslint-disable-line react-hooks/exhaustive-deps
+    if (!live?.text) return;
+    const opening = openingPhase(live);
+    // Matching needs three verses already met. Where the session can supply
+    // them, a well-known verse gets matched rather than asked about in
+    // isolation — telling apart things you know is the harder recall.
+    if (opening === 'reference' && matchGroup.length === 3 && live.strength >= 60) {
+      setPhase('match');
+      return;
+    }
+    setPhase(opening);
+  }, [live?.id, live?.text, matchGroup.length]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const resetPer = () => { setSlips(0); setRevealed(false); setPlaced([]); };
 
@@ -353,6 +375,7 @@ export default function TreasureSession() {
               text={live.text}
               assistance={0.5}
               omissions={[rung]}
+              filled={placed.map((p) => offered[p])}
               reference={reference}
             />
             <Text variant="caption" style={[s.instruction, { color: t.colors.onImmersiveMuted }]}>
@@ -513,6 +536,106 @@ export default function TreasureSession() {
         );
       }
 
+      case 'match': {
+        const pairs = matchGroup;
+        const refs = stableScramble(live.id + ':m', pairs.map((p) => p.id));
+        const allLinked = Object.keys(links).length === pairs.length;
+        return (
+          <>
+            <Text variant="body" style={[s.instruction, { color: t.colors.onImmersiveMuted }]}>
+              {activeText === null
+                ? 'Tap a Scripture, then its reference.'
+                : 'Now its reference.'}
+            </Text>
+
+            <View style={s.matchCol}>
+              {pairs.map((p, i) => {
+                const linked = links[i] !== undefined;
+                const isActive = activeText === i;
+                const right = revealed && pairs[links[i]]?.id === p.id;
+                return (
+                  <Pressable
+                    key={p.id}
+                    disabled={revealed}
+                    onPress={() => setActiveText(isActive ? null : i)}
+                    style={[s.matchCard, {
+                      backgroundColor: revealed
+                        ? (right ? t.colors.accent + '1E' : 'rgba(114,80,91,0.22)')
+                        : isActive ? t.colors.accent + '1E' : t.colors.immersiveRaised,
+                      borderColor: revealed
+                        ? (right ? t.colors.accent : t.colors.memory)
+                        : isActive ? t.colors.accent : 'rgba(245,239,227,0.18)',
+                      opacity: linked && !isActive && !revealed ? 0.6 : 1,
+                    }]}
+                  >
+                    <Text
+                      variant="body"
+                      style={{ color: t.colors.onImmersive, lineHeight: 22 }}
+                      numberOfLines={3}
+                    >
+                      {p.text}
+                    </Text>
+                    {linked && (
+                      <Text variant="caption" style={{ color: t.colors.accent, marginTop: 8 }}>
+                        {formatRef(pairs[links[i]].ref)}
+                      </Text>
+                    )}
+                  </Pressable>
+                );
+              })}
+            </View>
+
+            <View style={s.tiles}>
+              {refs.map((id) => {
+                const idx = pairs.findIndex((p) => p.id === id);
+                const used = Object.values(links).includes(idx);
+                return (
+                  <Pressable
+                    key={id}
+                    disabled={revealed || activeText === null || used}
+                    onPress={() => {
+                      if (activeText === null) return;
+                      feedback.select();
+                      setLinks((l) => ({ ...l, [activeText]: idx }));
+                      setActiveText(null);
+                    }}
+                    style={[s.tile, {
+                      backgroundColor: used ? 'transparent' : t.colors.immersiveRaised,
+                      borderColor: used ? 'rgba(245,239,227,0.14)' : 'rgba(245,239,227,0.22)',
+                      opacity: used ? 0.35 : activeText === null ? 0.55 : 1,
+                    }]}
+                  >
+                    <Text variant="body" style={{ color: t.colors.onImmersive }}>
+                      {formatRef(pairs[idx].ref)}
+                    </Text>
+                  </Pressable>
+                );
+              })}
+            </View>
+
+            {!revealed ? (
+              <Button
+                label="Check"
+                variant="primary"
+                disabled={!allLinked}
+                onPress={() => {
+                  const correct = pairs.every((p, i) => pairs[links[i]]?.id === p.id);
+                  setRevealed(true);
+                  if (correct) feedback.success?.(); else { feedback.error?.(); setSlips((n) => n + 1); }
+                }}
+              />
+            ) : (
+              <Button
+                label="Continue"
+                variant="primary"
+                arrow
+                onPress={() => settle(slips === 0 ? 'remembered' : 'almost')}
+              />
+            )}
+          </>
+        );
+      }
+
       case 'whisper':
         return (
           <>
@@ -641,6 +764,8 @@ const s = StyleSheet.create({
   tiles: { flexDirection: 'row', flexWrap: 'wrap', gap: 9, justifyContent: 'center' },
   options: { gap: 11, alignSelf: 'stretch' },
   tile: { borderWidth: 1.5, borderRadius: 12, paddingHorizontal: 14, paddingVertical: 11 },
+  matchCol: { gap: 10, alignSelf: 'stretch' },
+  matchCard: { borderWidth: 1.5, borderRadius: 16, padding: 15 },
   buildArea: {
     borderWidth: 1.5, borderRadius: 16, borderStyle: 'dashed',
     padding: 18, minHeight: 110, justifyContent: 'center', alignItems: 'center',

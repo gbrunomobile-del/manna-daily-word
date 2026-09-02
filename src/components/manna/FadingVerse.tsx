@@ -28,6 +28,12 @@ interface Props {
   /** Illuminate the emphasis words rather than hiding anything. */
   notice?: boolean;
   /**
+   * Words the reader has supplied so far, in order. They fill the blanks from
+   * the left as they are chosen — without this the verse stays empty while you
+   * answer, and there is no way to see what you have built.
+   */
+  filled?: string[];
+  /**
    * Whether to print the reference. Off when the reference is the thing being
    * asked for — otherwise the answer sits under the question.
    */
@@ -47,7 +53,7 @@ const bare = (w: string) => w.replace(/[^A-Za-z’']/g, '').toLowerCase();
 
 export const FadingVerse = ({
   text, assistance, reference, emphasis = [], omissions = [], notice = false,
-  showReference = true, size = 22,
+  filled = [], showReference = true, size = 22,
 }: Props) => {
   const t = useTheme();
   const words = useMemo(() => text.split(/\s+/).filter(Boolean), [text]);
@@ -104,6 +110,9 @@ export const FadingVerse = ({
 
   const lit = useMemo(() => new Set(emphasis.map(bare)), [emphasis]);
 
+  /** Blank positions in reading order, so answers fill left to right. */
+  const blankOrder = useMemo(() => [...hidden].sort((a, b) => a - b), [hidden]);
+
   // Reference-only recall.
   if (assistance <= 0) {
     return (
@@ -123,6 +132,20 @@ export const FadingVerse = ({
       >
         {words.map((word, i) => {
           if (hidden.has(i)) {
+            const slot = blankOrder.indexOf(i);
+            const answered = slot > -1 && slot < filled.length;
+
+            // Once supplied, the word appears in gold where it belongs — the
+            // verse reassembles as you go rather than staying blank until the
+            // end.
+            if (answered) {
+              return (
+                <RNText key={i} style={{ color: t.colors.accent }}>
+                  {filled[slot]}{' '}
+                </RNText>
+              );
+            }
+
             // A blank the width of the word it replaces, so the shape of the
             // sentence survives even when the word does not.
             return (
