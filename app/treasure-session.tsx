@@ -179,19 +179,27 @@ export default function TreasureSession() {
   }, [live?.id, live?.text]); // eslint-disable-line react-hooks/exhaustive-deps
 
   /**
-   * Which mode a verse deserves, given how well it is known.
+   * Which mode a verse deserves.
    *
-   * Matching is a rung in its own right rather than an occasional substitute:
-   * gated behind another phase it almost never appeared.
+   * Measured in encounters, not in strength. Strength is the scheduler's
+   * business — it climbs slowly and every success pushes the next review days
+   * out, so gating modes on it meant the later ones were effectively
+   * unreachable: Whisper wanted five or six recalls of one verse while the
+   * session was spreading attention across forty.
+   *
+   * Counting successful recalls instead gives a plain progression. Each time
+   * you get a verse right, it asks a little more of you next time.
    */
   const openingPhase = useCallback((m: MemoryItem, canMatch: boolean): Phase => {
-    if (!m.introducedAt || m.strength === 0) return 'read';
-    if (m.strength < 25) return 'missing';
-    if (m.strength < 45) return 'build';
-    if (m.strength < 60) return canMatch ? 'match' : 'reference';
-    if (m.strength < 75) return 'reference';
-    if (m.strength < 88) return 'recall';
-    return 'whisper';
+    if (!m.introducedAt || !m.text) return 'read';
+    switch (m.successes) {
+      case 0: return 'missing';
+      case 1: return 'build';
+      case 2: return canMatch ? 'match' : 'reference';
+      case 3: return 'reference';
+      case 4: return 'recall';
+      default: return 'whisper';
+    }
   }, []);
 
   /**
@@ -678,7 +686,7 @@ export default function TreasureSession() {
          * shows less of itself each time you meet it — the Word moving off the
          * page and into memory, which is the whole idea of Treasure.
          */
-        const remaining = Math.max(0.2, 0.55 - (live.strength - 70) / 100);
+        const remaining = Math.max(0.2, 0.6 - live.successes * 0.06);
         return (
           <>
             <FadingVerse

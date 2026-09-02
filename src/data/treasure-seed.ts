@@ -121,6 +121,191 @@ export const TREASURE_SEED: SeedVerse[] = [
     emphasis: ['assurance', 'hoped', 'evidence', 'not seen'],
     omissions: [['assurance'], ['assurance', 'evidence'], ['assurance', 'hoped', 'evidence']],
   },
+
+  // ── Promises ────────────────────────────────────────
+  {
+    id: 'jeremiah-29-11',
+    ref: { book: 'Jeremiah', chapter: 29, verseStart: 11 },
+    themes: ['hope', 'promises'],
+    emphasis: ['plans', 'peace', 'hope'],
+    omissions: [['plans'], ['plans', 'hope'], ['plans', 'peace', 'hope']],
+  },
+  {
+    id: 'deuteronomy-31-6',
+    ref: { book: 'Deuteronomy', chapter: 31, verseStart: 6 },
+    themes: ['fear', 'courage', 'promises'],
+    emphasis: ['strong', 'courageous', 'fail', 'forsake'],
+    omissions: [['strong'], ['strong', 'courageous'], ['strong', 'courageous', 'forsake']],
+  },
+  {
+    id: 'isaiah-40-31',
+    ref: { book: 'Isaiah', chapter: 40, verseStart: 31 },
+    themes: ['hope', 'strength'],
+    emphasis: ['wait', 'renew', 'wings', 'weary'],
+    omissions: [['wait'], ['wait', 'renew'], ['wait', 'renew', 'weary']],
+  },
+  {
+    id: 'psalm-46-1',
+    ref: { book: 'Psalms', chapter: 46, verseStart: 1 },
+    themes: ['fear', 'refuge'],
+    emphasis: ['refuge', 'strength', 'trouble'],
+    omissions: [['refuge'], ['refuge', 'strength'], ['refuge', 'strength', 'trouble']],
+  },
+  {
+    id: 'psalm-121-1-2',
+    ref: { book: 'Psalms', chapter: 121, verseStart: 1, verseEnd: 2 },
+    themes: ['trust', 'provision'],
+    emphasis: ['hills', 'help', 'made'],
+    omissions: [['help'], ['hills', 'help'], ['hills', 'help', 'made']],
+  },
+
+  // ── Character ──────────────────────────────────────
+  {
+    id: 'james-1-19',
+    ref: { book: 'James', chapter: 1, verseStart: 19 },
+    themes: ['wisdom', 'character'],
+    emphasis: ['swift', 'hear', 'slow', 'speak', 'anger'],
+    omissions: [['swift'], ['swift', 'slow'], ['swift', 'hear', 'slow', 'anger']],
+  },
+  {
+    id: 'colossians-3-23',
+    ref: { book: 'Colossians', chapter: 3, verseStart: 23 },
+    themes: ['work', 'character'],
+    emphasis: ['heartily', 'Lord', 'men'],
+    omissions: [['heartily'], ['heartily', 'Lord'], ['heartily', 'Lord', 'men']],
+  },
+  {
+    id: 'ephesians-4-32',
+    ref: { book: 'Ephesians', chapter: 4, verseStart: 32 },
+    themes: ['forgiveness', 'character'],
+    emphasis: ['kind', 'tenderhearted', 'forgiving'],
+    omissions: [['kind'], ['kind', 'forgiving'], ['kind', 'tenderhearted', 'forgiving']],
+  },
+  {
+    id: 'proverbs-15-1',
+    ref: { book: 'Proverbs', chapter: 15, verseStart: 1 },
+    themes: ['wisdom', 'character'],
+    emphasis: ['gentle', 'wrath', 'harsh', 'anger'],
+    omissions: [['gentle'], ['gentle', 'harsh'], ['gentle', 'wrath', 'harsh', 'anger']],
+  },
+  {
+    id: 'philippians-2-3',
+    ref: { book: 'Philippians', chapter: 2, verseStart: 3 },
+    themes: ['humility', 'character'],
+    emphasis: ['rivalry', 'humility', 'better'],
+    omissions: [['humility'], ['rivalry', 'humility'], ['rivalry', 'humility', 'better']],
+  },
+
+  // ── Jesus ──────────────────────────────────────────
+  {
+    id: 'john-14-6',
+    ref: { book: 'John', chapter: 14, verseStart: 6 },
+    themes: ['jesus', 'truth'],
+    emphasis: ['way', 'truth', 'life', 'Father'],
+    omissions: [['way'], ['way', 'truth', 'life'], ['way', 'truth', 'life', 'Father']],
+  },
+  {
+    id: 'matthew-11-28',
+    ref: { book: 'Matthew', chapter: 11, verseStart: 28 },
+    themes: ['jesus', 'rest'],
+    emphasis: ['labour', 'burdened', 'rest'],
+    omissions: [['rest'], ['burdened', 'rest'], ['labour', 'burdened', 'rest']],
+  },
+  {
+    id: 'john-15-5',
+    ref: { book: 'John', chapter: 15, verseStart: 5 },
+    themes: ['jesus', 'abiding'],
+    emphasis: ['vine', 'branches', 'remains', 'nothing'],
+    omissions: [['vine'], ['vine', 'branches'], ['vine', 'branches', 'nothing']],
+  },
+  {
+    id: 'john-1-14',
+    ref: { book: 'John', chapter: 1, verseStart: 14 },
+    themes: ['jesus', 'incarnation'],
+    emphasis: ['Word', 'flesh', 'lived', 'glory'],
+    omissions: [['flesh'], ['Word', 'flesh'], ['Word', 'flesh', 'glory']],
+  },
+  {
+    id: 'romans-5-8',
+    ref: { book: 'Romans', chapter: 5, verseStart: 8 },
+    themes: ['grace', 'jesus'],
+    emphasis: ['own', 'love', 'sinners', 'died'],
+    omissions: [['sinners'], ['love', 'sinners'], ['love', 'sinners', 'died']],
+  },
+
+  // ── Prayer and the Word ────────────────────────────────
+  {
+    id: '1-thessalonians-5-16-18',
+    ref: { book: '1 Thessalonians', chapter: 5, verseStart: 16, verseEnd: 18 },
+    themes: ['prayer', 'joy'],
+    emphasis: ['Rejoice', 'ceasing', 'thanks'],
+    omissions: [['Rejoice'], ['Rejoice', 'thanks'], ['Rejoice', 'ceasing', 'thanks']],
+  },
+  {
+    id: 'hebrews-4-12',
+    ref: { book: 'Hebrews', chapter: 4, verseStart: 12 },
+    themes: ['scripture', 'truth'],
+    emphasis: ['living', 'active', 'sharper', 'discerning'],
+    omissions: [['living'], ['living', 'active'], ['living', 'active', 'sharper']],
+  },
+  {
+    id: '2-timothy-3-16',
+    ref: { book: '2 Timothy', chapter: 3, verseStart: 16 },
+    themes: ['scripture'],
+    emphasis: ['breathed', 'profitable', 'teaching', 'righteousness'],
+    omissions: [['breathed'], ['breathed', 'profitable'], ['breathed', 'profitable', 'righteousness']],
+  },
+  {
+    id: 'james-1-5',
+    ref: { book: 'James', chapter: 1, verseStart: 5 },
+    themes: ['wisdom', 'prayer'],
+    emphasis: ['lacks', 'wisdom', 'generously', 'reproach'],
+    omissions: [['wisdom'], ['lacks', 'wisdom'], ['lacks', 'wisdom', 'generously']],
+  },
+  {
+    id: 'psalm-1-1-2',
+    ref: { book: 'Psalms', chapter: 1, verseStart: 1, verseEnd: 2 },
+    themes: ['scripture', 'wisdom'],
+    emphasis: ['Blessed', 'delight', 'meditates'],
+    omissions: [['delight'], ['Blessed', 'delight'], ['Blessed', 'delight', 'meditates']],
+  },
+
+  // ── Identity ───────────────────────────────────────
+  {
+    id: '2-corinthians-5-17',
+    ref: { book: '2 Corinthians', chapter: 5, verseStart: 17 },
+    themes: ['identity', 'grace'],
+    emphasis: ['new', 'creation', 'old', 'passed'],
+    omissions: [['new'], ['new', 'creation'], ['new', 'creation', 'passed']],
+  },
+  {
+    id: 'genesis-1-27',
+    ref: { book: 'Genesis', chapter: 1, verseStart: 27 },
+    themes: ['identity', 'creation'],
+    emphasis: ['image', 'created', 'male', 'female'],
+    omissions: [['image'], ['image', 'created'], ['image', 'created', 'male', 'female']],
+  },
+  {
+    id: 'psalm-139-14',
+    ref: { book: 'Psalms', chapter: 139, verseStart: 14 },
+    themes: ['identity'],
+    emphasis: ['fearfully', 'wonderfully', 'works'],
+    omissions: [['fearfully'], ['fearfully', 'wonderfully'], ['fearfully', 'wonderfully', 'works']],
+  },
+  {
+    id: 'romans-12-2',
+    ref: { book: 'Romans', chapter: 12, verseStart: 2 },
+    themes: ['identity', 'wisdom'],
+    emphasis: ['conformed', 'transformed', 'renewing', 'mind'],
+    omissions: [['transformed'], ['conformed', 'transformed'], ['conformed', 'transformed', 'renewing']],
+  },
+  {
+    id: '1-peter-5-7',
+    ref: { book: '1 Peter', chapter: 5, verseStart: 7 },
+    themes: ['fear', 'trust'],
+    emphasis: ['casting', 'worries', 'cares'],
+    omissions: [['casting'], ['casting', 'cares'], ['casting', 'worries', 'cares']],
+  },
 ];
 
 /** Every theme in the pool, for the Treasury's filters. */
