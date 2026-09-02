@@ -3,7 +3,9 @@ import { View, ScrollView, Pressable, StyleSheet, ActivityIndicator } from 'reac
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { useRouter, useLocalSearchParams } from 'expo-router';
-import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
+import Animated, {
+  FadeIn, FadeInDown, useSharedValue, useAnimatedStyle, withTiming, withDelay,
+} from 'react-native-reanimated';
 import { X, RotateCcw } from 'lucide-react-native';
 import { Text } from '@/components/primitives/Text';
 import { Button } from '@/components/primitives/Button';
@@ -17,7 +19,7 @@ import { formatRef, type ScriptureRef } from '@/types/scripture';
 import { justTreasured, isDue, type MemoryItem, type Recall } from '@/services/memory';
 import { useTreasure } from '@/store/treasure';
 
-type Phase = 'read' | 'notice' | 'missing' | 'build' | 'reference' | 'match' | 'whisper' | 'treasured' | 'done';
+type Phase = 'read' | 'notice' | 'missing' | 'build' | 'reference' | 'match' | 'recall' | 'whisper' | 'treasured' | 'done';
 
 /**
  * Three references for a verse, one of them right.
@@ -122,6 +124,28 @@ export default function TreasureSession() {
   const [tally, setTally] = useState({ practised: 0, strengthened: 0, treasured: 0 });
   const [justKept, setJustKept] = useState<MemoryItem | null>(null);
 
+  /**
+   * The Treasured moment, timed rather than merely shown.
+   *
+   * The verse settles first, then a thin gold line draws outward from the
+   * centre beneath it, and only then the word arrives. Roughly two seconds
+   * from start to rest — long enough to feel like something happened, short
+   * enough not to become an obstacle between you and the next verse.
+   */
+  const keptRule = useSharedValue(0);
+
+  useEffect(() => {
+    keptRule.value = 0;
+    if (justKept) {
+      keptRule.value = withDelay(700, withTiming(1, { duration: 900 }));
+    }
+  }, [justKept, keptRule]);
+
+  const keptRuleStyle = useAnimatedStyle(() => ({
+    width: keptRule.value * 110,
+    opacity: 0.35 + keptRule.value * 0.55,
+  }));
+
   const item = session[idx];
   const live = items.find((i) => i.id === item?.id) ?? item;
   const reference = live ? formatRef(live.ref) : '';
@@ -159,7 +183,8 @@ export default function TreasureSession() {
     if (!m.introducedAt || m.strength === 0) return 'read';
     if (m.strength < 30) return 'missing';
     if (m.strength < 55) return 'build';
-    if (m.strength < 75) return 'reference';
+    if (m.strength < 70) return 'reference';
+    if (m.strength < 85) return 'recall';
     return 'whisper';
   }, []);
 
@@ -275,27 +300,36 @@ export default function TreasureSession() {
       <SafeAreaView style={[s.flex, { backgroundColor: t.colors.immersive }]}>
         <ScrollView contentContainerStyle={s.endWrap}>
           <Animated.View entering={FadeIn.duration(700)} style={s.centreBlock}>
-            <Text variant="scripture" style={[s.keptVerse, { color: t.colors.onImmersive }]}>
-              {justKept.text}
-            </Text>
-            <View style={[s.keptRule, { backgroundColor: t.colors.accent }]} />
-            <Text variant="display" uppercase style={[s.endTitle, { color: t.colors.accent }]}>
-              Treasured
-            </Text>
-            <Text variant="reference" uppercase style={{ color: t.colors.onImmersiveMuted, marginTop: 10 }}>
-              {formatRef(justKept.ref)}
-            </Text>
-            <Text variant="body" style={[s.endLead, { color: t.colors.onImmersiveMuted }]}>
-              This Word is becoming yours.
-            </Text>
-            <View style={s.endCta}>
+            <Animated.View entering={FadeIn.duration(1100)}>
+              <Text variant="scripture" style={[s.keptVerse, { color: t.colors.onImmersive }]}>
+                {justKept.text}
+              </Text>
+            </Animated.View>
+
+            <Animated.View
+              style={[s.keptRule, keptRuleStyle, { backgroundColor: t.colors.accent }]}
+            />
+
+            <Animated.View entering={FadeInDown.delay(1500).duration(800)} style={s.centreBlock}>
+              <Text variant="display" uppercase style={[s.endTitle, { color: t.colors.accent }]}>
+                Treasured
+              </Text>
+              <Text variant="reference" uppercase style={{ color: t.colors.onImmersiveMuted, marginTop: 10 }}>
+                {formatRef(justKept.ref)}
+              </Text>
+              <Text variant="body" style={[s.endLead, { color: t.colors.onImmersiveMuted }]}>
+                This Word is becoming yours.
+              </Text>
+            </Animated.View>
+
+            <Animated.View entering={FadeIn.delay(2200).duration(700)} style={s.endCta}>
               <Button
                 label="Continue"
                 variant="primary"
                 arrow
                 onPress={() => { setJustKept(null); skip(); }}
               />
-            </View>
+            </Animated.View>
           </Animated.View>
         </ScrollView>
       </SafeAreaView>
@@ -636,30 +670,83 @@ export default function TreasureSession() {
         );
       }
 
-      case 'whisper':
+      case 'recall': {
+        /**
+         * How much remains, by how well the verse is known. The same verse
+         * shows less of itself each time you meet it — the Word moving off the
+         * page and into memory, which is the whole idea of Treasure.
+         */
+        const remaining = Math.max(0.2, 0.55 - (live.strength - 70) / 100);
         return (
           <>
-            <Text variant="label" uppercase style={{ color: t.colors.accent, textAlign: 'center' }}>
-              Whisper
-            </Text>
+            <FadingVerse
+              text={live.text}
+              assistance={revealed ? 1 : remaining}
+              reference={reference}
+              size={21}
+            />
+            {!revealed ? (
+              <>
+                <Text variant="body" style={[s.instruction, { color: t.colors.onImmersiveMuted }]}>
+                  Fill what is missing, from memory.
+                </Text>
+                <Button label="Show it" variant="onDark" onPress={() => setRevealed(true)} />
+              </>
+            ) : (
+              <>
+                <Text variant="body" style={[s.instruction, { color: t.colors.onImmersiveMuted }]}>
+                  How did you do?
+                </Text>
+                <View style={s.judgements}>
+                  {([
+                    ['I remembered', 'remembered'],
+                    ['Almost', 'almost'],
+                    ['Not yet', 'notYet'],
+                  ] as [string, Recall][]).map(([label, value]) => (
+                    <Pressable
+                      key={value}
+                      onPress={() => settle(value)}
+                      style={[s.judgement, { borderColor: 'rgba(245,239,227,0.22)' }]}
+                    >
+                      <Text variant="body" style={{ color: t.colors.onImmersive }}>{label}</Text>
+                    </Pressable>
+                  ))}
+                </View>
+              </>
+            )}
+          </>
+        );
+      }
 
+      case 'whisper':
+        /**
+         * Almost nothing on screen. A reference, a line, and a word to tap.
+         * Anything more would be furniture in a moment meant to be spoken
+         * aloud into a quiet room.
+         */
+        return (
+          <>
             {revealed ? (
-              <Animated.View entering={FadeIn.duration(800)}>
+              <Animated.View entering={FadeIn.duration(900)}>
                 <FadingVerse text={live.text} assistance={1} reference={reference} />
               </Animated.View>
             ) : (
               <View style={s.whisperQuiet}>
-                <Text variant="h1" style={{ color: t.colors.onImmersive, textAlign: 'center' }}>
+                <Text variant="display" style={[s.whisperRef, { color: t.colors.onImmersive }]}>
                   {reference}
                 </Text>
-                <Text variant="body" style={[s.instruction, { color: t.colors.onImmersiveMuted }]}>
+                <Text variant="body" style={[s.whisperLine, { color: t.colors.onImmersiveMuted }]}>
                   Finish it aloud.
                 </Text>
               </View>
             )}
 
             {!revealed ? (
-              <Button label="Reveal" variant="onDark" onPress={() => setRevealed(true)} />
+              <Pressable onPress={() => setRevealed(true)} style={s.whisperReveal}>
+                <Text variant="label" uppercase style={{ color: t.colors.accent, letterSpacing: 2 }}>
+                  Reveal
+                </Text>
+              </Pressable>
             ) : (
               <>
                 <Text variant="body" style={[s.instruction, { color: t.colors.onImmersiveMuted }]}>
@@ -771,7 +858,10 @@ const s = StyleSheet.create({
     padding: 18, minHeight: 110, justifyContent: 'center', alignItems: 'center',
   },
   reset: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 7, minHeight: MIN_TOUCH },
-  whisperQuiet: { paddingVertical: 40 },
+  whisperQuiet: { paddingVertical: 60 },
+  whisperRef: { textAlign: 'center', lineHeight: 56, paddingTop: 6 },
+  whisperLine: { textAlign: 'center', marginTop: 26 },
+  whisperReveal: { alignItems: 'center', paddingVertical: 18, minHeight: MIN_TOUCH },
   judgements: { gap: 10 },
   judgement: {
     borderWidth: 1, borderRadius: 14, paddingVertical: 16,
@@ -784,5 +874,5 @@ const s = StyleSheet.create({
   endFigure: { flex: 1, alignItems: 'center' },
   endCta: { alignSelf: 'stretch', marginTop: 48 },
   keptVerse: { textAlign: 'center', lineHeight: 34 },
-  keptRule: { width: 90, height: 1, marginTop: 28, opacity: 0.8 },
+  keptRule: { height: 1, marginTop: 30, alignSelf: 'center' },
 });
