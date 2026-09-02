@@ -357,7 +357,7 @@ const styles = StyleSheet.create({
   lampWrap: { alignItems: 'center' },
   gatheredHead: { alignItems: 'center', marginTop: 14 },
   // Display type needs a line box well over the font size or the capitals clip.
-  gatheredTitle: { letterSpacing: 5, lineHeight: 58, paddingTop: 6, textAlign: 'center' },
+  gatheredTitle: { letterSpacing: 5, paddingLeft: 5, lineHeight: 58, paddingTop: 6, textAlign: 'center' },
   gatheredLead: { textAlign: 'center', marginTop: 12, lineHeight: 26 },
   figures: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 44 },
   figure: { flex: 1, alignItems: 'center' },

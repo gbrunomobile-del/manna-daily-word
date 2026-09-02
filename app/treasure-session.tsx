@@ -653,7 +653,7 @@ const s = StyleSheet.create({
     alignItems: 'center', minHeight: MIN_TOUCH, justifyContent: 'center',
   },
   endWrap: { flexGrow: 1, justifyContent: 'center', paddingHorizontal: 34, paddingVertical: 48 },
-  endTitle: { letterSpacing: 5, lineHeight: 58, paddingTop: 6, textAlign: 'center', marginTop: 24 },
+  endTitle: { letterSpacing: 5, paddingLeft: 5, lineHeight: 58, paddingTop: 6, textAlign: 'center', marginTop: 24 },
   endLead: { textAlign: 'center', marginTop: 14, lineHeight: 26 },
   endFigures: { flexDirection: 'row', justifyContent: 'space-between', alignSelf: 'stretch', marginTop: 44 },
   endFigure: { flex: 1, alignItems: 'center' },

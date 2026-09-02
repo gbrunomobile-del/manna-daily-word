@@ -254,8 +254,10 @@ const styles = StyleSheet.create({
   fade: { position: 'absolute', left: 0, right: 0, bottom: 0, height: '58%' },
   content: { flexGrow: 1, paddingHorizontal: 28, paddingBottom: 32 },
   wordmark: { alignItems: 'center', gap: 14 },
-  manna: { letterSpacing: 10, fontSize: 40 },
-  dailyWord: { letterSpacing: 4 },
+  // Letter spacing is applied after the final character too, so centred text
+  // sits left by exactly that much. The padding puts it back.
+  manna: { letterSpacing: 10, paddingLeft: 10, fontSize: 40 },
+  dailyWord: { letterSpacing: 4, paddingLeft: 4 },
   tagline: { textAlign: 'center', fontSize: 16, marginTop: 14, marginBottom: 28 },
   actions: { gap: 12 },
   appleBtn: { height: 52, width: '100%' },

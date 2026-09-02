@@ -3,13 +3,15 @@ import { View, ScrollView, StyleSheet, Pressable, ActivityIndicator } from 'reac
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import * as Updates from 'expo-updates';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useRouter } from 'expo-router';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { RefreshCw } from 'lucide-react-native';
 import { Text } from '@/components/primitives/Text';
 import { Card } from '@/components/primitives/Card';
 import { PaperGrain } from '@/components/primitives/Screen';
-import { MannaMark } from '@/components/manna/MannaMark';
+import { ScreenHeader } from '@/components/manna/ScreenHeader';
+import { SCREEN_ART } from '@/components/manna/screen-art';
 import { useTheme } from '@/theme';
 import { useProgress, currentStreak } from '@/store/progress';
 import { useGathered, chapterId, TOTAL_CHAPTERS } from '@/store/gathered';
@@ -100,6 +102,15 @@ export default function You() {
   const [checking, setChecking] = useState(false);
   const [updateNote, setUpdateNote] = useState('');
 
+  /** Whatever name was given at sign-in, used as the screen's heading. */
+  const [name, setName] = useState('');
+  useEffect(() => {
+    void AsyncStorage.getItem('manna_user').then((raw) => {
+      if (!raw) return;
+      try { setName(JSON.parse(raw).name ?? ''); } catch { /* ignore */ }
+    });
+  }, []);
+
   /**
    * Fetch and apply an update immediately, rather than waiting for the usual
    * two launches. Useful while testing; harmless in production.
@@ -143,10 +154,12 @@ export default function You() {
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingHorizontal: t.gutter, paddingBottom: t.spacing.huge }}
       >
-        <View style={styles.head}>
-          <MannaMark size={40} strokeWidth={1.7} />
-          <Text variant="hero" style={styles.title}>Your journey</Text>
-        </View>
+        <ScreenHeader
+          art={SCREEN_ART.you}
+          caption="You"
+          eyebrow="Your journey"
+          title={name ? name : 'Gathered so far'}
+        />
 
         <View style={styles.stats}>
           {stats.map((s, i) => (
