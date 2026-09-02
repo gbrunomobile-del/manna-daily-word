@@ -1,8 +1,25 @@
 import React from 'react';
 import { View, Image, StyleSheet, type ImageSourcePropType } from 'react-native';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
+import { LinearGradient } from 'expo-linear-gradient';
 import { Text } from '@/components/primitives/Text';
 import { useTheme } from '@/theme';
+
+/**
+ * How a screen's engraving is presented.
+ *
+ * `portal` frames the plate in an architectural arch. Use it where the arch
+ * carries meaning — the reader is looking into, or stepping into, another
+ * environment. Journey and The Way earn it.
+ *
+ * `editorial` has no frame at all: the artwork is bled and faded so it reads as
+ * printed onto the same sheet of paper as the interface. Use it where the
+ * content is the subject and a theatrical opening would be in the way.
+ *
+ * The distinction is deliberate. Neither is the default because it is the
+ * component we happen to have.
+ */
+export type HeaderVariant = 'portal' | 'editorial';
 
 interface Props {
   /** The engraved plate. Omitted until the artwork exists; the header still works. */
@@ -16,6 +33,7 @@ interface Props {
   /** Optional line under the title. */
   subtitle?: string;
   align?: 'center' | 'left';
+  variant?: HeaderVariant;
 }
 
 const ARCH_W = 96;
@@ -29,13 +47,32 @@ const ARCH_H = 118;
  * takes the theme's border and surface colours and adapts to dark mode — and
  * so the same plate can be reframed later without regenerating artwork.
  */
-export const ScreenHeader = ({ art, caption, eyebrow, title, subtitle, align = 'center' }: Props) => {
+export const ScreenHeader = ({
+  art, caption, eyebrow, title, subtitle, align = 'center', variant = 'portal',
+}: Props) => {
   const t = useTheme();
   const centred = align === 'center';
+  const editorial = variant === 'editorial';
 
   return (
-    <View style={[styles.wrap, centred && styles.centred]}>
-      {art && (
+    <View style={[editorial ? styles.wrapEditorial : styles.wrap, centred && styles.centred]}>
+      {/*
+        Editorial: no frame, no boundary. The plate is set large behind the
+        heading, bled past the page margins and faded top and bottom, so it
+        emerges from the paper rather than sitting in a window on it.
+      */}
+      {art && editorial && (
+        <Animated.View entering={FadeIn.duration(700)} style={styles.bleed} pointerEvents="none">
+          <Image source={art} style={styles.bleedArt} resizeMode="contain" />
+          <LinearGradient
+            colors={[t.colors.background, t.colors.background + '00', t.colors.background]}
+            locations={[0, 0.45, 1]}
+            style={StyleSheet.absoluteFill}
+          />
+        </Animated.View>
+      )}
+
+      {art && !editorial && (
         <Animated.View
           entering={FadeIn.duration(600)}
           style={[
@@ -56,7 +93,7 @@ export const ScreenHeader = ({ art, caption, eyebrow, title, subtitle, align = '
         </Animated.View>
       )}
 
-      {art && caption && (
+      {art && caption && !editorial && (
         <Animated.View entering={FadeIn.delay(140).duration(600)} style={styles.captionWrap}>
           <Text variant="title" style={[styles.caption, { color: t.colors.text }]}>
             {caption}
@@ -98,6 +135,16 @@ export const ScreenHeader = ({ art, caption, eyebrow, title, subtitle, align = '
 
 const styles = StyleSheet.create({
   wrap: { gap: 16 },
+  // Editorial headers carry their artwork behind the type, so the block needs
+  // room above and below rather than a gap between stacked pieces.
+  wrapEditorial: { paddingTop: 34, paddingBottom: 10 },
+  bleed: {
+    position: 'absolute',
+    left: -70, right: -70, top: -46, height: 260,
+    opacity: 0.5,
+    alignItems: 'center',
+  },
+  bleedArt: { width: '62%', height: '100%' },
   centred: { alignItems: 'center' },
   arch: {
     width: ARCH_W,

@@ -92,8 +92,8 @@ export default function Bible() {
       >
         <ScreenHeader
           art={SCREEN_ART.bible}
-          caption="The Word"
-          eyebrow="World English Bible"
+          variant="editorial"
+          eyebrow="The Word"
           title="Read freely."
           subtitle={`${totalGathered} of ${TOTAL_CHAPTERS} chapters gathered`}
         />
