@@ -1,5 +1,5 @@
-import React, { useEffect } from 'react';
-import { View, ScrollView, Pressable, StyleSheet, Dimensions, Image } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { View, ScrollView, Pressable, StyleSheet, Dimensions, Image, Modal } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { useRouter } from 'expo-router';
@@ -7,8 +7,11 @@ import Animated, { FadeInDown, FadeIn } from 'react-native-reanimated';
 import Svg, { Path } from 'react-native-svg';
 import { Check, Lock } from 'lucide-react-native';
 import { Text } from '@/components/primitives/Text';
+import { Button } from '@/components/primitives/Button';
+import { Ornament } from '@/components/manna/Ornament';
 import { ScreenHeader } from '@/components/manna/ScreenHeader';
 import { SCREEN_ART, TOPIC_ART } from '@/components/manna/screen-art';
+import { TOPIC_INTRO } from '@/data/way-questions';
 import { useTheme } from '@/theme';
 import { feedback } from '@/services/feedback';
 import { useWay } from '@/store/way';
@@ -104,6 +107,21 @@ export default function TheWay() {
     (sk) => !completed.includes(sk.id) && sk.unlocksAfter.every((id) => completed.includes(id)),
   )?.id;
 
+  /**
+   * A topic waiting to be introduced.
+   *
+   * Only shown before a first attempt — once you have been in, tapping should
+   * take you straight back rather than making you read the same page again.
+   */
+  const [preview, setPreview] = useState<Skill | null>(null);
+
+  const open = (skill: Skill) => {
+    feedback.select();
+    const seen = attempted.includes(skill.id) || completed.includes(skill.id);
+    if (!seen && TOPIC_INTRO[skill.id]) { setPreview(skill); return; }
+    router.push({ pathname: '/way/lesson', params: { skillId: skill.id } });
+  };
+
   return (
     <SafeAreaView style={[styles.flex, { backgroundColor: t.colors.background }]} edges={['top']}>
       <StatusBar style={t.scheme === 'dark' ? 'light' : 'dark'} />
@@ -163,10 +181,7 @@ export default function TheWay() {
                   accessibilityLabel={locked ? `${skill.title}, locked` : skill.title}
                   accessibilityState={{ disabled: locked }}
                   disabled={locked}
-                  onPress={() => {
-                    feedback.select();
-                    router.push({ pathname: '/way/lesson', params: { skillId: skill.id } });
-                  }}
+                  onPress={() => open(skill)}
                   style={[
                     styles.node,
                     // With transparent artwork the engraving sits straight on the
@@ -238,6 +253,63 @@ export default function TheWay() {
 
         <View style={{ height: 90 }} />
       </ScrollView>
+
+      {/* Introduction, before a topic is entered for the first time */}
+      <Modal
+        visible={preview !== null}
+        animationType="slide"
+        transparent
+        onRequestClose={() => setPreview(null)}
+      >
+        <Pressable style={styles.backdrop} onPress={() => setPreview(null)} />
+        <View style={[styles.sheet, { backgroundColor: t.colors.immersive }]}>
+          {preview && (() => {
+            const intro = TOPIC_INTRO[preview.id];
+            return (
+              <>
+                {TOPIC_ART[preview.id] && (
+                  <Image source={TOPIC_ART[preview.id]} style={styles.sheetArt} resizeMode="contain" />
+                )}
+
+                <Text variant="label" uppercase style={{ color: t.colors.accent, textAlign: 'center' }}>
+                  {intro.range}
+                </Text>
+                <Text variant="h1" style={[styles.sheetTitle, { color: t.colors.onImmersive }]}>
+                  {preview.title}
+                </Text>
+                <Text variant="body" style={[styles.sheetLine, { color: t.colors.onImmersiveMuted }]}>
+                  {intro.line}
+                </Text>
+
+                <View style={styles.discoverBlock}>
+                  <Ornament width={92} opacity={0.4} />
+                  <Text variant="label" uppercase style={{ color: t.colors.onImmersiveMuted, marginTop: 18 }}>
+                    You will discover
+                  </Text>
+                  {intro.discover.map((d) => (
+                    <View key={d} style={styles.discoverRow}>
+                      <View style={[styles.discoverDot, { backgroundColor: t.colors.accent }]} />
+                      <Text variant="body" style={{ color: t.colors.onImmersive, flex: 1 }}>{d}</Text>
+                    </View>
+                  ))}
+                </View>
+
+                <Button
+                  label="Begin"
+                  variant="primary"
+                  arrow
+                  style={{ marginTop: 32 }}
+                  onPress={() => {
+                    const id = preview.id;
+                    setPreview(null);
+                    router.push({ pathname: '/way/lesson', params: { skillId: id } });
+                  }}
+                />
+              </>
+            );
+          })()}
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -271,5 +343,21 @@ const styles = StyleSheet.create({
     alignItems: 'center', justifyContent: 'center',
   },
   title: { marginTop: 10, fontSize: 15, textAlign: 'center' },
+  backdrop: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(0,0,0,0.45)' },
+  sheet: {
+    position: 'absolute', left: 0, right: 0, bottom: 0,
+    borderTopLeftRadius: 26, borderTopRightRadius: 26,
+    paddingHorizontal: 30, paddingTop: 26, paddingBottom: 44,
+    alignItems: 'center',
+  },
+  sheetArt: { width: 96, height: 96, marginBottom: 14 },
+  sheetTitle: { textAlign: 'center', marginTop: 8 },
+  sheetLine: { textAlign: 'center', marginTop: 12, lineHeight: 25 },
+  discoverBlock: { alignItems: 'center', alignSelf: 'stretch', marginTop: 30 },
+  discoverRow: {
+    flexDirection: 'row', alignItems: 'center', gap: 11,
+    alignSelf: 'stretch', paddingVertical: 7,
+  },
+  discoverDot: { width: 5, height: 5, borderRadius: 3 },
   subtitle: { marginTop: 1, textAlign: 'center', fontSize: 11 },
 });

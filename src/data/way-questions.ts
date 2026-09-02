@@ -1901,3 +1901,98 @@ export const CHAPTER_QUESTIONS: Record<string, Question[]> = {
 /** Whether a chapter has questions — most do not, and that is deliberate. */
 export const hasChapterQuestions = (chapter: string): boolean =>
   chapter in CHAPTER_QUESTIONS;
+
+/**
+ * TOPIC INTRODUCTIONS
+ *
+ * Shown once, before a topic is first opened — not on every replay, which
+ * would turn anticipation into an obstacle.
+ *
+ * “You will discover” names themes rather than answers. It should make someone
+ * curious about what is coming without giving away the questions.
+ */
+export const TOPIC_INTRO: Record<
+  string,
+  { range: string; line: string; discover: string[] }
+> = {
+  creation: {
+    range: 'Genesis 1–2',
+    line: 'Everything begins with speech, and ends with rest.',
+    discover: ['order out of formlessness', 'the image of God', 'the first “not good”', 'a day set apart'],
+  },
+  'the-fall': {
+    range: 'Genesis 3',
+    line: 'A question, then a lie, then a world that has to be lived in differently.',
+    discover: ['how doubt precedes denial', 'blame passed along', 'a promise inside a curse', 'the first covering'],
+  },
+  noah: {
+    range: 'Genesis 6–9',
+    line: 'Judgement and mercy arrive in the same story, and neither cancels the other.',
+    discover: ['grace before righteousness', 'a God who grieves', 'the door shut from outside', 'a weapon hung up'],
+  },
+  abraham: {
+    range: 'Genesis 12–22',
+    line: 'One man is called, and the promise reaches every family on earth.',
+    discover: ['leaving without a destination', 'faith counted as righteousness', 'twenty-five years of waiting', 'a mountain named for provision'],
+  },
+  joseph: {
+    range: 'Genesis 37–50',
+    line: 'Betrayed, enslaved, imprisoned, and none of it wasted.',
+    discover: ['favouritism and its cost', 'integrity that is punished', 'power without revenge', 'evil meant for good'],
+  },
+  moses: {
+    range: 'Exodus 3–16',
+    line: 'A reluctant man, an unpronounceable name, and a people brought out.',
+    discover: ['fire that consumes nothing', 'I AM', 'blood on the doorframe', 'bread that cannot be stored'],
+  },
+  'the-law': {
+    range: 'Exodus 20 – Deuteronomy 6',
+    line: 'Rescue comes first. The commands come to people already saved.',
+    discover: ['why the order matters', 'rest as a right', 'the poor and the stranger', 'a covenant broken at the foot of the mountain'],
+  },
+  david: {
+    range: '1 Samuel 16 – 2 Samuel 12',
+    line: 'A shepherd, a king, an adulterer, and a psalm written afterwards.',
+    discover: ['what God looks at', 'refusing the shortcut to a throne', 'confession without excuse', 'a promise that outlives the dynasty'],
+  },
+  isaiah: {
+    range: 'Isaiah 1–53',
+    line: 'Seven centuries early, and unmistakably about someone.',
+    discover: ['a volunteer for an impossible message', 'God with us', 'a servant nobody wanted', 'scarlet made white'],
+  },
+  birth: {
+    range: 'Matthew 1 – Luke 2',
+    line: 'The announcement goes first to the people least likely to be told.',
+    discover: ['a name that is a job description', 'shepherds before priests', 'a young woman’s answer', 'the Word pitching a tent'],
+  },
+  ministry: {
+    range: 'Matthew 5 – John 14',
+    line: 'Three years of stories, arguments, meals and impossible instructions.',
+    discover: ['two commands that cannot be separated', 'rest offered to the burdened', 'greatness redefined', 'the bread of life'],
+  },
+  miracles: {
+    range: 'Mark 4 – John 11',
+    line: 'Signs that point somewhere, done mostly for people nobody was watching.',
+    discover: ['a wedding saved from embarrassment', 'a storm spoken to', 'faith credited to the one who had it', 'grief before a resurrection'],
+  },
+  cross: {
+    range: 'Matthew 27–28 – John 19',
+    line: 'The worst day, and then the morning nobody expected.',
+    discover: ['forgiveness prayed mid-execution', 'a curtain torn from the top', 'women as first witnesses', 'disciples who did not believe it'],
+  },
+  acts: {
+    range: 'Acts 2–15',
+    line: 'Babel run backwards, and a movement that keeps outgrowing its own rules.',
+    discover: ['fire on individual people', 'many languages, one message', 'a martyr who forgives', 'the decision that opened the door'],
+  },
+  letters: {
+    range: 'Romans – Philippians',
+    line: 'Letters to real congregations with real problems, written mostly under arrest.',
+    discover: ['grace as gift rather than wage', 'love described as behaviour', 'contentment as a learned skill', 'gratitude before the answer'],
+  },
+  revelation: {
+    range: 'Revelation 3–21',
+    line: 'Not an escape from the world, but its remaking.',
+    discover: ['a Lion who turns out to be a Lamb', 'tears wiped away personally', 'a city that comes down', 'all things new'],
+  },
+};
