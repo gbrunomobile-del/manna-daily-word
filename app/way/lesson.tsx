@@ -717,10 +717,16 @@ export default function WayLesson() {
           atmosphere for the question, never competing with it. */}
       {!isChapter && TOPIC_ART[topic] && (
         <View style={s.environment} pointerEvents="none">
-          <Image source={TOPIC_ART[topic]} style={s.environmentImage} resizeMode="contain" />
+          {/*
+            Cropped to a band rather than shown whole. The engravings are
+            circular vignettes, and displayed complete they read as a medallion
+            stuck to the bottom of the screen instead of a landscape the page
+            is standing in.
+          */}
+          <Image source={TOPIC_ART[topic]} style={s.environmentImage} resizeMode="cover" />
           <LinearGradient
-            colors={[t.colors.immersive, t.colors.immersive + '00']}
-            locations={[0, 0.6]}
+            colors={[t.colors.immersive, t.colors.immersive + 'E6', t.colors.immersive + '00']}
+            locations={[0, 0.3, 0.85]}
             style={StyleSheet.absoluteFill}
           />
         </View>
@@ -799,11 +805,11 @@ const s = StyleSheet.create({
   hearts: { flexDirection: 'row', gap: 4 },
   content: { paddingHorizontal: 24, paddingBottom: 40 },
   environment: {
-    position: 'absolute', left: 0, right: 0, bottom: -40, height: 320, opacity: 0.22,
+    position: 'absolute', left: -40, right: -40, bottom: -30, height: 260, opacity: 0.3,
   },
   environmentImage: { width: '100%', height: '100%' },
-  divider: { alignItems: 'center', marginBottom: 26 },
-  prompt: { marginTop: 12, marginBottom: 26 },
+  divider: { alignItems: 'center', marginBottom: 30 },
+  prompt: { fontSize: 34, lineHeight: 43, marginTop: 14, marginBottom: 28 },
   quote: { borderLeftWidth: 2, paddingLeft: 16, paddingVertical: 4, marginBottom: 20 },
   passage: { borderWidth: 1, borderRadius: 16, padding: 18, marginBottom: 20 },
   options: { gap: 11 },

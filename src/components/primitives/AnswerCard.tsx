@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 import { Pressable, View, StyleSheet } from 'react-native';
 import Animated, {
-  useAnimatedStyle, useSharedValue, withTiming, interpolateColor,
+  useAnimatedStyle, useSharedValue, withTiming, withSequence, interpolateColor,
 } from 'react-native-reanimated';
 import { Text } from './Text';
 import { useTheme, MIN_TOUCH } from '@/theme';
@@ -34,14 +34,28 @@ export const AnswerCard = ({
 
   const locked = state === 'correct' || state === 'incorrect' || state === 'disabled';
 
-  // Correct and incorrect arrive rather than snap, so the result reads as a
-  // change of light rather than a verdict.
+  /**
+   * A brief outward illumination when an answer proves right: the gold rises,
+   * overshoots a little, then settles. Understanding arriving rather than a
+   * box being ticked — and it stops short of anything that could be called
+   * a celebration.
+   */
+  const glow = useSharedValue(0);
+
   useEffect(() => {
     settled.value = withTiming(
       state === 'correct' || state === 'incorrect' ? 1 : 0,
       { duration: 260 },
     );
-  }, [state, settled]);
+    if (state === 'correct') {
+      glow.value = withSequence(
+        withTiming(1, { duration: 220 }),
+        withTiming(0.45, { duration: 420 }),
+      );
+    } else {
+      glow.value = withTiming(0, { duration: 200 });
+    }
+  }, [state, settled, glow]);
 
   const ground = onDark ? t.colors.immersiveRaised : t.colors.surface;
   const groundPressed = onDark ? 'rgba(245,239,227,0.10)' : t.colors.surfacePressed;
@@ -67,7 +81,12 @@ export const AnswerCard = ({
       [0, 1],
       [resting, settled.value > 0 ? target : groundPressed],
     ),
-    transform: [{ scale: 1 - press.value * (locked ? 0 : 0.008) }],
+    transform: [{ scale: 1 - press.value * (locked ? 0 : 0.008) + glow.value * 0.006 }],
+  }));
+
+  /** The marker swells with the illumination and stays a touch larger. */
+  const markerStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: 1 + glow.value * 0.16 }],
   }));
 
   const textColour = onDark ? t.colors.onImmersive : t.colors.textPrimary;
@@ -92,25 +111,26 @@ export const AnswerCard = ({
         ]}
       >
         {marker && (
-          <View
+          <Animated.View
             style={[
               styles.marker,
+              markerStyle,
               {
-                borderColor: state === 'correct' ? t.colors.accent : border,
+                borderColor: state === 'correct' ? t.colors.accent : 'transparent',
                 backgroundColor: state === 'correct' ? t.colors.accent : 'transparent',
               },
             ]}
           >
             <Text
-              variant="caption"
+              variant="h3"
               style={{
                 color: state === 'correct' ? t.colors.onAccent : textColour,
-                opacity: state === 'correct' ? 1 : 0.7,
+                opacity: state === 'correct' ? 1 : 0.42,
               }}
             >
               {marker}
             </Text>
-          </View>
+          </Animated.View>
         )}
 
         <Text variant="bodyLarge" style={[styles.label, { color: textColour }]}>
@@ -125,19 +145,22 @@ const styles = StyleSheet.create({
   card: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 14,
-    borderRadius: 16,
-    paddingHorizontal: 18,
-    paddingVertical: 17,
-    minHeight: MIN_TOUCH + 8,
+    gap: 16,
+    // Larger radius and generous padding: a page element rather than a form
+    // field. The tighter box read as an input.
+    borderRadius: 20,
+    paddingHorizontal: 20,
+    paddingVertical: 19,
+    minHeight: MIN_TOUCH + 14,
   },
+  /** A serif letter, unboxed until it turns out to be the right answer. */
   marker: {
-    width: 28,
-    height: 28,
-    borderRadius: 8,
+    width: 30,
+    height: 30,
+    borderRadius: 15,
     borderWidth: 1,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  label: { flex: 1 },
+  label: { flex: 1, lineHeight: 25 },
 });
