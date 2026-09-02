@@ -532,6 +532,115 @@ export const QUESTIONS: Record<string, Question[]> = {
       verse: 'Exodus 19:8',
     },
   ],
+
+  // ── DAVID ────────────────────────────────────
+  david: [
+    {
+      kind: 'cloze',
+      prompt: 'Complete what God said when Samuel judged by appearance.',
+      text: 'Man looks at the outward appearance, but Yahweh looks at the ___.',
+      options: ['heart', 'hands', 'life', 'spirit'],
+      answer: 0,
+      teachingKeyword: 'THE HEART.',
+      insight: 'Said while passing over seven older brothers to reach the one left minding sheep.',
+      verse: '1 Samuel 16:7',
+    },
+    {
+      kind: 'mcq',
+      prompt: 'What did David say he came against Goliath with?',
+      options: ['A sword', 'His skill', 'The name of Yahweh', 'His brothers'],
+      answer: 2,
+      insight: 'He names the mismatch and calls it the wrong way round — the armed man is the one at a disadvantage.',
+      verse: '1 Samuel 17:45',
+    },
+    {
+      kind: 'tf',
+      prompt: 'David twice spared Saul\u2019s life when he could have killed him.',
+      answer: true,
+      insight: 'Once in a cave, once in a camp at night. He refuses to take the crown by the route available to him.',
+      verse: '1 Samuel 24:6',
+    },
+    {
+      kind: 'match',
+      prompt: 'Match each verse to where it is found.',
+      pairs: [
+        { text: 'Yahweh is my shepherd; I shall lack nothing.', reference: 'Psalm 23:1' },
+        { text: 'Create in me a clean heart, God.', reference: 'Psalm 51:10' },
+        { text: 'The heavens declare the glory of God.', reference: 'Psalm 19:1' },
+      ],
+      insight: 'Trust, repentance and wonder — three of the notes David keeps returning to.',
+    },
+    {
+      kind: 'mcq',
+      prompt: 'How did David respond when confronted about Bathsheba and Uriah?',
+      options: ['He denied it', 'He blamed others', 'He confessed', 'He said nothing'],
+      answer: 2,
+      insight: 'Four words, no defence. Psalm 51 is what came after.',
+      verse: '2 Samuel 12:13',
+    },
+    {
+      kind: 'type',
+      prompt: 'Type the missing word.',
+      text: 'God promised David that his ___ would be established forever.',
+      answer: 'throne',
+      accept: ['throne', 'kingdom', 'house'],
+      insight: 'A promise about a dynasty that ended in exile — and which the Gospels open by claiming is not finished.',
+      verse: '2 Samuel 7:16',
+    },
+  ],
+
+  // ── ISAIAH ───────────────────────────────────
+  isaiah: [
+    {
+      kind: 'whosaid',
+      quote: 'Here I am. Send me!',
+      options: ['Moses', 'Isaiah', 'Samuel', 'Jeremiah'],
+      answer: 1,
+      teachingKeyword: 'SEND ME.',
+      insight: 'Offered before he is told the message, which turns out to be one nobody will listen to.',
+      verse: 'Isaiah 6:8',
+    },
+    {
+      kind: 'cloze',
+      prompt: 'Complete the promise Matthew quotes at the birth of Jesus.',
+      text: 'The virgin will conceive and bear a son, and shall call his name ___.',
+      options: ['Immanuel', 'Jesus', 'Wonderful', 'Messiah'],
+      answer: 0,
+      insight: 'God with us. Written seven centuries before the Gospel that reaches back for it.',
+      verse: 'Isaiah 7:14',
+    },
+    {
+      kind: 'mcq',
+      prompt: 'How does Isaiah describe the suffering servant?',
+      options: ['Triumphant', 'Pierced for our transgressions', 'Unknown to God', 'A warrior king'],
+      answer: 1,
+      insight: 'Chapter 53 is quoted more often in the New Testament than almost any other passage.',
+      verse: 'Isaiah 53:5',
+    },
+    {
+      kind: 'tf',
+      prompt: 'Isaiah says the servant would be admired and followed by many.',
+      answer: false,
+      insight: 'Despised and rejected, and we hid our faces from him. The prophecy is explicit that he would not be wanted.',
+      verse: 'Isaiah 53:3',
+    },
+    {
+      kind: 'wordbank',
+      prompt: 'Build the verse.',
+      answer: ['They', 'will', 'mount', 'up', 'with', 'wings', 'like', 'eagles.'],
+      insight: 'The promise is to those who wait — which is the hardest thing the chapter asks for.',
+      verse: 'Isaiah 40:31',
+    },
+    {
+      kind: 'type',
+      prompt: 'Type the missing word.',
+      text: 'Though your sins are as scarlet, they shall be as white as ___.',
+      answer: 'snow',
+      accept: ['snow'],
+      insight: 'Offered in a chapter otherwise full of judgement — the invitation sits inside the indictment.',
+      verse: 'Isaiah 1:18',
+    },
+  ],
 };
 
 /** Topics that still use the older short set, pending expansion. */

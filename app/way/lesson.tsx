@@ -124,7 +124,7 @@ export default function WayLesson() {
 
   const questions = isChapter
     ? (CHAPTER_QUESTIONS[chapter] ?? [])
-    : (QUESTIONS[topic] ?? QUESTIONS.creation);
+    : (QUESTIONS[topic] ?? []);
   const total = questions.length;
 
   const [qIdx, setQIdx] = useState(0);
@@ -141,18 +141,18 @@ export default function WayLesson() {
   const [links, setLinks] = useState<Record<number, number>>({}); // match: text -> ref
   const [activeText, setActiveText] = useState<number | null>(null);
 
-  const q = questions[qIdx] as Question;
+  const q = questions[qIdx] as Question | undefined;
   const shake = useSharedValue(0);
   const shakeStyle = useAnimatedStyle(() => ({ transform: [{ translateX: shake.value }] }));
 
   // Presentation order for the shuffled formats, stable per question.
   const bank = useMemo(() => {
-    if (q.kind !== 'wordbank') return [];
+    if (!q || q.kind !== 'wordbank') return [];
     return shuffle([...q.answer, ...(q.distractors ?? [])]);
   }, [q, qIdx]);
 
   const refOrder = useMemo(() => {
-    if (q.kind !== 'match') return [];
+    if (!q || q.kind !== 'match') return [];
     return shuffle(q.pairs.map((_, i) => i));
   }, [q, qIdx]);
 
@@ -259,6 +259,40 @@ export default function WayLesson() {
   }, [hearts, qIdx, total, score, finish]);
 
   // ── Completion ─────────────────────────────────────────────────────────────
+  /**
+   * A topic with no questions yet.
+   *
+   * Previously this fell back to Creation's questions, so an unwritten topic
+   * silently taught the wrong lesson. Saying nothing is ready is honest, and
+   * matters more as the tree grows.
+   */
+  if (!q || total === 0) {
+    return (
+      <SafeAreaView style={[s.flex, { backgroundColor: t.colors.immersive }]}>
+        <View style={s.topBar}>
+          <Pressable onPress={() => router.back()} hitSlop={10} style={{ padding: 4 }}>
+            <X size={20} color={t.colors.onImmersiveMuted} strokeWidth={1.8} />
+          </Pressable>
+        </View>
+        <View style={s.centre}>
+          <Ornament width={116} opacity={0.4} />
+          <Text variant="h1" style={{ color: t.colors.onImmersive, textAlign: 'center', marginTop: 28 }}>
+            Not yet written.
+          </Text>
+          <Text
+            variant="body"
+            style={{ color: t.colors.onImmersiveMuted, textAlign: 'center', marginTop: 14, lineHeight: 24 }}
+          >
+            This part of the story is still being prepared. It will be here soon.
+          </Text>
+          <View style={{ alignSelf: 'stretch', marginTop: 40 }}>
+            <Button label="Back to The Way" variant="primary" onPress={() => router.back()} />
+          </View>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
   if (done) {
     const passed = score >= PASS_MARK;
     return (
