@@ -1896,6 +1896,231 @@ export const CHAPTER_QUESTIONS: Record<string, Question[]> = {
       verse: 'Proverbs 7:6',
     },
   ],
+
+  // ── SIGNIFICANT CHAPTERS ──────────────────────────────────────
+  // Written for the chapters that carry weight wherever they fall in the year,
+  // rather than working day by day from the start. Coverage that stops at an
+  // arbitrary line leaves the whole rest of the plan bare.
+
+  'genesis-22': [
+    {
+      kind: 'whosaid',
+      quote: 'God will provide himself the lamb for a burnt offering.',
+      options: ['Isaac', 'Abraham', 'The angel', 'Sarah'],
+      answer: 1,
+      teachingKeyword: 'PROVIDE.',
+      insight: 'Said walking up the mountain, to the son he had been told to offer. He names the place afterwards “Yahweh will provide”.',
+      verse: 'Genesis 22:8',
+    },
+    {
+      kind: 'mcq',
+      prompt: 'What stopped Abraham?',
+      options: ['Isaac ran', 'A voice from heaven', 'Sarah arrived', 'He changed his mind'],
+      answer: 1,
+      insight: 'The angel calls his name twice — the same doubling used when God stops someone mid-act.',
+      verse: 'Genesis 22:11',
+    },
+    {
+      kind: 'tf',
+      prompt: 'A ram was caught in a thicket nearby.',
+      answer: true,
+      insight: 'Provision that was already there, waiting, while he climbed believing there was none.',
+      verse: 'Genesis 22:13',
+    },
+  ],
+
+  'exodus-3': [
+    {
+      kind: 'cloze',
+      prompt: 'Complete the name God gives.',
+      text: 'God said to Moses, “I ___ WHO I AM.”',
+      options: ['AM', 'WAS', 'WILL BE', 'SEND'],
+      answer: 0,
+      teachingKeyword: 'I AM.',
+      insight: 'Asked for a name to give slaves, God answers with existence itself. Jesus takes the same words up in John.',
+      verse: 'Exodus 3:14',
+    },
+    {
+      kind: 'mcq',
+      prompt: 'Why was Moses told to remove his sandals?',
+      options: ['The ground was hot', 'He was standing on holy ground', 'It was custom', 'To show poverty'],
+      answer: 1,
+      insight: 'Ordinary desert made holy by who was standing in it, not by anything about the place.',
+      verse: 'Exodus 3:5',
+    },
+    {
+      kind: 'tf',
+      prompt: 'God says he has seen the affliction of his people and heard their cry.',
+      answer: true,
+      insight: 'Seen, heard, and “I know their sorrows”. The rescue begins with attention rather than with power.',
+      verse: 'Exodus 3:7',
+    },
+  ],
+
+  'exodus-12': [
+    {
+      kind: 'cloze',
+      prompt: 'Complete the promise.',
+      text: 'When I see the blood, I will ___ over you.',
+      options: ['pass', 'watch', 'stand', 'reign'],
+      answer: 0,
+      teachingKeyword: 'THE BLOOD.',
+      insight: 'Not their goodness or their record. The sign on the doorframe is the only thing being looked for.',
+      verse: 'Exodus 12:13',
+    },
+    {
+      kind: 'mcq',
+      prompt: 'How were they told to eat the meal?',
+      options: ['Slowly, reclining', 'Dressed and ready to leave', 'In silence', 'Outdoors'],
+      answer: 1,
+      insight: 'Belts fastened, sandals on, staff in hand. A meal eaten standing, by people expecting to move.',
+      verse: 'Exodus 12:11',
+    },
+    {
+      kind: 'tf',
+      prompt: 'The Passover was to be kept as a lasting observance.',
+      answer: true,
+      insight: 'Kept for three and a half thousand years since. It was the meal Jesus was eating the night he was betrayed.',
+      verse: 'Exodus 12:14',
+    },
+  ],
+
+  'exodus-20': [
+    {
+      kind: 'mcq',
+      prompt: 'How do the Ten Commandments begin?',
+      options: ['With a threat', 'With a reminder of rescue from Egypt', 'With a list of rewards', 'With silence'],
+      answer: 1,
+      teachingKeyword: 'I BROUGHT YOU OUT.',
+      insight: 'Rescue first, commands second. They are told who saved them before they are told how to live.',
+      verse: 'Exodus 20:2',
+    },
+    {
+      kind: 'type',
+      prompt: 'Type the missing word.',
+      text: 'Remember the ___ day, to keep it holy.',
+      answer: 'sabbath',
+      accept: ['sabbath'],
+      insight: 'The only command given to a people fresh out of slavery that guarantees them rest.',
+      verse: 'Exodus 20:8',
+    },
+    {
+      kind: 'tf',
+      prompt: 'The people asked Moses to speak to God on their behalf.',
+      answer: true,
+      insight: 'They stood at a distance, afraid. The whole later machinery of priesthood begins with that request.',
+      verse: 'Exodus 20:19',
+    },
+  ],
+
+  'psalms-23': [
+    {
+      kind: 'wordbank',
+      prompt: 'Build the verse.',
+      answer: ['Yahweh', 'is', 'my', 'shepherd;', 'I', 'shall', 'lack', 'nothing.'],
+      teachingKeyword: 'MY SHEPHERD.',
+      insight: 'Written by a man who had been a shepherd, and knew exactly how much work the word was doing.',
+      verse: 'Psalm 23:1',
+    },
+    {
+      kind: 'cloze',
+      prompt: 'Complete the verse.',
+      text: 'Even though I walk through the valley of the shadow of death, I will fear no ___.',
+      options: ['evil', 'man', 'darkness', 'end'],
+      answer: 0,
+      insight: 'Through the valley, not around it. The psalm never promises the valley will be avoided.',
+      verse: 'Psalm 23:4',
+    },
+    {
+      kind: 'tf',
+      prompt: 'The table is prepared in the presence of enemies.',
+      answer: true,
+      insight: 'The enemies are still there. What changes is that a meal is laid out in front of them.',
+      verse: 'Psalm 23:5',
+    },
+  ],
+
+  'psalms-51': [
+    {
+      kind: 'cloze',
+      prompt: 'Complete the prayer.',
+      text: 'Create in me a clean ___, God. Renew a right spirit within me.',
+      options: ['heart', 'mind', 'life', 'way'],
+      answer: 0,
+      teachingKeyword: 'CREATE.',
+      insight: 'The verb is the one used in Genesis 1 — not repair, not clean up. Make something that was not there.',
+      verse: 'Psalm 51:10',
+    },
+    {
+      kind: 'mcq',
+      prompt: 'What does the psalm say God does not delight in?',
+      options: ['Prayer', 'Sacrifice without a broken spirit', 'Music', 'Fasting'],
+      answer: 1,
+      insight: 'From a king with every resource for offerings, saying the offering is not the point.',
+      verse: 'Psalm 51:16',
+    },
+    {
+      kind: 'tf',
+      prompt: 'The psalm was written after David was confronted about Bathsheba.',
+      answer: true,
+      insight: 'The heading says so plainly. Scripture keeps both the failure and the prayer that followed it.',
+      verse: 'Psalm 51:1',
+    },
+  ],
+
+  'isaiah-53': [
+    {
+      kind: 'cloze',
+      prompt: 'Complete the verse.',
+      text: 'He was ___ for our transgressions. He was crushed for our iniquities.',
+      options: ['pierced', 'judged', 'broken', 'humbled'],
+      answer: 0,
+      teachingKeyword: 'FOR OURS.',
+      insight: 'The whole chapter turns on the preposition. Not for anything he did.',
+      verse: 'Isaiah 53:5',
+    },
+    {
+      kind: 'mcq',
+      prompt: 'How is the servant described in appearance?',
+      options: ['Radiant', 'Nothing to attract us to him', 'Kingly', 'Terrifying'],
+      answer: 1,
+      insight: 'No beauty that we should desire him. The prophecy is explicit that he would be easy to overlook.',
+      verse: 'Isaiah 53:2',
+    },
+    {
+      kind: 'tf',
+      prompt: 'The servant is described as silent before his accusers.',
+      answer: true,
+      insight: 'As a lamb before its shearers is silent. The Gospels note Pilate’s astonishment at exactly this.',
+      verse: 'Isaiah 53:7',
+    },
+  ],
+
+  'john-3': [
+    {
+      kind: 'wordbank',
+      prompt: 'Build the verse.',
+      answer: ['For', 'God', 'so', 'loved', 'the', 'world.'],
+      teachingKeyword: 'SO LOVED.',
+      insight: 'The best known sentence in the Bible, said at night to a man who came in secret.',
+      verse: 'John 3:16',
+    },
+    {
+      kind: 'mcq',
+      prompt: 'What did Jesus tell Nicodemus he must do?',
+      options: ['Keep the Law better', 'Be born again', 'Leave the council', 'Fast'],
+      answer: 1,
+      insight: 'Said to a man who had done everything right. Starting over is offered to the one least in need of it.',
+      verse: 'John 3:3',
+    },
+    {
+      kind: 'tf',
+      prompt: 'Jesus compares himself to the bronze serpent Moses lifted in the wilderness.',
+      answer: true,
+      insight: 'An odd image to choose — people were healed by looking at the thing that was killing them.',
+      verse: 'John 3:14',
+    },
+  ],
 };
 
 /** Whether a chapter has questions — most do not, and that is deliberate. */
