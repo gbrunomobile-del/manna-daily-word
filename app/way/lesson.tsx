@@ -17,13 +17,12 @@ import { Ornament } from '@/components/manna/Ornament';
 import { TOPIC_ART } from '@/components/manna/screen-art';
 import { useTheme, MIN_TOUCH } from '@/theme';
 import { feedback } from '@/services/feedback';
-import { useWay } from '@/store/way';
+import { useWay, passMarkFor } from '@/store/way';
 import { useGathered } from '@/store/gathered';
 import { useProgress, useTimeInWord } from '@/store/progress';
 import { QUESTIONS, CHAPTER_QUESTIONS, KIND_LABEL, type Question } from '@/data/way-questions';
 
 const MAX_LAMPS = 3;
-const PASS_MARK = 3;
 
 /** Deterministic-enough shuffle; only used for presentation order. */
 function shuffle<T>(arr: T[]): T[] {
@@ -126,6 +125,8 @@ export default function WayLesson() {
     ? (CHAPTER_QUESTIONS[chapter] ?? [])
     : (QUESTIONS[topic] ?? []);
   const total = questions.length;
+  /** Proportional, so a longer topic is not easier to pass. */
+  const passMark = passMarkFor(total);
 
   const [qIdx, setQIdx] = useState(0);
   const [hearts, setHearts] = useState(MAX_LAMPS);
@@ -247,9 +248,9 @@ export default function WayLesson() {
     await Promise.all([
       recordAttempt(topic, finalScore, total),
       gather([...verses, ...matchRefs]),
-      finalScore >= PASS_MARK ? recordDay(`way-${topic}`, 0) : Promise.resolve(),
+      finalScore >= passMark ? recordDay(`way-${topic}`, 0) : Promise.resolve(),
     ]);
-  }, [questions, recordAttempt, gather, recordDay, topic, total, isChapter]);
+  }, [questions, recordAttempt, gather, recordDay, topic, total, isChapter, passMark]);
 
   const next = useCallback(() => {
     if (hearts <= 0 || qIdx >= total - 1) { void finish(score); return; }
@@ -294,7 +295,7 @@ export default function WayLesson() {
   }
 
   if (done) {
-    const passed = score >= PASS_MARK;
+    const passed = score >= passMark;
     return (
       <SafeAreaView style={[s.flex, { backgroundColor: t.colors.background }]}>
         <View style={s.centre}>

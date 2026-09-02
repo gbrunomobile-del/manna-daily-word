@@ -12,11 +12,11 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 const KEY = 'manna.way.v1';
 
 export interface WayState {
-  /** Topic ids fully completed (3 or more correct out of 5). */
+  /** Topic ids fully completed. */
   completed: string[];
   /** Topic ids attempted but not yet passed. */
   attempted: string[];
-  /** Best score per topic, out of 5. */
+  /** Best score per topic, as a raw count of correct answers. */
   bestScores: Record<string, number>;
   xp: number;
   hydrated: boolean;
@@ -36,7 +36,16 @@ const initial: WayState = {
   hydrated: false,
 };
 
-const PASS_MARK = 3;
+/**
+ * The share of a topic that must be answered correctly to pass it.
+ *
+ * Proportional rather than a fixed count: topics vary in length already, and
+ * will vary more as sections grow into several units. A hardcoded three meant
+ * an eight-question topic could be passed with five wrong.
+ */
+const PASS_RATIO = 0.6;
+
+export const passMarkFor = (total: number) => Math.max(1, Math.ceil(total * PASS_RATIO));
 
 export const useWay = create<WayState & Actions>((set, get) => ({
   ...initial,
@@ -55,7 +64,7 @@ export const useWay = create<WayState & Actions>((set, get) => ({
     const s = get();
     const previousBest = s.bestScores[topicId] ?? 0;
     const improved = score > previousBest;
-    const passed = score >= PASS_MARK;
+    const passed = score >= passMarkFor(total);
 
     // XP is only awarded for improvement, so replaying can't farm points.
     const gainedXp = improved ? (score - previousBest) * 10 : 0;
@@ -84,4 +93,4 @@ export const useWay = create<WayState & Actions>((set, get) => ({
   },
 }));
 
-export { PASS_MARK };
+export { PASS_RATIO };
