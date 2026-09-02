@@ -136,6 +136,13 @@ export default function BookScreen() {
     return n;
   }, [book, isGathered]);
 
+  /** The first chapter not yet gathered — where the reader is up to. */
+  const firstUngathered = useMemo(() => {
+    if (!book) return 1;
+    for (let c = 1; c <= book.chapters; c++) if (!isGathered(c)) return c;
+    return 0;
+  }, [book, isGathered]);
+
   if (!book) {
     return (
       <SafeAreaView style={[s.flex, { backgroundColor: t.colors.background }]}>
@@ -452,23 +459,29 @@ export default function BookScreen() {
         <Animated.View entering={FadeInDown.delay(60).duration(400)} style={s.grid}>
           {Array.from({ length: book.chapters }, (_, i) => i + 1).map((n) => {
             const done = isGathered(n);
+            // Where you are up to: the first chapter not yet gathered.
+            const current = !done && n === firstUngathered;
             return (
               <Pressable
                 key={n}
                 onPress={() => { feedback.select(); setOpenChapter(n); }}
+                accessibilityLabel={`Chapter ${n}${done ? ', gathered' : ''}`}
                 style={[
                   s.chapter,
-                  {
-                    backgroundColor: done ? t.colors.accent : t.colors.surface,
-                    borderColor: done ? t.colors.accent : t.colors.border,
-                  },
+                  // Only the chapter you are on carries a shape. Everything
+                  // else is a number — a page of boxes was a grid to get
+                  // through rather than a book to read.
+                  current && { backgroundColor: t.colors.primary, borderRadius: 14 },
                 ]}
               >
                 <Text
-                  variant="body"
+                  variant="bodyLarge"
                   style={{
-                    color: done ? t.colors.background : t.colors.text,
-                    fontFamily: done ? t.fonts.sansSemi : t.fonts.sans,
+                    color: current ? t.colors.onPrimary
+                      : done ? t.colors.accent
+                      : t.colors.textMuted,
+                    fontFamily: done || current ? t.fonts.sansSemi : t.fonts.sans,
+                    opacity: done || current ? 1 : 0.65,
                   }}
                 >
                   {n}
@@ -541,7 +554,7 @@ const s = StyleSheet.create({
   picker: { paddingHorizontal: 24, paddingTop: 20 },
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 9, marginTop: 18 },
   chapter: {
-    width: 48, height: 48, borderRadius: 12, borderWidth: 1,
+    width: 48, height: 48,
     alignItems: 'center', justifyContent: 'center',
   },
 });

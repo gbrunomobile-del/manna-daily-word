@@ -384,9 +384,10 @@ const styles = StyleSheet.create({
 
   portion: { marginTop: 44 },
   // The engraving sits behind the portion and dissolves into the page rather
-  // than being boxed — atmosphere, not an illustration slot.
+  // than being boxed — atmosphere, not an illustration slot. Lifted from a
+  // whisper to something you can actually see without it reaching the text.
   portionArt: {
-    position: 'absolute', top: -34, right: -46, width: 250, height: 250, opacity: 0.5,
+    position: 'absolute', top: -46, right: -54, width: 286, height: 286, opacity: 0.62,
   },
   portionImage: { width: '100%', height: '100%' },
   excerpt: { marginTop: 16 },

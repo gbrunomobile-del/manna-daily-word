@@ -42,9 +42,9 @@ const TabBar = ({ state, navigation }: TabBarProps) => {
     >
       <Icon
         size={20}
-        strokeWidth={focused ? 1.9 : 1.5}
+        strokeWidth={focused ? 1.9 : 1.4}
         color={focused ? t.colors.accent : t.colors.textMuted}
-        opacity={focused ? 1 : 0.7}
+        opacity={focused ? 1 : 0.55}
       />
       <Text
         variant="caption"
@@ -54,7 +54,9 @@ const TabBar = ({ state, navigation }: TabBarProps) => {
           {
             color: focused ? t.colors.textPrimary : t.colors.textMuted,
             fontFamily: focused ? t.fonts.sansSemi : t.fonts.sans,
-            opacity: focused ? 1 : 0.75,
+            // Inactive items recede: the bar should tell you where you are
+            // without listing where you are not.
+            opacity: focused ? 1 : 0.58,
           },
         ]}
       >
