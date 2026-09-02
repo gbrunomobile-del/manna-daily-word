@@ -26,9 +26,34 @@ export function bookId(name: string): number | undefined {
 
 const cache = new Map<string, Verse[]>();
 
-/** Strip the HTML tags bolls.life includes for italics and Jesus' words. */
+/**
+ * Strip the markup bolls.life ships inside verse text.
+ *
+ * The order matters. KJV and ASV carry Strong's concordance numbers wrapped in
+ * <S> tags; removing only the tags leaves the numbers stranded in the middle of
+ * the sentence, which is what put stray digits through those translations.
+ * Anything whose contents should go must therefore be removed with its tags,
+ * before the general tag strip runs.
+ *
+ * Square brackets are left alone: Darby and the KJV use them for words supplied
+ * by the translator, and those are part of the text.
+ */
 const clean = (s: string) =>
-  s.replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim();
+  s
+    // Strong's numbers, with their contents.
+    .replace(/<S>[\s\S]*?<\/S>/gi, '')
+    // Footnotes, translator notes and superscript markers, with their contents.
+    .replace(/<sup>[\s\S]*?<\/sup>/gi, '')
+    .replace(/<f>[\s\S]*?<\/f>/gi, '')
+    .replace(/<note>[\s\S]*?<\/note>/gi, '')
+    // Line breaks become spaces rather than vanishing into adjoining words.
+    .replace(/<br\s*\/?>/gi, ' ')
+    // Everything structural that remains — italics, red-letter markers.
+    .replace(/<[^>]+>/g, '')
+    .replace(/&nbsp;/gi, ' ')
+    .replace(/&amp;/gi, '&')
+    .replace(/\s+/g, ' ')
+    .trim();
 
 export async function fetchChapter(
   book: string,
@@ -57,9 +82,10 @@ async function fetchFromBolls(book: string, chapter: number, version: string): P
   if (!res.ok) throw new Error('Could not load that chapter.');
 
   const raw: { verse: number; text: string }[] = await res.json();
-  return raw
-    .map((x) => ({ number: x.verse, text: clean(x.text) }))
-    .filter((x) => x.text.length > 0);
+  // Verses are never dropped. Filtering out any that cleaned to nothing meant a
+  // mangled verse vanished silently, leaving a gap in the chapter with no sign
+  // that anything was missing.
+  return raw.map((x) => ({ number: x.verse, text: clean(x.text) }));
 }
 
 /**

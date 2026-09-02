@@ -22,8 +22,14 @@ import { useGathered, chapterId } from '@/store/gathered';
 import { useProgress, useTimeInWord } from '@/store/progress';
 import { hasChapterQuestions } from '@/data/way-questions';
 
-/** Reading sizes, in points. Stored so the choice persists. */
-const SIZES = [17, 19, 21, 24] as const;
+/**
+ * Reading sizes, in points. Stored so the choice persists.
+ *
+ * Raised across the board: these are for reading pages of prose, not scanning
+ * a list, and the smallest step was uncomfortable for anything longer than a
+ * psalm.
+ */
+const SIZES = [18, 20, 22, 25] as const;
 const SIZE_KEY = 'manna.readerSize';
 const VERSION_KEY = 'manna.version';
 
@@ -220,7 +226,7 @@ export default function BookScreen() {
             <Text variant="hero" style={{ color: t.colors.text, marginBottom: 4 }}>
               {book.name} {openChapter}
             </Text>
-            <Text variant="caption" tone="muted" style={{ marginBottom: 22 }}>
+            <Text variant="caption" tone="muted" style={{ marginBottom: 30 }}>
               {v.name}
             </Text>
 
@@ -230,31 +236,39 @@ export default function BookScreen() {
               per verse turned Scripture into a table.
             */}
             <Text
-              variant="scripture"
-              style={{ color: t.colors.text, fontSize: size, lineHeight: size * 1.74 }}
+            variant="scripture"
+            style={{
+                color: t.colors.text,
+              fontSize: size,
+            lineHeight: size * 1.78,
+            letterSpacing: 0.1,
+            }}
             >
-              {verses.map((verse) => {
-                const taught = wasTaught(openChapter, verse.number);
-                return (
-                  <RNText key={verse.number}>
-                    <RNText
-                      style={{
-                        color: taught ? t.colors.accent : t.colors.textMuted,
-                        fontFamily: t.fonts.sansSemi,
-                        fontSize: Math.round(size * 0.56),
-                      }}
-                    >
-                      {verse.number}  
-                    </RNText>
-                    {/* Verses met in a lesson carry a faint gold ground —
-                        over time the page fills in with what you have learned. */}
-                    <RNText
+            {verses.map((verse, i) => {
+            const taught = wasTaught(openChapter, verse.number);
+            return (
+            <RNText key={verse.number}>
+            {/* A hair of space before each number, and none trailing the
+                last verse — literal double spaces left ragged gaps. */}
+            {i > 0 ? '\u2002' : ''}
+            <RNText
+              style={{
+            color: taught ? t.colors.accent : t.colors.textMuted,
+                fontFamily: t.fonts.sansSemi,
+              fontSize: Math.round(size * 0.52),
+            }}
+            >
+            {verse.number} 
+            </RNText>
+            {/* Verses met in a lesson carry a faint gold ground — kept
+                  very low, because an inline highlight hugs the glyphs
+                    and reads as a marker pen if it is any stronger. */}
+                  <RNText
                       onPress={() => { feedback.select(); setSelected(verse); }}
-                      style={taught ? { backgroundColor: t.colors.illumination } : undefined}
+                      style={taught ? { backgroundColor: t.colors.accent + '12' } : undefined}
                     >
                       {verse.text}
                     </RNText>
-                    {'  '}
                   </RNText>
                 );
               })}
