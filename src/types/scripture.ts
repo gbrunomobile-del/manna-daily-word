@@ -9,7 +9,7 @@
  * the type invites code that assumes access we do not have. They can be added
  * when there is an agreement behind them.
  */
-export type TranslationId = 'WEB' | 'KJV' | 'ASV' | 'YLT' | 'DBY';
+export type TranslationId = 'WEB' | 'KJV' | 'ASV' | 'YLT' | 'GNV' | 'DRB' | 'ESV';
 
 export type Translation = {
   id: TranslationId;

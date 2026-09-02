@@ -112,6 +112,13 @@ export const LampIndicator = ({ remaining, total = 3, size = 22 }: Props) => (
 );
 
 /**
+ * The lamp artwork is landscape, not square. Framing it in a square left the
+ * vessel sitting low and right of centre, because the flame and its rays reach
+ * up and to the left — which is what made it look off-centre on the page.
+ */
+const LAMP_ASPECT = 1000 / 666;
+
+/**
  * ENGRAVED LAMP
  *
  * The Doré lamp, in two layers: a still vessel with the flame animated over
@@ -127,6 +134,7 @@ export const EngravedLamp = ({
 }: {
   lamp: ImageSourcePropType;
   flame: ImageSourcePropType;
+  /** Width in points. Height follows the artwork's own proportion. */
   size?: number;
 }) => {
   const breath = useSharedValue(0);
@@ -134,27 +142,28 @@ export const EngravedLamp = ({
   useEffect(() => {
     breath.value = withRepeat(
       withSequence(
-        withTiming(1, { duration: 900 }),
-        withTiming(0, { duration: 1150 }),
+        withTiming(1, { duration: 820 }),
+        withTiming(0, { duration: 1040 }),
       ),
       -1,
       false,
     );
   }, [breath]);
 
-  // Gentler than the small indicator: at this size a strong pulse reads as
-  // flickering rather than burning.
+  // Strong enough to read as a flame. An earlier pass moved opacity only from
+  // 0.72 to 1.0, which is not a change the eye registers on a shape this size
+  // — it looked static.
   const flameStyle = useAnimatedStyle(() => ({
-    opacity: 0.72 + breath.value * 0.28,
+    opacity: 0.52 + breath.value * 0.48,
     transform: [
-      { translateY: -breath.value * (size * 0.008) },
-      { scaleY: 0.97 + breath.value * 0.07 },
-      { scaleX: 1.01 - breath.value * 0.02 },
+      { translateY: -breath.value * (size * 0.014) },
+      { scaleY: 0.94 + breath.value * 0.13 },
+      { scaleX: 1.02 - breath.value * 0.04 },
     ],
   }));
 
   return (
-    <View style={[styles.engraved, { width: size, height: size }]}>
+    <View style={[styles.engraved, { width: size, height: size / LAMP_ASPECT }]}>
       <Image source={lamp} style={styles.engravedImage} resizeMode="contain" />
       <Animated.View style={[styles.engravedLayer, flameStyle]} pointerEvents="none">
         <Image source={flame} style={styles.engravedImage} resizeMode="contain" />

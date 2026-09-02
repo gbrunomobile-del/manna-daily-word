@@ -68,10 +68,17 @@ const ALL: Version[] = [
     provider: 'bolls',
   },
   {
-    id: 'DBY',
-    short: 'DBY',
-    name: 'Darby Translation',
-    note: '1890, careful with tenses',
+    id: 'GNV',
+    short: 'GNV',
+    name: 'Geneva Bible',
+    note: '1599, the Bible of the Reformation',
+    provider: 'bolls',
+  },
+  {
+    id: 'DRB',
+    short: 'DRB',
+    name: 'Douay\u2013Rheims',
+    note: 'From the Latin Vulgate',
     provider: 'bolls',
   },
   {

@@ -552,9 +552,12 @@ const s = StyleSheet.create({
     paddingVertical: 16, minHeight: MIN_TOUCH,
   },
   picker: { paddingHorizontal: 24, paddingTop: 20 },
-  grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 9, marginTop: 18 },
+  // Six proportional columns rather than fixed cells with a gap: fixed widths
+  // left whatever did not divide evenly as dead space on the right, so the
+  // first column sat nearer the edge than the last.
+  grid: { flexDirection: 'row', flexWrap: 'wrap', marginTop: 18 },
   chapter: {
-    width: 48, height: 48,
+    width: '16.666%', height: 52,
     alignItems: 'center', justifyContent: 'center',
   },
 });

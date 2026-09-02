@@ -178,40 +178,42 @@ export default function TreasureSession() {
     return () => { alive = false; };
   }, [live?.id, live?.text]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  /** Which mode a verse deserves, given how well it is known. */
-  const openingPhase = useCallback((m: MemoryItem): Phase => {
+  /**
+   * Which mode a verse deserves, given how well it is known.
+   *
+   * Matching is a rung in its own right rather than an occasional substitute:
+   * gated behind another phase it almost never appeared.
+   */
+  const openingPhase = useCallback((m: MemoryItem, canMatch: boolean): Phase => {
     if (!m.introducedAt || m.strength === 0) return 'read';
-    if (m.strength < 30) return 'missing';
-    if (m.strength < 55) return 'build';
-    if (m.strength < 70) return 'reference';
-    if (m.strength < 85) return 'recall';
+    if (m.strength < 25) return 'missing';
+    if (m.strength < 45) return 'build';
+    if (m.strength < 60) return canMatch ? 'match' : 'reference';
+    if (m.strength < 75) return 'reference';
+    if (m.strength < 88) return 'recall';
     return 'whisper';
   }, []);
 
   /**
    * Two other verses to sit alongside this one in a matching exercise.
    *
-   * Drawn from the session, so they are verses already met rather than
-   * strangers — the test is telling apart things you know, not guessing at
-   * things you have never seen.
+   * Drawn from everything already met rather than from this session alone —
+   * early on a session is mostly verses with no text yet, which made matching
+   * effectively unreachable. The strongest are chosen, so you are told apart
+   * things you actually know.
    */
   const matchGroup = useMemo(() => {
     if (!live?.text) return [];
-    const others = session.filter((m) => m.id !== live.id && m.text).slice(0, 2);
+    const others = items
+      .filter((m) => m.id !== live.id && m.text)
+      .sort((x, y) => y.strength - x.strength)
+      .slice(0, 2);
     return others.length === 2 ? [live, ...others] : [];
-  }, [live?.id, live?.text, session]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [live?.id, live?.text, items]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     if (!live?.text) return;
-    const opening = openingPhase(live);
-    // Matching needs three verses already met. Where the session can supply
-    // them, a well-known verse gets matched rather than asked about in
-    // isolation — telling apart things you know is the harder recall.
-    if (opening === 'reference' && matchGroup.length === 3 && live.strength >= 60) {
-      setPhase('match');
-      return;
-    }
-    setPhase(opening);
+    setPhase(openingPhase(live, matchGroup.length === 3));
   }, [live?.id, live?.text, matchGroup.length]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const resetPer = () => { setSlips(0); setRevealed(false); setPlaced([]); };
