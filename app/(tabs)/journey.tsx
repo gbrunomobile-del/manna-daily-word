@@ -5,6 +5,7 @@ import { StatusBar } from 'expo-status-bar';
 import { useRouter } from 'expo-router';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 import { Text } from '@/components/primitives/Text';
+import { PaperGrain } from '@/components/primitives/Screen';
 import { ScreenHeader } from '@/components/manna/ScreenHeader';
 import { SCREEN_ART } from '@/components/manna/screen-art';
 import { useTheme } from '@/theme';
@@ -53,6 +54,7 @@ export default function Journey() {
   return (
     <SafeAreaView style={[styles.flex, { backgroundColor: t.colors.background }]} edges={['top']}>
       <StatusBar style={t.scheme === 'dark' ? 'light' : 'dark'} />
+      <PaperGrain />
 
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <ScreenHeader

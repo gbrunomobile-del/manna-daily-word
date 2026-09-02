@@ -6,6 +6,7 @@ import { useRouter } from 'expo-router';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 import { Search, ChevronRight } from 'lucide-react-native';
 import { Text } from '@/components/primitives/Text';
+import { PaperGrain } from '@/components/primitives/Screen';
 import { ScreenHeader } from '@/components/manna/ScreenHeader';
 import { SCREEN_ART } from '@/components/manna/screen-art';
 import { useTheme, MIN_TOUCH } from '@/theme';
@@ -82,6 +83,7 @@ export default function Bible() {
   return (
     <SafeAreaView style={[styles.flex, { backgroundColor: t.colors.background }]} edges={['top']}>
       <StatusBar style={t.scheme === 'dark' ? 'light' : 'dark'} />
+      <PaperGrain />
 
       <ScrollView
         showsVerticalScrollIndicator={false}

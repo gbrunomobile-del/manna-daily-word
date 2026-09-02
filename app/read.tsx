@@ -6,6 +6,7 @@ import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 import { ChevronLeft, ChevronRight, Check, ArrowRight, HelpCircle } from 'lucide-react-native';
 import { Text } from '@/components/primitives/Text';
 import { Button } from '@/components/primitives/Button';
+import { PaperGrain } from '@/components/primitives/Screen';
 import { EngravedLamp } from '@/components/manna/LampIndicator';
 import { LAMP_ART } from '@/components/manna/screen-art';
 import { Ornament } from '@/components/manna/Ornament';
@@ -181,6 +182,7 @@ export default function DailyReading() {
 
   return (
     <SafeAreaView style={[styles.flex, { backgroundColor: t.colors.background }]} edges={['top']}>
+      <PaperGrain />
       <View style={[styles.header, { borderBottomColor: t.colors.border + '44' }]}>
         <Pressable onPress={() => router.back()} hitSlop={10} style={styles.back}>
           <ChevronLeft size={22} color={t.colors.textMuted} strokeWidth={1.8} />

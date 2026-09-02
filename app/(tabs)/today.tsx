@@ -9,6 +9,7 @@ import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 import { ArrowRight, User } from 'lucide-react-native';
 import { Text } from '@/components/primitives/Text';
 import { Button } from '@/components/primitives/Button';
+import { PaperGrain } from '@/components/primitives/Screen';
 import { Ornament } from '@/components/manna/Ornament';
 import { SCREEN_ART } from '@/components/manna/screen-art';
 import { useTheme, MIN_TOUCH } from '@/theme';
@@ -135,6 +136,7 @@ export default function Today() {
   return (
     <SafeAreaView style={[styles.flex, { backgroundColor: t.colors.background }]} edges={['top']}>
       <StatusBar style={t.scheme === 'dark' ? 'light' : 'dark'} />
+      <PaperGrain />
 
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         {/* Profile sits here rather than in the bar, which keeps the tabs to

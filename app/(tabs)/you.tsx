@@ -8,6 +8,7 @@ import Animated, { FadeInDown } from 'react-native-reanimated';
 import { RefreshCw } from 'lucide-react-native';
 import { Text } from '@/components/primitives/Text';
 import { Card } from '@/components/primitives/Card';
+import { PaperGrain } from '@/components/primitives/Screen';
 import { MannaMark } from '@/components/manna/MannaMark';
 import { useTheme } from '@/theme';
 import { useProgress, currentStreak } from '@/store/progress';
@@ -137,6 +138,7 @@ export default function You() {
   return (
     <SafeAreaView style={[styles.flex, { backgroundColor: t.colors.background }]} edges={['top']}>
       <StatusBar style={t.scheme === 'dark' ? 'light' : 'dark'} />
+      <PaperGrain />
       <ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingHorizontal: t.gutter, paddingBottom: t.spacing.huge }}

@@ -1,4 +1,21 @@
 /** 4px base. Whitespace is part of the brand. */
+/**
+ * PAPER GRAIN
+ *
+ * How strongly the paper fibre shows on light surfaces. One value, tuned here
+ * and nowhere else — it is the kind of thing that only looks right on a real
+ * screen, and hunting it down across a dozen files would be miserable.
+ *
+ * The intent is that nobody consciously notices a texture. If you can see it,
+ * it is too high.
+ */
+export const grain = {
+  /** Applied to the overlay. Perceived strength is lower than the number. */
+  opacity: 0.06,
+  /** Rendered tile size in points. Larger reads as fibre, smaller as noise. */
+  tile: 220,
+} as const;
+
 export const spacing = {
   xxs: 4, xs: 8, sm: 12, md: 16, lg: 20,
   xl: 24, xxl: 32, xxxl: 40, huge: 48, vast: 64, colossal: 80,

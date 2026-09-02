@@ -8,6 +8,7 @@ import Svg, { Path } from 'react-native-svg';
 import { Check, Lock } from 'lucide-react-native';
 import { Text } from '@/components/primitives/Text';
 import { Button } from '@/components/primitives/Button';
+import { PaperGrain } from '@/components/primitives/Screen';
 import { Ornament } from '@/components/manna/Ornament';
 import { ScreenHeader } from '@/components/manna/ScreenHeader';
 import { SCREEN_ART, TOPIC_ART } from '@/components/manna/screen-art';
@@ -125,6 +126,7 @@ export default function TheWay() {
   return (
     <SafeAreaView style={[styles.flex, { backgroundColor: t.colors.background }]} edges={['top']}>
       <StatusBar style={t.scheme === 'dark' ? 'light' : 'dark'} />
+      <PaperGrain />
 
       <Animated.View
         entering={FadeIn.duration(400)}

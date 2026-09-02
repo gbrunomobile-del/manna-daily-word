@@ -6,6 +6,7 @@ import { useRouter } from 'expo-router';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 import { ChevronLeft } from 'lucide-react-native';
 import { Text } from '@/components/primitives/Text';
+import { PaperGrain } from '@/components/primitives/Screen';
 import { Ornament } from '@/components/manna/Ornament';
 import { useTheme, MIN_TOUCH } from '@/theme';
 import { feedback } from '@/services/feedback';
@@ -73,6 +74,7 @@ export default function Treasury() {
   return (
     <SafeAreaView style={[styles.flex, { backgroundColor: t.colors.background }]} edges={['top']}>
       <StatusBar style={t.scheme === 'dark' ? 'light' : 'dark'} />
+      <PaperGrain />
 
       <View style={styles.bar}>
         <Pressable onPress={() => router.back()} hitSlop={10} style={styles.back}>

@@ -12,6 +12,7 @@ import {
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Text } from '@/components/primitives/Text';
 import { Button } from '@/components/primitives/Button';
+import { PaperGrain } from '@/components/primitives/Screen';
 import { useTheme, MIN_TOUCH } from '@/theme';
 import { feedback } from '@/services/feedback';
 import { getBook } from '@/data/books';
@@ -148,6 +149,7 @@ export default function BookScreen() {
 
     return (
       <SafeAreaView style={[s.flex, { backgroundColor: t.colors.background }]} edges={['top']}>
+        <PaperGrain />
         {/* Reader bar */}
         <View style={[s.bar, { borderBottomColor: t.colors.border + '44' }]}>
           <Pressable onPress={() => setOpenChapter(null)} hitSlop={10} style={s.iconBtn}>
@@ -406,6 +408,7 @@ export default function BookScreen() {
   // ── Chapter picker ─────────────────────────────────────────────────────────
   return (
     <SafeAreaView style={[s.flex, { backgroundColor: t.colors.background }]} edges={['top']}>
+      <PaperGrain />
       <View style={[s.bar, { borderBottomColor: t.colors.border + '44' }]}>
         <Pressable onPress={() => router.back()} hitSlop={10} style={s.iconBtn}>
           <ChevronLeft size={22} color={t.colors.textMuted} strokeWidth={1.8} />

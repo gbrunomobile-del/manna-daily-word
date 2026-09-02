@@ -2,7 +2,7 @@ import React, { createContext, useContext, useMemo } from 'react';
 import { useColorScheme, AccessibilityInfo } from 'react-native';
 import { ColorTokens, darkColors, lightColors } from './colors';
 import { typography, fonts } from './typography';
-import { spacing, radius, elevation, gutter, HIT_SLOP, MIN_TOUCH } from './layout';
+import { spacing, radius, elevation, gutter, grain, HIT_SLOP, MIN_TOUCH } from './layout';
 import { duration, easing, spring, TRAVEL } from './motion';
 
 export type Scheme = 'light' | 'dark';
@@ -16,6 +16,7 @@ export type Theme = {
   radius: typeof radius;
   elevation: typeof elevation;
   gutter: number;
+  grain: typeof grain;
   motion: {
     duration: typeof duration;
     easing: typeof easing;
@@ -34,6 +35,7 @@ const buildTheme = (scheme: Scheme, reduceMotion: boolean): Theme => ({
   radius,
   elevation,
   gutter,
+  grain,
   motion: { duration, easing, spring, travel: TRAVEL },
   reduceMotion,
 });

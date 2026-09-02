@@ -6,6 +6,7 @@ import { useRouter } from 'expo-router';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 import { Text } from '@/components/primitives/Text';
 import { Button } from '@/components/primitives/Button';
+import { PaperGrain } from '@/components/primitives/Screen';
 import { EngravedLamp } from '@/components/manna/LampIndicator';
 import { LAMP_ART } from '@/components/manna/screen-art';
 import { Ornament } from '@/components/manna/Ornament';
@@ -42,6 +43,7 @@ export default function TreasureHome() {
   return (
     <SafeAreaView style={[styles.flex, { backgroundColor: t.colors.background }]} edges={['top']}>
       <StatusBar style={t.scheme === 'dark' ? 'light' : 'dark'} />
+      <PaperGrain />
 
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <Animated.View entering={FadeIn.duration(600)} style={styles.lamp}>
