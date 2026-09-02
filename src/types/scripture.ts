@@ -2,7 +2,14 @@
  * Scripture is stored as structured data, never as a loose string.
  * `text` is verbatim from the named translation and must never be edited.
  */
-export type TranslationId = 'WEB' | 'KJV' | 'ESV' | 'NIV';
+/**
+ * Translations the app actually serves — all public domain.
+ *
+ * ESV and NIV are deliberately absent: both are licensed, and listing them in
+ * the type invites code that assumes access we do not have. They can be added
+ * when there is an agreement behind them.
+ */
+export type TranslationId = 'WEB' | 'KJV' | 'ASV' | 'YLT' | 'DBY';
 
 export type Translation = {
   id: TranslationId;

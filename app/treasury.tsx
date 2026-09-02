@@ -152,7 +152,10 @@ export default function Treasury() {
           shown.map((i, n) => (
             <Animated.View key={i.id} entering={FadeInDown.delay(Math.min(n, 8) * 40).duration(400)}>
               <Pressable
-                onPress={() => { feedback.select(); router.push('/treasure-session'); }}
+                onPress={() => {
+                  feedback.select();
+                  router.push(`/treasure-session?verse=${encodeURIComponent(i.id)}`);
+                }}
                 style={[styles.item, { borderTopColor: t.colors.border }]}
               >
                 <View style={styles.itemHead}>

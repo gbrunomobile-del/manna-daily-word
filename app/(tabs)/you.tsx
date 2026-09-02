@@ -3,6 +3,7 @@ import { View, ScrollView, StyleSheet, Pressable, ActivityIndicator } from 'reac
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import * as Updates from 'expo-updates';
+import { useRouter } from 'expo-router';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { RefreshCw } from 'lucide-react-native';
 import { Text } from '@/components/primitives/Text';
@@ -12,6 +13,7 @@ import { useTheme } from '@/theme';
 import { useProgress, currentStreak } from '@/store/progress';
 import { useGathered, chapterId, TOTAL_CHAPTERS } from '@/store/gathered';
 import { useWay } from '@/store/way';
+import { useTreasure, treasuredCount, readyCount } from '@/store/treasure';
 import { BOOKS } from '@/data/books';
 import { feedback } from '@/services/feedback';
 
@@ -59,14 +61,19 @@ const Meter = ({ area, read, total }: { area: string; read: number; total: numbe
 
 export default function You() {
   const t = useTheme();
+  const router = useRouter();
   const { daysGathered, gatheredDates, totalSeconds, savedPassageIds, hydrate: hydrateProgress, hydrated: progressReady } = useProgress();
   const { chapters, hydrate: hydrateGathered, hydrated: gatheredReady } = useGathered();
   const { completed, xp, hydrate: hydrateWay, hydrated: wayReady } = useWay();
+  const {
+    items: memory, hydrate: hydrateTreasure, hydrated: treasureReady,
+  } = useTreasure();
 
   useEffect(() => {
     if (!progressReady) void hydrateProgress();
     if (!gatheredReady) void hydrateGathered();
     if (!wayReady) void hydrateWay();
+    if (!treasureReady) void hydrateTreasure();
   }, [progressReady, gatheredReady, wayReady, hydrateProgress, hydrateGathered, hydrateWay]);
 
   const chapterCount = Object.keys(chapters).length;
@@ -184,6 +191,26 @@ export default function You() {
         </Card>
 
         {/* Build and update state — so it is always clear which version is running. */}
+        <Text variant="reference" tone="muted" uppercase style={styles.sectionLabel}>
+          Treasury
+        </Text>
+        <Card>
+          <View style={styles.versionRow}>
+            <Text variant="bodySmall">Scriptures treasured</Text>
+            <Text variant="caption" tone="muted">{treasuredCount(memory)}</Text>
+          </View>
+          <View style={styles.versionRow}>
+            <Text variant="bodySmall">Ready to remember</Text>
+            <Text variant="caption" tone="accent">{readyCount(memory)}</Text>
+          </View>
+          <Pressable
+            onPress={() => { feedback.select(); router.push('/treasury'); }}
+            style={[styles.checkBtn, { borderColor: t.colors.border }]}
+          >
+            <Text variant="bodySmall" tone="accent">Open Treasury</Text>
+          </Pressable>
+        </Card>
+
         <Text variant="reference" tone="muted" uppercase style={styles.sectionLabel}>
           Saved verses
         </Text>

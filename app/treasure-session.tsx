@@ -2,21 +2,52 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { View, ScrollView, Pressable, StyleSheet, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
-import { useRouter } from 'expo-router';
+import { useRouter, useLocalSearchParams } from 'expo-router';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 import { X, RotateCcw } from 'lucide-react-native';
 import { Text } from '@/components/primitives/Text';
 import { Button } from '@/components/primitives/Button';
+import { AnswerCard } from '@/components/primitives/AnswerCard';
 import { FadingVerse } from '@/components/manna/FadingVerse';
 import { Ornament } from '@/components/manna/Ornament';
 import { useTheme, MIN_TOUCH } from '@/theme';
 import { feedback } from '@/services/feedback';
 import { fetchChapter } from '@/services/bible';
-import { formatRef } from '@/types/scripture';
+import { formatRef, type ScriptureRef } from '@/types/scripture';
 import { justTreasured, isDue, type MemoryItem, type Recall } from '@/services/memory';
 import { useTreasure } from '@/store/treasure';
 
-type Phase = 'read' | 'notice' | 'missing' | 'build' | 'whisper' | 'treasured' | 'done';
+type Phase = 'read' | 'notice' | 'missing' | 'build' | 'reference' | 'whisper' | 'treasured' | 'done';
+
+/**
+ * Three references for a verse, one of them right.
+ *
+ * The wrong two are the real reference shifted rather than pulled from other
+ * books — “Philippians 4:6” against “Genesis 1:1” tests nothing, while the same
+ * book a chapter away asks whether you actually know where it sits.
+ */
+function referenceChoices(ref: ScriptureRef): { label: string; correct: boolean }[] {
+  const shift = (dc: number, dv: number) =>
+    formatRef({
+      ...ref,
+      chapter: Math.max(1, ref.chapter + dc),
+      verseStart: Math.max(1, ref.verseStart + dv),
+      verseEnd: ref.verseEnd ? Math.max(1, ref.verseEnd + dv) : undefined,
+    });
+
+  const correct = formatRef(ref);
+  const near = new Set<string>();
+  for (const [dc, dv] of [[1, 0], [-1, 0], [0, 3], [0, -2], [2, 0]] as [number, number][]) {
+    const candidate = shift(dc, dv);
+    if (candidate !== correct) near.add(candidate);
+    if (near.size >= 2) break;
+  }
+
+  return shuffle([
+    { label: correct, correct: true },
+    ...[...near].map((label) => ({ label, correct: false })),
+  ]);
+}
 
 /** Split a verse into phrases a person would actually recall as units. */
 function phrasesOf(text: string): string[] {
@@ -51,6 +82,8 @@ const shuffle = <T,>(a: T[]): T[] => {
 export default function TreasureSession() {
   const t = useTheme();
   const router = useRouter();
+  /** A single verse to practise, when arriving from the Treasury. */
+  const { verse: onlyVerse } = useLocalSearchParams<{ verse?: string }>();
   const { items, sessionLength, hydrate, hydrated, setText, record, completeSession } = useTreasure();
 
   useEffect(() => { if (!hydrated) void hydrate(); }, [hydrated, hydrate]);
@@ -64,6 +97,13 @@ export default function TreasureSession() {
    */
   const session = useMemo(() => {
     if (!hydrated) return [];
+
+    // Arriving from the Treasury: practise that verse alone.
+    if (onlyVerse) {
+      const one = items.find((i) => i.id === onlyVerse);
+      return one ? [one] : [];
+    }
+
     const due = items.filter((i) => i.state !== 'new' && isDue(i));
     const inProgress = items.filter((i) => i.state === 'learning' || i.state === 'remembering');
     const fresh = items.filter((i) => i.state === 'new');
@@ -71,7 +111,7 @@ export default function TreasureSession() {
     return [...due, ...inProgress, ...fresh]
       .filter((i) => (seen.has(i.id) ? false : (seen.add(i.id), true)))
       .slice(0, sessionLength);
-  }, [hydrated, sessionLength]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [hydrated, sessionLength, onlyVerse]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const [idx, setIdx] = useState(0);
   const [phase, setPhase] = useState<Phase>('read');
@@ -117,8 +157,9 @@ export default function TreasureSession() {
   /** Which mode a verse deserves, given how well it is known. */
   const openingPhase = useCallback((m: MemoryItem): Phase => {
     if (!m.introducedAt || m.strength === 0) return 'read';
-    if (m.strength < 40) return 'missing';
-    if (m.strength < 70) return 'build';
+    if (m.strength < 30) return 'missing';
+    if (m.strength < 55) return 'build';
+    if (m.strength < 75) return 'reference';
     return 'whisper';
   }, []);
 
@@ -421,6 +462,57 @@ export default function TreasureSession() {
         );
       }
 
+      case 'reference': {
+        const choices = stableChoices(live.id, live.ref);
+        return (
+          <>
+            <FadingVerse
+              text={live.text}
+              assistance={1}
+              reference={reference}
+              showReference={false}
+              size={20}
+            />
+            <Text variant="body" style={[s.instruction, { color: t.colors.onImmersiveMuted }]}>
+              Where is this found?
+            </Text>
+
+            <View style={s.options}>
+              {choices.map((c, i) => (
+                <AnswerCard
+                  key={c.label}
+                  label={c.label}
+                  marker={['A', 'B', 'C'][i]}
+                  onDark
+                  state={
+                    revealed
+                      ? (c.correct ? 'correct' : placed[0] === i ? 'incorrect' : 'disabled')
+                      : 'default'
+                  }
+                  onPress={() => {
+                    if (revealed) return;
+                    setPlaced([i]);
+                    setRevealed(true);
+                    if (c.correct) feedback.success?.(); else feedback.error?.();
+                  }}
+                />
+              ))}
+            </View>
+
+            {revealed && (
+              <Button
+                label="Continue"
+                variant="primary"
+                arrow
+                onPress={() =>
+                  settle(choices[placed[0]]?.correct ? 'remembered' : 'notYet')
+                }
+              />
+            )}
+          </>
+        );
+      }
+
       case 'whisper':
         return (
           <>
@@ -505,6 +597,19 @@ export default function TreasureSession() {
 }
 
 /**
+ * A stable set of reference choices per verse, so the options do not reshuffle
+ * as you look at them.
+ */
+const choiceCache = new Map<string, { label: string; correct: boolean }[]>();
+function stableChoices(key: string, ref: ScriptureRef) {
+  const hit = choiceCache.get(key);
+  if (hit) return hit;
+  const made = referenceChoices(ref);
+  choiceCache.set(key, made);
+  return made;
+}
+
+/**
  * A stable shuffle per verse, so tiles do not jump on every render.
  *
  * Deliberately not a hook — it is called inside a map and inside a press
@@ -534,6 +639,7 @@ const s = StyleSheet.create({
   stack: { gap: 26, flex: 1, justifyContent: 'center' },
   instruction: { textAlign: 'center' },
   tiles: { flexDirection: 'row', flexWrap: 'wrap', gap: 9, justifyContent: 'center' },
+  options: { gap: 11, alignSelf: 'stretch' },
   tile: { borderWidth: 1.5, borderRadius: 12, paddingHorizontal: 14, paddingVertical: 11 },
   buildArea: {
     borderWidth: 1.5, borderRadius: 16, borderStyle: 'dashed',

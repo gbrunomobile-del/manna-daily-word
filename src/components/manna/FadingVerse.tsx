@@ -27,6 +27,11 @@ interface Props {
   omissions?: string[][];
   /** Illuminate the emphasis words rather than hiding anything. */
   notice?: boolean;
+  /**
+   * Whether to print the reference. Off when the reference is the thing being
+   * asked for — otherwise the answer sits under the question.
+   */
+  showReference?: boolean;
   size?: number;
 }
 
@@ -41,7 +46,8 @@ const FUNCTION_WORDS = new Set([
 const bare = (w: string) => w.replace(/[^A-Za-z’']/g, '').toLowerCase();
 
 export const FadingVerse = ({
-  text, assistance, reference, emphasis = [], omissions = [], notice = false, size = 22,
+  text, assistance, reference, emphasis = [], omissions = [], notice = false,
+  showReference = true, size = 22,
 }: Props) => {
   const t = useTheme();
   const words = useMemo(() => text.split(/\s+/).filter(Boolean), [text]);
@@ -142,9 +148,11 @@ export const FadingVerse = ({
 
       {/* Scripture always carries its reference — knowing where a verse sits is
           half of knowing it. */}
-      <Text variant="reference" uppercase style={[styles.reference, { color: t.colors.accent }]}>
-        {reference}
-      </Text>
+      {showReference && (
+        <Text variant="reference" uppercase style={[styles.reference, { color: t.colors.accent }]}>
+          {reference}
+        </Text>
+      )}
 
       {/* The blanks are drawn under the text as faint gold rules — stippling
           rather than a gap, so the page still reads as a verse. */}
