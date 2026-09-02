@@ -641,6 +641,114 @@ export const QUESTIONS: Record<string, Question[]> = {
       verse: 'Isaiah 1:18',
     },
   ],
+
+  // ── BIRTH OF JESUS ────────────────────────
+  birth: [
+    {
+      kind: 'cloze',
+      prompt: 'Complete the angel\u2019s words to Joseph.',
+      text: 'You shall call his name Jesus, for it is he who shall ___ his people from their sins.',
+      options: ['save', 'lead', 'gather', 'judge'],
+      answer: 0,
+      teachingKeyword: 'HE WILL SAVE.',
+      insight: 'The name is the job description. Yeshua means “the Lord saves”, so the sentence explains itself.',
+      verse: 'Matthew 1:21',
+    },
+    {
+      kind: 'mcq',
+      prompt: 'Who were the first people told of the birth?',
+      options: ['Priests', 'Shepherds', 'Kings', 'Scribes'],
+      answer: 1,
+      insight: 'Night-shift labourers on a hillside, in a trade that kept them from the temple. The announcement goes to them first.',
+      verse: 'Luke 2:8',
+    },
+    {
+      kind: 'whosaid',
+      quote: 'Let it be done to me according to your word.',
+      options: ['Elizabeth', 'Mary', 'Anna', 'Joseph'],
+      answer: 1,
+      insight: 'An answer given by a young woman in a village, to news that would cost her reputation.',
+      verse: 'Luke 1:38',
+    },
+    {
+      kind: 'tf',
+      prompt: 'The Gospel of John opens with a genealogy.',
+      answer: false,
+      insight: 'It opens where Genesis does — in the beginning — and reaches the birth in a single line.',
+      verse: 'John 1:1',
+    },
+    {
+      kind: 'wordbank',
+      prompt: 'Build the verse.',
+      answer: ['The', 'Word', 'became', 'flesh,', 'and', 'lived', 'among', 'us.'],
+      insight: 'The Greek behind “lived among us” means pitched a tent — the word used of God dwelling with Israel in the wilderness.',
+      verse: 'John 1:14',
+    },
+    {
+      kind: 'mcq',
+      prompt: 'What did Simeon say when he saw the child?',
+      options: ['That he would reign', 'That he could now depart in peace', 'That he feared for him', 'That he must be hidden'],
+      answer: 1,
+      insight: 'An old man promised he would not die before seeing it. He asks for nothing else afterwards.',
+      verse: 'Luke 2:29',
+    },
+  ],
+
+  // ── MINISTRY ──────────────────────────
+  ministry: [
+    {
+      kind: 'mcq',
+      prompt: 'What did Jesus say the greatest commandment was?',
+      options: ['Keep the Sabbath', 'Love God with everything, and your neighbour as yourself', 'Give to the poor', 'Study the Law'],
+      answer: 1,
+      insight: 'Two commands offered where one was asked for, and he refuses to separate them.',
+      verse: 'Matthew 22:37',
+    },
+    {
+      kind: 'cloze',
+      prompt: 'Complete the invitation.',
+      text: 'Come to me, all you who labour and are heavily burdened, and I will give you ___.',
+      options: ['rest', 'peace', 'life', 'freedom'],
+      answer: 0,
+      teachingKeyword: 'REST.',
+      insight: 'Offered to people under a system of religious requirements — and what he offers is the one thing it could not give.',
+      verse: 'Matthew 11:28',
+    },
+    {
+      kind: 'tf',
+      prompt: 'Jesus taught mainly in parables.',
+      answer: true,
+      insight: 'Stories about farming, money and family that let people arrive at the point themselves rather than be told it.',
+      verse: 'Matthew 13:34',
+    },
+    {
+      kind: 'match',
+      prompt: 'Match each verse to where it is found.',
+      pairs: [
+        { text: 'I am the way, the truth, and the life.', reference: 'John 14:6' },
+        { text: 'I am the bread of life.', reference: 'John 6:35' },
+        { text: 'I am the good shepherd.', reference: 'John 10:11' },
+      ],
+      insight: 'Three of the “I am” sayings, each reaching back to the name given at the burning bush.',
+    },
+    {
+      kind: 'whosaid',
+      quote: 'Whoever wants to become great among you shall be your servant.',
+      options: ['Peter', 'Jesus', 'Paul', 'John'],
+      answer: 1,
+      insight: 'Said to disciples arguing about rank. He does not tell them to stop wanting greatness — he redefines it.',
+      verse: 'Matthew 20:26',
+    },
+    {
+      kind: 'type',
+      prompt: 'Type the missing word.',
+      text: 'I am the ___ of life. Whoever comes to me will not be hungry.',
+      answer: 'bread',
+      accept: ['bread'],
+      insight: 'Said the day after feeding five thousand, to a crowd that had come back for more food.',
+      verse: 'John 6:35',
+    },
+  ],
 };
 
 /** Topics that still use the older short set, pending expansion. */
