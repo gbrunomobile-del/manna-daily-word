@@ -21,6 +21,7 @@ import { fetchChapter, type Verse } from '@/services/bible';
 import { useGathered, chapterId } from '@/store/gathered';
 import { useProgress, useTimeInWord } from '@/store/progress';
 import { hasChapterQuestions } from '@/data/way-questions';
+import { connectionsFor } from '@/data/connections/connections';
 
 /**
  * Reading sizes, in points. Stored so the choice persists.
@@ -294,6 +295,27 @@ export default function BookScreen() {
               </Text>
             )}
 
+            {/* A connection, where this chapter has one. Offered after the
+                reading rather than before it — the passage first, then what it
+                reaches toward. */}
+            {connectionsFor(book.name, openChapter).map((c) => (
+              <Pressable
+                key={c.id}
+                onPress={() => {
+                  feedback.select();
+                  router.push(`/reveal?id=${encodeURIComponent(c.id)}`);
+                }}
+                style={[s.connection, { borderColor: t.colors.accent + '44', backgroundColor: t.colors.illumination }]}
+              >
+                <Text variant="label" uppercase style={{ color: t.colors.accent, letterSpacing: 1.6 }}>
+                  See the connection
+                </Text>
+                <Text variant="body" style={{ color: t.colors.text, marginTop: 8, lineHeight: 24 }}>
+                  {c.summary}
+                </Text>
+              </Pressable>
+            ))}
+
             {/* Chapter navigation */}
             <View style={s.navRow}>
               <Pressable
@@ -528,6 +550,9 @@ const s = StyleSheet.create({
   verseRow: { flexDirection: 'row', gap: 9, marginBottom: 10 },
   verseNum: { fontSize: 11, minWidth: 20, textAlign: 'right', paddingTop: 1 },
   navRow: { flexDirection: 'row', gap: 12, marginTop: 34 },
+  connection: {
+    borderWidth: 1, borderRadius: 18, padding: 20, marginTop: 36,
+  },
   copyright: { marginTop: 34, lineHeight: 16, opacity: 0.8 },
   navBtn: {
     flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
