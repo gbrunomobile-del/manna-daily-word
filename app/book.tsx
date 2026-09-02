@@ -266,6 +266,13 @@ export default function BookScreen() {
               </View>
             )}
 
+            {/* Required by the licence for translations that carry one. */}
+            {v.copyright && (
+              <Text variant="caption" tone="muted" style={s.copyright}>
+                {v.copyright}
+              </Text>
+            )}
+
             {/* Chapter navigation */}
             <View style={s.navRow}>
               <Pressable
@@ -494,6 +501,7 @@ const s = StyleSheet.create({
   verseRow: { flexDirection: 'row', gap: 9, marginBottom: 10 },
   verseNum: { fontSize: 11, minWidth: 20, textAlign: 'right', paddingTop: 1 },
   navRow: { flexDirection: 'row', gap: 12, marginTop: 34 },
+  copyright: { marginTop: 34, lineHeight: 16, opacity: 0.8 },
   navBtn: {
     flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
     gap: 6, borderWidth: 1, borderRadius: 12, paddingVertical: 14, minHeight: MIN_TOUCH,

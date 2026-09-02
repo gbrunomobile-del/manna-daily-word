@@ -11,6 +11,7 @@
 
 import { BOOKS } from '@/data/books';
 import { QUESTIONS } from '@/data/way-questions';
+import { getVersion } from '@/data/versions';
 
 export interface Verse {
   number: number;
@@ -38,6 +39,17 @@ export async function fetchChapter(
   const hit = cache.get(key);
   if (hit) return hit;
 
+  const v = getVersion(version);
+  const verses = v.provider === 'esv'
+    ? await fetchFromEsv(book, chapter, v.keyEnv)
+    : await fetchFromBolls(book, chapter, v.id);
+
+  cache.set(key, verses);
+  return verses;
+}
+
+/** Public-domain texts: no key, no quota, structured verses. */
+async function fetchFromBolls(book: string, chapter: number, version: string): Promise<Verse[]> {
   const id = bookId(book);
   if (!id) throw new Error(`Unknown book: ${book}`);
 
@@ -45,12 +57,49 @@ export async function fetchChapter(
   if (!res.ok) throw new Error('Could not load that chapter.');
 
   const raw: { verse: number; text: string }[] = await res.json();
-  const verses = raw
-    .map((v) => ({ number: v.verse, text: clean(v.text) }))
-    .filter((v) => v.text.length > 0);
+  return raw
+    .map((x) => ({ number: x.verse, text: clean(x.text) }))
+    .filter((x) => x.text.length > 0);
+}
 
-  cache.set(key, verses);
-  return verses;
+/**
+ * ESV, from Crossway directly.
+ *
+ * Returns one block of prose with verse numbers inline as [1], [2], so the
+ * verses have to be split back out. Their licence caps how much any one reader
+ * may download, which a chapter-at-a-time reader stays well inside.
+ */
+async function fetchFromEsv(book: string, chapter: number, keyEnv?: string): Promise<Verse[]> {
+  const token = keyEnv ? process.env[keyEnv as keyof typeof process.env] : undefined;
+  if (!token) throw new Error('This translation is not available in this build.');
+
+  const params = new URLSearchParams({
+    q: `${book} ${chapter}`,
+    'include-verse-numbers': 'true',
+    'include-first-verse-numbers': 'true',
+    'include-headings': 'false',
+    'include-footnotes': 'false',
+    'include-passage-references': 'false',
+    'include-short-copyright': 'false',
+    'indent-paragraphs': '0',
+  });
+
+  const res = await fetch(`https://api.esv.org/v3/passage/text/?${params}`, {
+    headers: { Authorization: `Token ${token}` },
+  });
+  if (!res.ok) throw new Error('Could not load that chapter.');
+
+  const body: { passages?: string[] } = await res.json();
+  const passage = body.passages?.[0] ?? '';
+
+  const out: Verse[] = [];
+  const re = /\[(\d+)\]\s*([\s\S]*?)(?=\[\d+\]|$)/g;
+  let m: RegExpExecArray | null;
+  while ((m = re.exec(passage)) !== null) {
+    const text = clean(m[2]);
+    if (text) out.push({ number: Number(m[1]), text });
+  }
+  return out;
 }
 
 /** A verse found by search, with enough context to open it. */
