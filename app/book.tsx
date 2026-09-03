@@ -7,7 +7,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 import {
-  ChevronLeft, ChevronRight, Check, Type, X, Bookmark, HelpCircle,
+  ChevronLeft, ChevronRight, Check, Type, X, Bookmark, HelpCircle, Flame,
 } from 'lucide-react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Text } from '@/components/primitives/Text';
@@ -22,6 +22,7 @@ import { useGathered, chapterId } from '@/store/gathered';
 import { useProgress, useTimeInWord } from '@/store/progress';
 import { hasChapterQuestions } from '@/data/way-questions';
 import { connectionsFor } from '@/data/connections/connections';
+import { useTreasure } from '@/store/treasure';
 
 /**
  * Reading sizes, in points. Stored so the choice persists.
@@ -44,6 +45,10 @@ export default function BookScreen() {
   const { chapters, gather, hydrate, hydrated } = useGathered();
   const savedPassageIds = useProgress((p) => p.savedPassageIds);
   const toggleSaved = useProgress((p) => p.toggleSaved);
+  const addVerse = useTreasure((s) => s.addVerse);
+  const memoryItems = useTreasure((s) => s.items);
+  const hydrateTreasure = useTreasure((s) => s.hydrate);
+  const treasureReady = useTreasure((s) => s.hydrated);
 
   /** The verse a reader has tapped, if any — opens the actions sheet. */
   const [selected, setSelected] = useState<Verse | null>(null);
@@ -63,6 +68,7 @@ export default function BookScreen() {
   const [showSizes, setShowSizes] = useState(false);
 
   useEffect(() => { if (!hydrated) void hydrate(); }, [hydrated, hydrate]);
+  useEffect(() => { if (!treasureReady) void hydrateTreasure(); }, [treasureReady, hydrateTreasure]);
 
   // Restore reading preferences.
   useEffect(() => {
@@ -396,6 +402,43 @@ export default function BookScreen() {
                       {saved ? 'Saved' : 'Save this verse'}
                     </Text>
                   </Pressable>
+
+                  {/* Any verse can be taken into the Treasury — the seeded
+                      pool is a starting point, not the limit of what someone
+                      is allowed to learn. */}
+                  {(() => {
+                    const memId = `custom:${book.name}-${openChapter}-${selected.number}`
+                      .toLowerCase().replace(/\s+/g, '-');
+                    const already = memoryItems.some(
+                      (m) => m.id === memId
+                        || (m.ref.book === book.name
+                          && m.ref.chapter === openChapter
+                          && m.ref.verseStart === selected.number),
+                    );
+                    return (
+                      <Pressable
+                        disabled={already}
+                        onPress={async () => {
+                          feedback.success?.();
+                          await addVerse(
+                            { book: book.name, chapter: openChapter, verseStart: selected.number },
+                            selected.text,
+                          );
+                          setSelected(null);
+                        }}
+                        style={[s.action, { borderTopColor: t.colors.border }]}
+                      >
+                        <Flame
+                          size={18}
+                          color={already ? t.colors.accent : t.colors.textMuted}
+                          strokeWidth={1.7}
+                        />
+                        <Text variant="bodyLarge" style={{ color: t.colors.text }}>
+                          {already ? 'In your Treasury' : 'Memorise this verse'}
+                        </Text>
+                      </Pressable>
+                    );
+                  })()}
 
                   {/* Only offered where the chapter actually has questions. */}
                   {hasChapterQuestions(chapterKey) && (

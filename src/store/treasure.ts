@@ -31,6 +31,14 @@ interface Actions {
   record: (id: string, result: Recall) => Promise<MemoryItem | null>;
   setSessionLength: (n: SessionLength) => Promise<void>;
   completeSession: () => Promise<void>;
+  /**
+   * Take any verse into the Treasury.
+   *
+   * The seeded pool is a starting point, not a boundary — someone whose church
+   * is working through a passage should be able to memorise that passage. Text
+   * is supplied by the caller because the reader already has it.
+   */
+  addVerse: (ref: MemoryItem['ref'], text: string) => Promise<string>;
 }
 
 const CURRENT_VERSION = 1;
@@ -105,6 +113,39 @@ export const useTreasure = create<State & Actions>((set, get) => ({
     const sessionsCompleted = s.sessionsCompleted + 1;
     set({ sessionsCompleted });
     await localRepository.set(StorageKeys.memory, persist({ ...s, sessionsCompleted }));
+  },
+
+  addVerse: async (ref, text) => {
+    const s = get();
+    const id = `custom:${ref.book}-${ref.chapter}-${ref.verseStart}${ref.verseEnd ? `-${ref.verseEnd}` : ''}`
+      .toLowerCase()
+      .replace(/\s+/g, '-');
+
+    // Already there — adding it twice would split its progress in two.
+    if (s.items.some((i) => i.id === id)) return id;
+
+    const item: MemoryItem = {
+      id,
+      ref,
+      translation: SEED_TRANSLATION,
+      text,
+      themes: [],
+      // No curated emphasis or omissions: FadingVerse falls back to choosing
+      // content words, which is why that fallback exists.
+      emphasis: [],
+      omissions: [],
+      state: 'learning',
+      strength: 0,
+      successes: 0,
+      failures: 0,
+      introducedAt: new Date().toISOString(),
+      nextReviewAt: new Date().toISOString(),
+    };
+
+    const items = [...s.items, item];
+    set({ items });
+    await localRepository.set(StorageKeys.memory, persist({ ...s, items }));
+    return id;
   },
 }));
 
