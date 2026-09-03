@@ -120,6 +120,8 @@ export default function TreasureSession() {
   const [loading, setLoading] = useState(false);
   const [slips, setSlips] = useState(0);
   const [revealed, setRevealed] = useState(false);
+  /** Words given away one at a time in the recall phase. */
+  const [hints, setHints] = useState(0);
   const [placed, setPlaced] = useState<number[]>([]);
   const [tally, setTally] = useState({ practised: 0, strengthened: 0, treasured: 0 });
   const [justKept, setJustKept] = useState<MemoryItem | null>(null);
@@ -181,25 +183,33 @@ export default function TreasureSession() {
   /**
    * Which mode a verse deserves.
    *
-   * Measured in encounters, not in strength. Strength is the scheduler's
-   * business — it climbs slowly and every success pushes the next review days
-   * out, so gating modes on it meant the later ones were effectively
-   * unreachable: Whisper wanted five or six recalls of one verse while the
-   * session was spreading attention across forty.
+   * Measured in encounters rather than strength — strength climbs slowly and
+   * pushes reviews days out, so gating modes on it left the later ones
+   * unreachable.
    *
-   * Counting successful recalls instead gives a plain progression. Each time
-   * you get a verse right, it asks a little more of you next time.
+   * Within a level there is more than one fair choice, and which one a verse
+   * gets is decided by the verse itself. Without that, a session full of new
+   * verses asked for the same exercise ten times in a row, because every one
+   * of them was on the same rung.
    */
   const openingPhase = useCallback((m: MemoryItem, canMatch: boolean): Phase => {
     if (!m.introducedAt || !m.text) return 'read';
-    switch (m.successes) {
-      case 0: return 'missing';
-      case 1: return 'build';
-      case 2: return canMatch ? 'match' : 'reference';
-      case 3: return 'reference';
-      case 4: return 'recall';
-      default: return 'whisper';
-    }
+
+    const options: Phase[][] = [
+      ['missing', 'build'],                       // first recall
+      ['build', 'missing'],
+      canMatch ? ['match', 'reference'] : ['reference', 'missing'],
+      canMatch ? ['reference', 'match'] : ['reference', 'build'],
+      ['recall', 'reference'],
+      ['whisper', 'recall'],
+    ];
+
+    const rung = options[Math.min(m.successes, options.length - 1)];
+
+    // A stable number from the verse id, so the same verse keeps its variant
+    // rather than shuffling every time the screen renders.
+    const seed = m.id.split('').reduce((n, c) => n + c.charCodeAt(0), 0);
+    return rung[(seed + m.successes) % rung.length];
   }, []);
 
   /**
@@ -224,7 +234,7 @@ export default function TreasureSession() {
     setPhase(openingPhase(live, matchGroup.length === 3));
   }, [live?.id, live?.text, matchGroup.length]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const resetPer = () => { setSlips(0); setRevealed(false); setPlaced([]); };
+  const resetPer = () => { setSlips(0); setRevealed(false); setPlaced([]); setHints(0); };
 
   const skip = useCallback(() => {
     resetPer();
@@ -693,6 +703,7 @@ export default function TreasureSession() {
               text={live.text}
               assistance={revealed ? 1 : remaining}
               reference={reference}
+              hints={revealed ? 0 : hints}
               size={21}
             />
             {!revealed ? (
@@ -700,6 +711,16 @@ export default function TreasureSession() {
                 <Text variant="body" style={[s.instruction, { color: t.colors.onImmersiveMuted }]}>
                   Fill what is missing, from memory.
                 </Text>
+                {/* A word at a time for someone nearly there, and the whole
+                    thing for someone who is not. */}
+                <Pressable
+                  onPress={() => { feedback.select(); setHints((h) => h + 1); }}
+                  style={s.hintBtn}
+                >
+                  <Text variant="label" uppercase style={{ color: t.colors.accent, letterSpacing: 1.6 }}>
+                    One more word
+                  </Text>
+                </Pressable>
                 <Button label="Show it" variant="onDark" onPress={() => setRevealed(true)} />
               </>
             ) : (
@@ -872,6 +893,7 @@ const s = StyleSheet.create({
   whisperRef: { textAlign: 'center', lineHeight: 56, paddingTop: 6 },
   whisperLine: { textAlign: 'center', marginTop: 26 },
   whisperReveal: { alignItems: 'center', paddingVertical: 18, minHeight: MIN_TOUCH },
+  hintBtn: { alignItems: 'center', paddingVertical: 14, minHeight: MIN_TOUCH },
   judgements: { gap: 10 },
   judgement: {
     borderWidth: 1, borderRadius: 14, paddingVertical: 16,

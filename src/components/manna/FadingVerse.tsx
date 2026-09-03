@@ -34,6 +34,12 @@ interface Props {
    */
   filled?: string[];
   /**
+   * How many further blanks to give away, from the left. For nudging someone
+   * who is one word short of remembering, rather than making them reveal the
+   * whole verse to get past it.
+   */
+  hints?: number;
+  /**
    * Whether to print the reference. Off when the reference is the thing being
    * asked for — otherwise the answer sits under the question.
    */
@@ -53,7 +59,7 @@ const bare = (w: string) => w.replace(/[^A-Za-z’']/g, '').toLowerCase();
 
 export const FadingVerse = ({
   text, assistance, reference, emphasis = [], omissions = [], notice = false,
-  filled = [], showReference = true, size = 22,
+  filled = [], hints = 0, showReference = true, size = 22,
 }: Props) => {
   const t = useTheme();
   const words = useMemo(() => text.split(/\s+/).filter(Boolean), [text]);
@@ -134,14 +140,15 @@ export const FadingVerse = ({
           if (hidden.has(i)) {
             const slot = blankOrder.indexOf(i);
             const answered = slot > -1 && slot < filled.length;
+            const hinted = slot > -1 && slot < filled.length + hints;
 
-            // Once supplied, the word appears in gold where it belongs — the
-            // verse reassembles as you go rather than staying blank until the
-            // end.
-            if (answered) {
+            // Once supplied — or given away as a hint — the word appears in
+            // gold where it belongs. The verse reassembles as you go rather
+            // than staying blank until the end.
+            if (answered || hinted) {
               return (
                 <RNText key={i} style={{ color: t.colors.accent }}>
-                  {filled[slot]}{' '}
+                  {answered ? filled[slot] : word}{' '}
                 </RNText>
               );
             }

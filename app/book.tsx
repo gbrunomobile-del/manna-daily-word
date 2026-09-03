@@ -166,7 +166,17 @@ export default function BookScreen() {
         <PaperGrain />
         {/* Reader bar */}
         <View style={[s.bar, { borderBottomColor: t.colors.border + '44' }]}>
-          <Pressable onPress={() => setOpenChapter(null)} hitSlop={10} style={s.iconBtn}>
+          {/*
+            Arriving with a chapter in the URL means the reader was opened from
+            somewhere else — the daily reading, a search result, a connection.
+            Back should return there rather than dropping into this book's
+            chapter list, which is not where the reader came from.
+          */}
+          <Pressable
+            onPress={() => (chapterParam ? router.back() : setOpenChapter(null))}
+            hitSlop={10}
+            style={s.iconBtn}
+          >
             <ChevronLeft size={22} color={t.colors.textMuted} strokeWidth={1.8} />
           </Pressable>
 

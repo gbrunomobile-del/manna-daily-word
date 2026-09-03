@@ -87,6 +87,21 @@ export default function DailyReading() {
 
   const allGathered = passages.length > 0 && passages.every((p) => hasGathered(p.reference));
 
+  /**
+   * Close the day out on its own once every passage has been gathered.
+   *
+   * Having read everything and then being asked to press a button confirming
+   * you read everything is a formality. The day completes itself.
+   */
+  useEffect(() => {
+    if (!hydrated || complete || !allGathered) return;
+    void (async () => {
+      await recordDay(`day-${day}`, 0);
+      feedback.success?.();
+      setComplete(true);
+    })();
+  }, [hydrated, complete, allGathered, day, recordDay]);
+
   /** Gather one passage on its own — the day need not be done in one sitting. */
   const gatherOne = useCallback(async (reference: string) => {
     feedback.success?.();
