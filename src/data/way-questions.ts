@@ -316,6 +316,577 @@ export const QUESTIONS: Record<string, Question[]> = {
     },
   ],
 
+  // ── SECOND UNITS ───────────────────────────────────────────
+  // A topic is not one lesson. These go further into the same passages rather
+  // than moving on — the second reading of a chapter is usually where the
+  // interesting things are.
+
+  'creation-2': [
+    {
+      kind: 'mcq',
+      prompt: 'What is the pattern of each day of creation?',
+      options: ['Command, then rest', 'God speaks, it is so, and he calls it good', 'A question, then an answer', 'Light, then dark'],
+      answer: 1,
+      teachingKeyword: 'AND IT WAS SO.',
+      insight: 'The repetition is the argument. Nothing struggles into being; it is spoken and it is there.',
+      verse: 'Genesis 1:9',
+    },
+    {
+      kind: 'tf',
+      prompt: 'The sun and moon are named in the creation account.',
+      answer: false,
+      insight: 'They are called the greater and lesser lights. Neighbouring cultures worshipped them by name; Genesis declines to use it.',
+      verse: 'Genesis 1:16',
+    },
+    {
+      kind: 'cloze',
+      prompt: 'Complete the verse.',
+      text: 'Yahweh God formed man from the dust of the ground, and breathed into his nostrils the breath of ___.',
+      options: ['life', 'wisdom', 'spirit', 'days'],
+      answer: 0,
+      insight: 'Dust and breath. The account insists on both, and the rest of Scripture keeps returning to the pairing.',
+      verse: 'Genesis 2:7',
+    },
+    {
+      kind: 'mcq',
+      prompt: 'What was Adam given to do in the garden?',
+      options: ['Rest', 'Tend and keep it', 'Build', 'Wait'],
+      answer: 1,
+      insight: 'Work exists before anything goes wrong. It is not part of the curse.',
+      verse: 'Genesis 2:15',
+    },
+    {
+      kind: 'tf',
+      prompt: 'Adam named the animals.',
+      answer: true,
+      insight: 'And whatever he called them, that was the name. Authority handed over without supervision.',
+      verse: 'Genesis 2:19',
+    },
+    {
+      kind: 'match',
+      prompt: 'Match each verse to where it is found.',
+      pairs: [
+        { text: 'God saw everything that he had made, and behold, it was very good.', reference: 'Genesis 1:31' },
+        { text: 'It is not good that the man should be alone.', reference: 'Genesis 2:18' },
+        { text: 'God blessed the seventh day, and made it holy.', reference: 'Genesis 2:3' },
+      ],
+      insight: 'A verdict, a lack, and a day set apart — the three notes the opening chapters end on.',
+    },
+  ],
+
+  'the-fall-2': [
+    {
+      kind: 'mcq',
+      prompt: 'How does the serpent\u2019s first line begin?',
+      options: ['With a command', 'With a question', 'With a promise', 'With a threat'],
+      answer: 1,
+      teachingKeyword: 'DID GOD SAY?',
+      insight: 'Did God really say? Not a denial — an invitation to reconsider. The denial comes only after that lands.',
+      verse: 'Genesis 3:1',
+    },
+    {
+      kind: 'tf',
+      prompt: 'Eve repeats God\u2019s command exactly.',
+      answer: false,
+      insight: 'She adds “neither shall you touch it”. A small addition, and the chapter lets it pass without comment.',
+      verse: 'Genesis 3:3',
+    },
+    {
+      kind: 'mcq',
+      prompt: 'What did they do first after eating?',
+      options: ['Ran', 'Made coverings and hid', 'Prayed', 'Argued'],
+      answer: 1,
+      insight: 'Fig leaves, then hiding. Both are attempts at the same thing, and neither works.',
+      verse: 'Genesis 3:7',
+    },
+    {
+      kind: 'whosaid',
+      quote: 'The woman whom you gave to be with me, she gave me of the tree.',
+      options: ['Adam', 'Eve', 'The serpent', 'Cain'],
+      answer: 0,
+      insight: 'Blame passed twice in one sentence — to her, and to the one who gave her.',
+      verse: 'Genesis 3:12',
+    },
+    {
+      kind: 'tf',
+      prompt: 'They were sent from the garden to keep them from the tree of life.',
+      answer: true,
+      insight: 'Read one way, exile. Read another, mercy — preventing them living forever in that condition.',
+      verse: 'Genesis 3:22',
+    },
+    {
+      kind: 'type',
+      prompt: 'Type the missing word.',
+      text: 'Yahweh God called to the man, and said to him, “Where ___ you?”',
+      answer: 'are',
+      accept: ['are'],
+      insight: 'The first question in Scripture, asked by the one who already knew.',
+      verse: 'Genesis 3:9',
+    },
+  ],
+
+  'noah-2': [
+    {
+      kind: 'mcq',
+      prompt: 'How long did the waters prevail on the earth?',
+      options: ['Forty days', 'A hundred and fifty days', 'A year', 'Seven days'],
+      answer: 1,
+      insight: 'Forty days of rain, then a hundred and fifty of water. The account is longer and slower than it is remembered.',
+      verse: 'Genesis 7:24',
+    },
+    {
+      kind: 'tf',
+      prompt: 'Noah sent out a raven before the dove.',
+      answer: true,
+      insight: 'It went back and forth and did not return. The dove is sent because the raven told him nothing.',
+      verse: 'Genesis 8:7',
+    },
+    {
+      kind: 'cloze',
+      prompt: 'Complete the first thing Noah did on leaving the ark.',
+      text: 'Noah built an ___ to Yahweh.',
+      options: ['altar', 'house', 'ark', 'city'],
+      answer: 0,
+      teachingKeyword: 'AN ALTAR FIRST.',
+      insight: 'Before shelter, before planting. The first structure built in the new world is for worship.',
+      verse: 'Genesis 8:20',
+    },
+    {
+      kind: 'mcq',
+      prompt: 'Who is the covenant after the flood made with?',
+      options: ['Noah alone', 'Noah and his sons', 'Every living creature', 'The land'],
+      answer: 2,
+      insight: 'Every living creature of all flesh. The promise is wider than the family that survived.',
+      verse: 'Genesis 9:15',
+    },
+    {
+      kind: 'wordbank',
+      prompt: 'Build the promise.',
+      answer: ['Seedtime', 'and', 'harvest', 'will', 'not', 'cease.'],
+      insight: 'The rhythm of ordinary days offered as the sign. Every unremarkable morning is the evidence.',
+      verse: 'Genesis 8:22',
+    },
+    {
+      kind: 'tf',
+      prompt: 'The chapter records Noah\u2019s failure after the flood.',
+      answer: true,
+      insight: 'Drunk in his tent, chapters after being called righteous. Scripture rarely tidies up its heroes.',
+      verse: 'Genesis 9:21',
+    },
+  ],
+
+  'abraham-2': [
+    {
+      kind: 'mcq',
+      prompt: 'How did Abraham and Sarah react to the promise of a son in old age?',
+      options: ['They wept', 'They laughed', 'They argued', 'They gave thanks'],
+      answer: 1,
+      teachingKeyword: 'HE LAUGHED.',
+      insight: 'Both of them, separately. The son is then named Isaac, which means laughter — the joke kept as the name.',
+      verse: 'Genesis 17:17',
+    },
+    {
+      kind: 'tf',
+      prompt: 'Abraham bargained with God over Sodom.',
+      answer: true,
+      insight: 'From fifty righteous down to ten, each time asking permission to ask again.',
+      verse: 'Genesis 18:24',
+    },
+    {
+      kind: 'mcq',
+      prompt: 'What did Hagar call God in the wilderness?',
+      options: ['The Almighty', 'The God who sees', 'The Everlasting', 'The Provider'],
+      answer: 1,
+      insight: 'A pregnant Egyptian slave, alone at a spring, gives God a name. She is the first person in Scripture to do so.',
+      verse: 'Genesis 16:13',
+    },
+    {
+      kind: 'tf',
+      prompt: 'Abraham passed Sarah off as his sister to protect himself.',
+      answer: true,
+      insight: 'Twice, to two different kings. The father of faith is not presented as a brave man.',
+      verse: 'Genesis 20:2',
+    },
+    {
+      kind: 'cloze',
+      prompt: 'Complete the question asked at Sarah\u2019s tent.',
+      text: 'Is anything too ___ for Yahweh?',
+      options: ['hard', 'great', 'small', 'late'],
+      answer: 0,
+      insight: 'Asked after she laughed and then denied laughing. The question is left hanging rather than answered.',
+      verse: 'Genesis 18:14',
+    },
+    {
+      kind: 'match',
+      prompt: 'Match each verse to where it is found.',
+      pairs: [
+        { text: 'He believed in Yahweh, and he reckoned it to him for righteousness.', reference: 'Genesis 15:6' },
+        { text: 'In you all the families of the earth will be blessed.', reference: 'Genesis 12:3' },
+        { text: 'God will provide himself the lamb for a burnt offering.', reference: 'Genesis 22:8' },
+      ],
+      insight: 'Faith, reach and provision — the three things the New Testament keeps returning to Abraham for.',
+    },
+  ],
+
+  'joseph-2': [
+    {
+      kind: 'mcq',
+      prompt: 'Why did Joseph refuse Potiphar\u2019s wife?',
+      options: ['Fear of Potiphar', 'He would not sin against God', 'He was betrothed', 'He was afraid of prison'],
+      answer: 1,
+      insight: 'He names God rather than consequences. The consequence arrives anyway.',
+      verse: 'Genesis 39:9',
+    },
+    {
+      kind: 'tf',
+      prompt: 'The cupbearer remembered Joseph as soon as he was released.',
+      answer: false,
+      teachingKeyword: 'TWO FULL YEARS.',
+      insight: 'He forgot him. Genesis notes the delay precisely — two full years, for nothing Joseph did wrong.',
+      verse: 'Genesis 40:23',
+    },
+    {
+      kind: 'mcq',
+      prompt: 'What did Joseph say when Pharaoh praised his ability?',
+      options: ['He accepted it', 'It is not in me; God will give an answer', 'He asked for payment', 'He said nothing'],
+      answer: 1,
+      insight: 'Standing before absolute power, after thirteen years in prison, he corrects the compliment.',
+      verse: 'Genesis 41:16',
+    },
+    {
+      kind: 'tf',
+      prompt: 'Joseph tested his brothers before revealing himself.',
+      answer: true,
+      insight: 'At length, and harshly. He is watching whether they will abandon another brother.',
+      verse: 'Genesis 44:2',
+    },
+    {
+      kind: 'whosaid',
+      quote: 'Let your servant stay instead of the boy, a bondservant to my lord.',
+      options: ['Reuben', 'Judah', 'Benjamin', 'Simeon'],
+      answer: 1,
+      insight: 'The brother who suggested selling Joseph offers to take Benjamin’s place. That is when Joseph breaks.',
+      verse: 'Genesis 44:33',
+    },
+    {
+      kind: 'cloze',
+      prompt: 'Complete what Joseph named his firstborn for.',
+      text: 'God has made me ___ all my toil, and all my father\u2019s house.',
+      options: ['forget', 'remember', 'endure', 'forgive'],
+      answer: 0,
+      insight: 'Manasseh, meaning forgetting. The second son is named Ephraim, fruitful — in the land of his affliction.',
+      verse: 'Genesis 41:51',
+    },
+  ],
+
+  'moses-2': [
+    {
+      kind: 'mcq',
+      prompt: 'What did Moses do before the burning bush?',
+      options: ['Ran', 'Turned aside to look', 'Called out', 'Knelt'],
+      answer: 1,
+      teachingKeyword: 'HE TURNED ASIDE.',
+      insight: 'The text says God called only when he saw that Moses turned to look. The whole exodus waits on curiosity.',
+      verse: 'Exodus 3:4',
+    },
+    {
+      kind: 'tf',
+      prompt: 'Moses had killed a man before fleeing Egypt.',
+      answer: true,
+      insight: 'Forty years earlier, buried in the sand. He is called at eighty, from the far side of a failure.',
+      verse: 'Exodus 2:12',
+    },
+    {
+      kind: 'mcq',
+      prompt: 'What advice did Jethro give Moses?',
+      options: ['To rest', 'To appoint others to judge', 'To return to Midian', 'To pray more'],
+      answer: 1,
+      insight: 'You will surely wear out. The exodus’s administrative structure comes from a foreign priest’s common sense.',
+      verse: 'Exodus 18:18',
+    },
+    {
+      kind: 'tf',
+      prompt: 'Moses asked to see God\u2019s glory.',
+      answer: true,
+      insight: 'And was shown his goodness, and his back, from inside a cleft in the rock.',
+      verse: 'Exodus 33:18',
+    },
+    {
+      kind: 'cloze',
+      prompt: 'Complete what God told Moses about his presence.',
+      text: 'My ___ will go with you, and I will give you rest.',
+      options: ['presence', 'angel', 'word', 'spirit'],
+      answer: 0,
+      insight: 'Moses had just said he would not move without it. He was willing to refuse the promised land on that condition.',
+      verse: 'Exodus 33:14',
+    },
+    {
+      kind: 'whosaid',
+      quote: 'Who am I, that I should go to Pharaoh?',
+      options: ['Aaron', 'Moses', 'Joshua', 'Jethro'],
+      answer: 1,
+      insight: 'The first of five objections. The answer he is given is not about him at all: I will be with you.',
+      verse: 'Exodus 3:11',
+    },
+  ],
+
+  'the-law-2': [
+    {
+      kind: 'mcq',
+      prompt: 'What was the Year of Jubilee?',
+      options: ['A festival', 'Every fiftieth year, when land returned and debts cleared', 'A fast', 'A census'],
+      answer: 1,
+      teachingKeyword: 'RETURN IT.',
+      insight: 'A built-in reset on inequality, every fifty years. Whether Israel ever kept it is another matter.',
+      verse: 'Leviticus 25:10',
+    },
+    {
+      kind: 'tf',
+      prompt: 'The Law provided cities where someone who killed accidentally could flee.',
+      answer: true,
+      insight: 'Six of them, spread so none was too far. Protection from revenge, before a trial.',
+      verse: 'Numbers 35:11',
+    },
+    {
+      kind: 'mcq',
+      prompt: 'What were farmers told to leave at the edges of their fields?',
+      options: ['Nothing', 'The corners, and anything dropped', 'A tenth', 'The best',],
+      answer: 1,
+      insight: 'Not charity handed over but harvest deliberately left standing. It is how Ruth eats, generations later.',
+      verse: 'Leviticus 19:9',
+    },
+    {
+      kind: 'cloze',
+      prompt: 'Complete the command about foreigners.',
+      text: 'You shall love him as yourself, for you were ___ in the land of Egypt.',
+      options: ['foreigners', 'slaves', 'strangers', 'sojourners'],
+      answer: 0,
+      insight: 'The reason given is memory. They are to treat outsiders as they wish they had been treated.',
+      verse: 'Leviticus 19:34',
+    },
+    {
+      kind: 'tf',
+      prompt: 'The tabernacle was built from voluntary offerings.',
+      answer: true,
+      insight: 'And they eventually had to be told to stop bringing things — the only recorded instance of that problem.',
+      verse: 'Exodus 36:6',
+    },
+    {
+      kind: 'type',
+      prompt: 'Type the missing word.',
+      text: 'You shall love your ___ as yourself.',
+      answer: 'neighbour',
+      accept: ['neighbour', 'neighbor'],
+      insight: 'Buried in Leviticus among laws about weights and field boundaries. Jesus pulls it out and puts it second only to loving God.',
+      verse: 'Leviticus 19:18',
+    },
+  ],
+
+  'david-2': [
+    {
+      kind: 'mcq',
+      prompt: 'What did David do when his infant son died?',
+      options: ['Mourned for days', 'Washed, ate, and worshipped', 'Refused to speak', 'Left Jerusalem'],
+      answer: 1,
+      teachingKeyword: 'HE WORSHIPPED.',
+      insight: 'He fasted while the child lived and stopped when he died. His servants find it baffling; he explains it plainly.',
+      verse: '2 Samuel 12:20',
+    },
+    {
+      kind: 'tf',
+      prompt: 'David danced before the ark and was criticised for it.',
+      answer: true,
+      insight: 'By his own wife, for undignified behaviour. He answers that he will be more undignified still.',
+      verse: '2 Samuel 6:22',
+    },
+    {
+      kind: 'mcq',
+      prompt: 'What did David want to build?',
+      options: ['A palace', 'A temple', 'A city wall', 'An army'],
+      answer: 1,
+      insight: 'He is told no, and that God will build him a house instead. The refusal contains a larger promise.',
+      verse: '2 Samuel 7:5',
+    },
+    {
+      kind: 'whosaid',
+      quote: 'You are the man.',
+      options: ['Samuel', 'Nathan', 'Joab', 'Absalom'],
+      answer: 1,
+      insight: 'After a story about a poor man’s lamb, which David had just condemned without recognising himself in it.',
+      verse: '2 Samuel 12:7',
+    },
+    {
+      kind: 'tf',
+      prompt: 'David showed kindness to a surviving member of Saul\u2019s family.',
+      answer: true,
+      insight: 'Mephibosheth, lame in both feet, given a permanent place at the king’s table. For Jonathan’s sake.',
+      verse: '2 Samuel 9:7',
+    },
+    {
+      kind: 'cloze',
+      prompt: 'Complete David\u2019s lament for his son.',
+      text: 'Absalom, my son, my son! Would I had ___ for you.',
+      options: ['died', 'wept', 'spoken', 'waited'],
+      answer: 0,
+      insight: 'Grief for the son who tried to kill him and take his throne.',
+      verse: '2 Samuel 18:33',
+    },
+  ],
+
+  'isaiah-2': [
+    {
+      kind: 'mcq',
+      prompt: 'What will the nations do with their swords?',
+      options: ['Sharpen them', 'Beat them into ploughshares', 'Bury them', 'Give them away'],
+      answer: 1,
+      teachingKeyword: 'PLOUGHSHARES.',
+      insight: 'Weapons remade into farm tools — not destroyed but repurposed. The image is inscribed outside the United Nations.',
+      verse: 'Isaiah 2:4',
+    },
+    {
+      kind: 'tf',
+      prompt: 'Isaiah says a child will be born and called Wonderful Counsellor, Mighty God.',
+      answer: true,
+      insight: 'And Everlasting Father, Prince of Peace. Four titles for a child, in a chapter about a people walking in darkness.',
+      verse: 'Isaiah 9:6',
+    },
+    {
+      kind: 'cloze',
+      prompt: 'Complete the promise.',
+      text: 'A bruised reed he will not ___, and a dimly burning wick he will not quench.',
+      options: ['break', 'take', 'bend', 'burn'],
+      answer: 0,
+      insight: 'Quoted by Matthew of Jesus. The servant is defined by what he declines to finish off.',
+      verse: 'Isaiah 42:3',
+    },
+    {
+      kind: 'mcq',
+      prompt: 'How does Isaiah describe our righteousness?',
+      options: ['Sufficient', 'As filthy rags', 'Growing', 'Hidden'],
+      answer: 1,
+      insight: 'Said by the prophet about his own people, including himself. He does not exempt the messenger.',
+      verse: 'Isaiah 64:6',
+    },
+    {
+      kind: 'tf',
+      prompt: 'Isaiah pictures a wolf living with a lamb.',
+      answer: true,
+      insight: 'And a child leading them. The image is of danger present but no longer dangerous.',
+      verse: 'Isaiah 11:6',
+    },
+    {
+      kind: 'type',
+      prompt: 'Type the missing word.',
+      text: 'Can a woman forget her nursing child… I have engraved you on the palms of my ___.',
+      answer: 'hands',
+      accept: ['hands'],
+      insight: 'The strongest human bond named, and then said to be less reliable than the one being described.',
+      verse: 'Isaiah 49:16',
+    },
+  ],
+
+  'birth-2': [
+    {
+      kind: 'mcq',
+      prompt: 'What did Mary\u2019s song say God had done to the powerful?',
+      options: ['Blessed them', 'Brought them down from their thrones', 'Ignored them', 'Warned them'],
+      answer: 1,
+      teachingKeyword: 'BROUGHT DOWN.',
+      insight: 'And exalted the lowly, and filled the hungry. Sung by a pregnant teenager about a child not yet born.',
+      verse: 'Luke 1:52',
+    },
+    {
+      kind: 'tf',
+      prompt: 'Zechariah was unable to speak until John was born.',
+      answer: true,
+      insight: 'For doubting the angel. His first words after months of silence are a song of praise.',
+      verse: 'Luke 1:20',
+    },
+    {
+      kind: 'mcq',
+      prompt: 'What did Joseph plan before the angel spoke to him?',
+      options: ['To marry quietly', 'To divorce her quietly', 'To accuse her', 'To leave Nazareth'],
+      answer: 1,
+      insight: 'Unwilling to expose her to public shame. Matthew notes the kindness before the intervention.',
+      verse: 'Matthew 1:19',
+    },
+    {
+      kind: 'whosaid',
+      quote: 'My eyes have seen your salvation.',
+      options: ['Anna', 'Simeon', 'Zechariah', 'Joseph'],
+      answer: 1,
+      insight: 'Holding a forty-day-old baby in a crowded temple. He asks for nothing else afterwards.',
+      verse: 'Luke 2:30',
+    },
+    {
+      kind: 'tf',
+      prompt: 'An elderly widow also recognised the child.',
+      answer: true,
+      insight: 'Anna, eighty-four, who had not left the temple in decades. Luke names her and her tribe.',
+      verse: 'Luke 2:36',
+    },
+    {
+      kind: 'cloze',
+      prompt: 'Complete the angel\u2019s announcement.',
+      text: 'I bring you good news of great joy which will be to ___ the people.',
+      options: ['all', 'some of', 'these', 'God\u2019s'],
+      answer: 0,
+      insight: 'Said to shepherds, about a birth in a stable, in an occupied province. The word is all.',
+      verse: 'Luke 2:10',
+    },
+  ],
+
+  'ministry-2': [
+    {
+      kind: 'mcq',
+      prompt: 'What did Jesus say about the Sabbath?',
+      options: ['It is abolished', 'It was made for man, not man for the Sabbath', 'It is optional', 'It is the greatest command'],
+      answer: 1,
+      teachingKeyword: 'FOR MAN.',
+      insight: 'Said while his disciples were being criticised for picking grain. He reverses which serves which.',
+      verse: 'Mark 2:27',
+    },
+    {
+      kind: 'tf',
+      prompt: 'Jesus was criticised for the company he kept.',
+      answer: true,
+      insight: 'A friend of tax collectors and sinners — meant as an accusation, and never denied.',
+      verse: 'Matthew 11:19',
+    },
+    {
+      kind: 'mcq',
+      prompt: 'What did Jesus tell the disciples about worry?',
+      options: ['It is natural', 'Consider the birds and the lilies', 'Pray it away', 'Work harder'],
+      answer: 1,
+      insight: 'The argument is from ordinary things anyone could look at while he was speaking.',
+      verse: 'Matthew 6:26',
+    },
+    {
+      kind: 'whosaid',
+      quote: 'Lord, to whom would we go? You have the words of eternal life.',
+      options: ['Peter', 'John', 'Thomas', 'Andrew'],
+      answer: 0,
+      insight: 'Said after a hard teaching had emptied the crowd. Asked whether the twelve would leave too.',
+      verse: 'John 6:68',
+    },
+    {
+      kind: 'tf',
+      prompt: 'Jesus withdrew regularly to pray alone.',
+      answer: true,
+      insight: 'Often, and early, and in lonely places. The Gospels mention it as a habit rather than an event.',
+      verse: 'Luke 5:16',
+    },
+    {
+      kind: 'cloze',
+      prompt: 'Complete the invitation.',
+      text: 'Take my yoke upon you and learn from me, for I am gentle and ___ in heart.',
+      options: ['humble', 'patient', 'pure', 'strong'],
+      answer: 0,
+      insight: 'The only place he describes his own character, and these are the two words he chooses.',
+      verse: 'Matthew 11:29',
+    },
+  ],
+
   // ── ABRAHAM ──────────────────────────────────────────────────────
   abraham: [
     {
@@ -1017,6 +1588,29 @@ export const QUESTIONS: Record<string, Question[]> = {
     },
   ],
 };
+
+/**
+ * UNITS
+ *
+ * A topic can hold several lessons. The tree still shows one node per topic;
+ * tapping it opens whichever unit comes next, and the topic only counts as
+ * gathered once all of them are done.
+ *
+ * A topic with no entry here has a single unit named after itself, which is
+ * how every topic began — so adding units is additive and never disturbs
+ * progress already made.
+ */
+export const UNITS: Record<string, string[]> = {
+  creation: ['creation', 'creation-2'],
+  'the-fall': ['the-fall', 'the-fall-2'],
+  noah: ['noah', 'noah-2'],
+};
+
+export const unitsOf = (topic: string): string[] => UNITS[topic] ?? [topic];
+
+/** Whether every unit of a topic has been gathered. */
+export const topicComplete = (topic: string, completed: string[]): boolean =>
+  unitsOf(topic).every((u) => completed.includes(u));
 
 /** Topics that still use the older short set, pending expansion. */
 export const hasExpandedSet = (topicId: string): boolean => topicId in QUESTIONS;

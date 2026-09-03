@@ -13,7 +13,7 @@ import { PaperGrain } from '@/components/primitives/Screen';
 import { Ornament } from '@/components/manna/Ornament';
 import { ScreenHeader } from '@/components/manna/ScreenHeader';
 import { SCREEN_ART, TOPIC_ART } from '@/components/manna/screen-art';
-import { TOPIC_INTRO } from '@/data/way-questions';
+import { TOPIC_INTRO, unitsOf, topicComplete } from '@/data/way-questions';
 import { useTheme } from '@/theme';
 import { feedback } from '@/services/feedback';
 import { useWay } from '@/store/way';
@@ -61,11 +61,17 @@ const SKILLS: Skill[] = [
 
 type Status = 'locked' | 'available' | 'attempted' | 'complete';
 
+/**
+ * A topic is complete when all of its units are, and unlocks the next once it
+ * is. Topics with a single unit behave exactly as before.
+ */
 function statusOf(skill: Skill, completed: string[], attempted: string[]): Status {
-  if (completed.includes(skill.id)) return 'complete';
-  const unlocked = skill.unlocksAfter.every((id) => completed.includes(id));
+  if (topicComplete(skill.id, completed)) return 'complete';
+  const unlocked = skill.unlocksAfter.every((id) => topicComplete(id, completed));
   if (!unlocked) return 'locked';
-  return attempted.includes(skill.id) ? 'attempted' : 'available';
+  const units = unitsOf(skill.id);
+  const started = units.some((u) => completed.includes(u) || attempted.includes(u));
+  return started ? 'attempted' : 'available';
 }
 
 /**
@@ -120,7 +126,8 @@ export default function TheWay() {
 
   /** Where you are now: the first topic open to you but not yet gathered. */
   const currentId = SKILLS.find(
-    (sk) => !completed.includes(sk.id) && sk.unlocksAfter.every((id) => completed.includes(id)),
+    (sk) => !topicComplete(sk.id, completed)
+      && sk.unlocksAfter.every((id) => topicComplete(id, completed)),
   )?.id;
 
   /**
@@ -131,11 +138,16 @@ export default function TheWay() {
    */
   const [preview, setPreview] = useState<Skill | null>(null);
 
+  /** The next unit of a topic that has not been gathered. */
+  const nextUnit = (topic: string) =>
+    unitsOf(topic).find((u) => !completed.includes(u)) ?? unitsOf(topic)[0];
+
   const open = (skill: Skill) => {
     feedback.select();
-    const seen = attempted.includes(skill.id) || completed.includes(skill.id);
+    const units = unitsOf(skill.id);
+    const seen = units.some((u) => attempted.includes(u) || completed.includes(u));
     if (!seen && TOPIC_INTRO[skill.id]) { setPreview(skill); return; }
-    router.push({ pathname: '/way/lesson', params: { skillId: skill.id } });
+    router.push({ pathname: '/way/lesson', params: { skillId: nextUnit(skill.id) } });
   };
 
   return (
@@ -150,7 +162,7 @@ export default function TheWay() {
         <View>
           <Text variant="title" style={{ color: t.colors.text }}>The Way</Text>
           <Text variant="body" tone="muted" style={{ marginTop: 2 }}>
-            {completed.length} of {SKILLS.length} topics gathered
+            {SKILLS.filter((sk) => topicComplete(sk.id, completed)).length} of {SKILLS.length} topics gathered
           </Text>
         </View>
         <View style={[styles.xp, { backgroundColor: t.colors.accent + '18', borderColor: t.colors.accent + '44' }]}>
@@ -277,7 +289,14 @@ export default function TheWay() {
                   {skill.title}
                 </Text>
                 <Text variant="caption" tone="muted" style={styles.subtitle} numberOfLines={1}>
-                  {skill.subtitle}
+                  {(() => {
+                    const units = unitsOf(skill.id);
+                    if (units.length < 2 || locked || complete) return skill.subtitle;
+                    // Only worth saying where a topic holds more than one
+                    // lesson and is not yet finished.
+                    const done = units.filter((u) => completed.includes(u)).length;
+                    return `${skill.subtitle} · ${done} of ${units.length}`;
+                  })()}
                 </Text>
               </View>
             </Animated.View>
@@ -335,7 +354,7 @@ export default function TheWay() {
                   onPress={() => {
                     const id = preview.id;
                     setPreview(null);
-                    router.push({ pathname: '/way/lesson', params: { skillId: id } });
+                    router.push({ pathname: '/way/lesson', params: { skillId: nextUnit(id) } });
                   }}
                 />
               </>

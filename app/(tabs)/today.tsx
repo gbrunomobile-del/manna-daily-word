@@ -19,6 +19,7 @@ import { getDayReading, passagesForDay, TOTAL_DAYS } from '@/data/year-plan';
 import { DEFAULT_VERSION } from '@/data/versions';
 import { useGathered } from '@/store/gathered';
 import { useWay } from '@/store/way';
+import { unitsOf, topicComplete } from '@/data/way-questions';
 import { useTreasure, treasuredCount, readyCount } from '@/store/treasure';
 import {
   useProgress, weekDots, currentStreak, gatheredToday, isReturning, planDay,
@@ -113,8 +114,10 @@ export default function Today() {
   // How much of today's portion is already behind you.
   const portionDone = refs.filter((r) => hasGathered(r)).length;
 
-  // The next topic in The Way that hasn't been passed.
-  const nextTopic = WAY_ORDER.find((id) => !completed.includes(id)) ?? null;
+  // The next topic in The Way that hasn't been passed. A topic counts as done
+  // only when all of its units are.
+  const nextTopic = WAY_ORDER.find((id) => !topicComplete(id, completed)) ?? null;
+  const topicsDone = WAY_ORDER.filter((id) => topicComplete(id, completed)).length;
 
   /**
    * The opening verse of today's Old Testament portion, shown as a taste of
@@ -282,7 +285,7 @@ export default function Today() {
               accessibilityLabel={`Continue ${WAY_TITLES[nextTopic]}`}
               onPress={() => {
                 feedback.select();
-                router.push({ pathname: '/way/lesson', params: { skillId: nextTopic } });
+                router.push({ pathname: '/way/lesson', params: { skillId: unitsOf(nextTopic).find((u) => !completed.includes(u)) ?? nextTopic } });
               }}
               style={[styles.lesson, { backgroundColor: t.colors.primary }]}
             >
@@ -293,11 +296,11 @@ export default function Today() {
                     {WAY_TITLES[nextTopic]}
                   </Text>
                   <Text variant="caption" style={{ color: t.colors.onImmersiveMuted, marginTop: 3 }}>
-                    {completed.length} of {WAY_ORDER.length} gathered
+                    {topicsDone} of {WAY_ORDER.length} gathered
                   </Text>
                 </View>
                 <Text variant="h3" style={{ color: t.colors.onPrimary }}>
-                  {Math.round((completed.length / WAY_ORDER.length) * 100)}%
+                  {Math.round((topicsDone / WAY_ORDER.length) * 100)}%
                 </Text>
               </View>
 
@@ -307,7 +310,7 @@ export default function Today() {
                     styles.lessonFill,
                     {
                       backgroundColor: t.colors.accent,
-                      width: `${Math.max((completed.length / WAY_ORDER.length) * 100, 2)}%`,
+                      width: `${Math.max((topicsDone / WAY_ORDER.length) * 100, 2)}%`,
                     },
                   ]}
                 />
